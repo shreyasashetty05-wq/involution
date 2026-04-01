@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '@/lib/mongodb';
-import AIFeedback from '@/models/AIFeedback';
+import dbConnect from "@/database/mongodb";
+import AIFeedback from "@/database/models/AIFeedback";
 import { GoogleGenAI } from '@google/genai';
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });

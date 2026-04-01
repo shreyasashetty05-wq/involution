@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
-import dbConnect from '@/lib/mongodb';
-import KYCDocument from '@/models/KYCDocument';
+import dbConnect from "@/database/mongodb";
+import KYCDocument from "@/database/models/KYCDocument";
 
 export async function POST(req: Request) {
     try {

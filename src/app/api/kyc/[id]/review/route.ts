@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import dbConnect from '@/lib/mongodb';
-import KYCDocument from '@/models/KYCDocument';
+import dbConnect from "@/database/mongodb";
+import KYCDocument from "@/database/models/KYCDocument";
 
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
     try {

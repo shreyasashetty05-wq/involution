@@ -1,0 +1,66 @@
+﻿Γû▓ Next.js 16.1.6 (Turbopack)
+- Environments: .env.local
+
+  Creating an optimized production build ...
+Γ£ô Compiled successfully in 7.9s
+  Running TypeScript ...
+  Collecting page data using 15 workers ...
+  Generating static pages using 15 workers (0/32) ...
+  Generating static pages using 15 workers (8/32) 
+  Generating static pages using 15 workers (16/32) 
+  Generating static pages using 15 workers (24/32) 
+Γ£ô Generating static pages using 15 workers (32/32) in 586.5ms
+  Finalizing page optimization ...
+
+Route (app)
+Γöî Γùï /
+Γö£ Γùï /_not-found
+Γö£ Γùï /about
+Γö£ Γùï /admin/kyc
+Γö£ ╞Æ /api/ai-analyze
+Γö£ ╞Æ /api/ai-chat
+Γö£ ╞Æ /api/ai-feedback
+Γö£ ╞Æ /api/ai-verify
+Γö£ ╞Æ /api/auth/[...nextauth]
+Γö£ ╞Æ /api/deals
+Γö£ ╞Æ /api/dev/seed-deals
+Γö£ ╞Æ /api/dev/seed-dummy
+Γö£ ╞Æ /api/dev/seed-feedback
+Γö£ ╞Æ /api/investors/dashboard
+Γö£ ╞Æ /api/kyc/[id]/review
+Γö£ ╞Æ /api/kyc/pending
+Γö£ ╞Æ /api/kyc/submit
+Γö£ ╞Æ /api/startups
+Γö£ ╞Æ /api/startups/[id]/compliance
+Γö£ ╞Æ /api/startups/[id]/due-diligence
+Γö£ ╞Æ /api/startups/[id]/financials
+Γö£ ╞Æ /api/startups/[id]/health
+Γö£ ╞Æ /api/startups/[id]/kpi
+Γö£ ╞Æ /api/startups/[id]/trust
+Γö£ ╞Æ /api/startups/deals
+Γö£ ╞Æ /api/startups/publish
+Γö£ Γùï /investors
+Γö£ Γùï /investors/dashboard
+Γö£ Γùï /investors/search
+Γö£ Γùï /kyc
+Γö£ Γùï /login
+Γö£ Γùï /messages
+Γö£ Γùï /messages/agreement
+Γö£ Γùï /register
+Γö£ Γùï /rules
+Γö£ Γùï /startups
+Γö£ ╞Æ /startups/[id]
+Γö£ ╞Æ /startups/[id]/compliance
+Γö£ ╞Æ /startups/[id]/due-diligence
+Γö£ ╞Æ /startups/[id]/financial-update
+Γö£ ╞Æ /startups/[id]/health
+Γö£ ╞Æ /startups/[id]/trust
+Γö£ ╞Æ /startups/dashboard
+Γöö Γùï /startups/publish
+
+
+╞Æ Proxy (Middleware)
+
+Γùï  (Static)   prerendered as static content
+╞Æ  (Dynamic)  server-rendered on demand
+

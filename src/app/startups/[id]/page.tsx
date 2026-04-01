@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { ArrowLeft, MessageSquare, Briefcase, TrendingUp, Presentation, CheckCircle2, Factory, LineChart, AlertTriangle, Activity, BrainCircuit, ShieldCheck, Scale, HeartPulse } from "lucide-react";
-import AIChat from "@/components/AIChat";
+import { ArrowLeft, MessageSquare, Briefcase, TrendingUp, Presentation, CheckCircle2, Factory, LineChart, AlertTriangle, Activity, BrainCircuit, ShieldCheck, Scale, HeartPulse, Clock, Calendar } from "lucide-react";
+import AIChat from "@/frontend/components/AIChat";
 
 // Remove mock data. We will fetch dynamically now.
 
@@ -78,6 +78,20 @@ export default function StartupProfile() {
 
     const revChart = generatePath(startup.financials?.revenue || []);
     const profitChart = generatePath(startup.financials?.netProfit || []);
+
+    const calculateActivity = (updatedAt: string) => {
+        if (!updatedAt) return { status: "Unknown", color: "text-slate-400", bg: "bg-slate-100", border: "border-slate-200", days: -1 };
+        const updatedDate = new Date(updatedAt);
+        const diffTime = Math.abs(new Date().getTime() - updatedDate.getTime());
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        
+        if (diffDays <= 7) return { status: "Highly Active", color: "text-emerald-600", bg: "bg-emerald-50", border: "border-emerald-200", days: diffDays };
+        if (diffDays <= 30) return { status: "Active", color: "text-blue-600", bg: "bg-blue-50", border: "border-blue-200", days: diffDays };
+        if (diffDays <= 60) return { status: "Needs Update", color: "text-yellow-600", bg: "bg-yellow-50", border: "border-yellow-200", days: diffDays };
+        return { status: "Inactive", color: "text-red-600", bg: "bg-red-50", border: "border-red-200", days: diffDays };
+    };
+
+    const activityStatus = startup ? calculateActivity(startup.updatedAt) : null;
 
     return (
         <div className="min-h-screen pb-20">
@@ -281,6 +295,27 @@ export default function StartupProfile() {
                                 <span className="font-medium text-slate-600">~14 Months</span>
                             </div>
                         </div>
+
+                        {activityStatus && (
+                            <>
+                                <h3 className="text-lg font-bold text-slate-900 mb-4 border-b border-slate-200 pb-4 flex items-center gap-2">
+                                    <Clock className="w-5 h-5 text-emerald-600" /> Founder Activity
+                                </h3>
+                                <div className="mb-8 p-4 rounded-xl border bg-white shadow-sm flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center border ${activityStatus.bg} ${activityStatus.border}`}>
+                                            <Activity className={`w-5 h-5 ${activityStatus.color}`} />
+                                        </div>
+                                        <div>
+                                            <p className={`font-bold ${activityStatus.color}`}>{activityStatus.status}</p>
+                                            <p className="text-xs text-slate-500 mt-0.5">
+                                                {activityStatus.days >= 0 ? `Last updated ${activityStatus.days} day${activityStatus.days === 1 ? '' : 's'} ago` : 'No update data available'}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </>
+                        )}
 
                         {/* AI Intelligence Suite */}
                         <h3 className="text-lg font-bold text-slate-900 mb-4 border-b border-slate-200 pb-4 flex items-center gap-2">

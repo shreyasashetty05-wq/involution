@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '@/lib/mongodb';
-import Startup from '@/models/Startup';
+import dbConnect from "@/database/mongodb";
+import Startup from "@/database/models/Startup";
 import { GoogleGenAI, Type, Schema } from '@google/genai';
 
 // Initialize the Google Gen AI client

@@ -1,8 +1,8 @@
 // Temporary script to seed the database with one AIFeedback item
 // so the 'aifeedbacks' collection is created in MongoDB Atlas.
-import dbConnect from '../../../../lib/mongodb';
-import AIFeedback from '../../../../models/AIFeedback';
-import Startup from '../../../../models/Startup';
+import dbConnect from "@/database/mongodb";
+import AIFeedback from "@/database/models/AIFeedback";
+import Startup from "@/database/models/Startup";
 import { GoogleGenAI } from '@google/genai';
 import { NextRequest, NextResponse } from 'next/server';
 

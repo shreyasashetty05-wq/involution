@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '@/lib/mongodb';
-import AIPrediction from '@/models/AIPrediction';
+import dbConnect from "@/database/mongodb";
+import AIPrediction from "@/database/models/AIPrediction";
 
 // This would typically be triggered by a Cron Job, Webhook, or Admin Interface
 // when actual financial data matches the time horizon predicted by the AI.

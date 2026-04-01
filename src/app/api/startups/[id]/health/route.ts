@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '@/lib/mongodb';
-import Startup from '@/models/Startup';
+import dbConnect from "@/database/mongodb";
+import Startup from "@/database/models/Startup";
 import { GoogleGenAI, Type, Schema } from '@google/genai';
 import mongoose from 'mongoose';
 
@@ -135,7 +135,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         // STEP 3: TRACK GROUND TRUTH (AI Predictions)
         // Log the AI's prediction for future verification
         // -----------------------------------------------------
-        import('@/models/AIPrediction').then(async (AIPredictionModule) => {
+        import('@/database/models/AIPrediction').then(async (AIPredictionModule) => {
             const AIPrediction = AIPredictionModule.default;
 
             // Log Overall Health Score

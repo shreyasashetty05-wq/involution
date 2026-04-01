@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import dbConnect from '@/lib/mongodb';
-import { Deal } from '@/models/Deal';
+import dbConnect from "@/database/mongodb";
+import { Deal } from "@/database/models/Deal";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 

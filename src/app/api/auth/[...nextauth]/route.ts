@@ -1,8 +1,8 @@
 import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import { cookies } from "next/headers";
-import dbConnect from "@/lib/mongodb";
-import KYCDocument from "@/models/KYCDocument";
+import dbConnect from "@/database/mongodb";
+import KYCDocument from "@/database/models/KYCDocument";
 
 export const authOptions = {
     providers: [
