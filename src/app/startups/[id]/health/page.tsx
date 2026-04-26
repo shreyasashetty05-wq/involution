@@ -1,16 +1,15 @@
 "use client";
 
-import React from "react";
-
-import { useState, useEffect } from "react";
+import type { ReactElement } from "react";
 import { useParams } from "next/navigation";
-import Link from "next/link";
 import {
-    Activity, AlertTriangle, CheckCircle, XCircle, ArrowLeft,
+    Activity, AlertTriangle, CheckCircle, XCircle,
     TrendingUp, Flame, Clock, BarChart2, Info
 } from "lucide-react";
+import { useFetchReport } from "@/frontend/hooks/useFetchReport";
+import { PageLoading, PageError, SubPageHeader } from "@/frontend/components/StartupSubPageShell";
 
-const PILLAR_ICONS: Record<string, React.ReactElement> = {
+const PILLAR_ICONS: Record<string, ReactElement> = {
     burn: <Flame className="w-5 h-5" />,
     runway: <Clock className="w-5 h-5" />,
     revenue: <TrendingUp className="w-5 h-5" />,
@@ -29,7 +28,7 @@ const GAUGE_COLORS: Record<string, string> = {
     orange: "#f97316", red: "#ef4444"
 };
 
-const ALERT_STYLES: Record<string, { bg: string; border: string; icon: React.ReactElement; text: string }> = {
+const ALERT_STYLES: Record<string, { bg: string; border: string; icon: ReactElement; text: string }> = {
     critical: { bg: "bg-red-950/40", border: "border-red-500/30", icon: <XCircle className="w-4 h-4 text-red-400 shrink-0" />, text: "text-red-400" },
     warning: { bg: "bg-amber-100", border: "border-amber-300", icon: <AlertTriangle className="w-4 h-4 text-amber-700 shrink-0" />, text: "text-amber-700" },
     info: { bg: "bg-blue-950/40", border: "border-blue-500/30", icon: <Info className="w-4 h-4 text-blue-400 shrink-0" />, text: "text-blue-400" },
@@ -38,65 +37,33 @@ const ALERT_STYLES: Record<string, { bg: string; border: string; icon: React.Rea
 export default function HealthMonitorPage() {
     const params = useParams();
     const id = params?.id as string;
-
-    const [report, setReport] = useState<any>(null);
-    const [startup, setStartup] = useState<any>(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState("");
-
-    useEffect(() => {
-        if (!id) return;
-        fetch(`/api/startups/${id}/health`)
-            .then(r => r.json())
-            .then(data => {
-                if (data.success) { setReport(data.report); setStartup(data.startup); }
-                else setError(data.error || "Failed to load");
-            })
-            .catch(() => setError("Network error"))
-            .finally(() => setLoading(false));
-    }, [id]);
+    const { report, startup, loading, error } = useFetchReport(id, "health");
 
     if (loading) return (
-        <div className="min-h-screen flex items-center justify-center">
-            <div className="text-center">
-                <Activity className="w-14 h-14 text-emerald-600 animate-pulse mx-auto mb-4" />
-                <p className="text-slate-900 font-bold">Health Monitor Computing Vitals...</p>
-            </div>
-        </div>
+        <PageLoading>
+            <Activity className="w-14 h-14 text-emerald-600 animate-pulse mx-auto mb-4" />
+            <p className="text-slate-900 font-bold">Health Monitor Computing Vitals...</p>
+        </PageLoading>
     );
-    if (error) return (
-        <div className="min-h-screen flex items-center justify-center text-red-400 font-bold">
-            <XCircle className="w-6 h-6 mr-2" />{error}
-        </div>
-    );
+    if (error) return <PageError message={error} />;
+    if (!report || !startup) return <PageError message="Report data is unavailable" />;
 
     const gaugeColor = GAUGE_COLORS[report.healthColor] ?? "#6366f1";
     const sweepAngle = (report.overallHealth / 100) * 180;
 
-    // Convert semi-circular gauge
-    const radius = 80;
-    const circumference = Math.PI * radius;
-    const dashOffset = circumference - (circumference * report.overallHealth) / 100;
-
     return (
         <div className="container mx-auto px-6 py-12 max-w-5xl min-h-screen">
-            {/* Header */}
-            <div className="mb-10">
-                <Link href={`/startups/${id}`} className="flex items-center gap-2 text-slate-400 hover:text-emerald-600 text-sm mb-6 transition-colors">
-                    <ArrowLeft className="w-4 h-4" /> Back to Profile
-                </Link>
-                <div className="flex items-center gap-3 mb-2">
-                    <Activity className="w-6 h-6 text-emerald-600" />
-                    <span className="text-xs font-bold uppercase tracking-widest text-emerald-600 bg-emerald-900/30 px-3 py-1 rounded-full border border-emerald-500/20">
-                        Startup Health Monitor
-                    </span>
-                </div>
-                <h1 className="text-3xl font-bold text-slate-900">{startup?.name}</h1>
-                <p className="text-slate-500 mt-1">{startup?.sector}</p>
-            </div>
+            <SubPageHeader
+                id={id}
+                badgeIcon={<Activity className="w-6 h-6 text-emerald-600" />}
+                badgeLabel="Startup Health Monitor"
+                badgeColorClasses="text-emerald-600 bg-emerald-900/30 border-emerald-500/20"
+                startupName={startup?.name}
+                startupSector={startup?.sector}
+            />
 
             {/* Overall Health Gauge */}
-            <div className="bg-white border border-slate-200 shadow-sm rounded-2xl bg-white p-8 rounded-2xl mb-8 flex flex-col md:flex-row items-center gap-10 border border-slate-200">
+            <div className="bg-white border border-slate-200 shadow-sm rounded-2xl p-8 mb-8 flex flex-col md:flex-row items-center gap-10">
                 <div className="relative shrink-0" style={{ width: 200, height: 110 }}>
                     <svg width="200" height="110" viewBox="0 0 200 110">
                         {/* Track */}
@@ -120,8 +87,9 @@ export default function HealthMonitorPage() {
                                 <CheckCircle className="w-4 h-4" /> All vitals clear
                             </span>
                         )}
-                        {report.alerts?.slice(0, 2).map((a: any, i: number) => {
-                            const s = ALERT_STYLES[a.level];
+                        {report.alerts?.slice(0, 2).map((a: Record<string, unknown>, i: number) => {
+                            const level = String(a.level);
+                            const s = ALERT_STYLES[level] ?? ALERT_STYLES.info;
                             return (
                                 <span key={i} className={`flex items-center gap-1 text-xs px-3 py-1 rounded-full border ${s.bg} ${s.border} ${s.text} font-medium`}>
                                     {s.icon} {a.level}
@@ -138,8 +106,9 @@ export default function HealthMonitorPage() {
                     <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
                         <AlertTriangle className="w-5 h-5 text-amber-700" /> Live Alerts
                     </h2>
-                    {report.alerts.map((a: any, i: number) => {
-                        const s = ALERT_STYLES[a.level] ?? ALERT_STYLES.info;
+                    {report.alerts.map((a: Record<string, unknown>, i: number) => {
+                        const level = String(a.level);
+                        const s = ALERT_STYLES[level] ?? ALERT_STYLES.info;
                         return (
                             <div key={i} className={`flex items-start gap-3 p-4 rounded-xl border ${s.bg} ${s.border}`}>
                                 {s.icon}
@@ -156,28 +125,30 @@ export default function HealthMonitorPage() {
                     <BarChart2 className="w-5 h-5 text-indigo-400" /> Health Pillars
                 </h2>
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {report.pillars?.map((p: any) => {
-                        const color = PILLAR_COLORS[p.id] ?? "indigo";
+                    {report.pillars?.map((p: Record<string, unknown>) => {
+                        const id = String(p.id);
+                        const color = PILLAR_COLORS[id] ?? "indigo";
+                        const score = Number(p.score) || 0;
                         const barColorClass =
-                            p.score >= 80 ? "bg-emerald-500" :
-                                p.score >= 60 ? "bg-blue-500" :
-                                    p.score >= 40 ? "bg-amber-500" : "bg-red-500";
+                            score >= 80 ? "bg-emerald-500" :
+                                score >= 60 ? "bg-blue-500" :
+                                    score >= 40 ? "bg-amber-500" : "bg-red-500";
                         return (
-                            <div key={p.id} className="bg-white border border-slate-200 shadow-sm rounded-2xl bg-white p-5 rounded-2xl border border-slate-200">
+                            <div key={id} className="bg-white border border-slate-200 shadow-sm rounded-2xl p-5">
                                 <div className="flex items-center gap-3 mb-3">
                                     <div className={`w-9 h-9 rounded-full flex items-center justify-center bg-${color}-900/30 text-${color}-400 border border-${color}-500/20`}>
-                                        {PILLAR_ICONS[p.id] ?? <Activity className="w-4 h-4" />}
+                                        {PILLAR_ICONS[id] ?? <Activity className="w-4 h-4" />}
                                     </div>
                                     <div>
-                                        <p className="text-sm font-bold text-slate-800">{p.label}</p>
-                                        <p className="text-xs text-slate-400">{p.description}</p>
+                                        <p className="text-sm font-bold text-slate-800">{String(p.label)}</p>
+                                        <p className="text-xs text-slate-400">{String(p.description)}</p>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-3">
                                     <div className="flex-grow h-2 bg-slate-200 rounded-full overflow-hidden">
-                                        <div className={`h-full ${barColorClass} rounded-full transition-all duration-700`} style={{ width: `${p.score}%` }} />
+                                        <div className={`h-full ${barColorClass} rounded-full transition-all duration-700`} style={{ width: `${score}%` }} />
                                     </div>
-                                    <span className="text-sm font-mono font-bold text-slate-600 shrink-0">{p.score}</span>
+                                    <span className="text-sm font-mono font-bold text-slate-600 shrink-0">{score}</span>
                                 </div>
                             </div>
                         );
@@ -187,7 +158,7 @@ export default function HealthMonitorPage() {
 
             {/* Revenue Trend */}
             {report.revenueTrend?.length > 0 && (
-                <div className="bg-white border border-slate-200 shadow-sm rounded-2xl bg-white p-6 rounded-2xl mb-8 border border-slate-200">
+                <div className="bg-white border border-slate-200 shadow-sm rounded-2xl p-6 mb-8">
                     <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
                         <TrendingUp className="w-5 h-5 text-emerald-600" /> 6-Month Revenue vs Expense Trend
                     </h2>

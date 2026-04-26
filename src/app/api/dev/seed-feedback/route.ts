@@ -9,6 +9,11 @@ import { NextRequest, NextResponse } from 'next/server';
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 export async function GET(req: NextRequest) {
+    // Hard block in production
+    if (process.env.NODE_ENV === 'production') {
+        return NextResponse.json({ success: false, error: 'Seeding is not available in production.' }, { status: 403 });
+    }
+
     try {
         await dbConnect();
 

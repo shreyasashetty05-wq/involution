@@ -11,7 +11,7 @@ import AIChat from "@/frontend/components/AIChat";
 export default function StartupProfile() {
     const params = useParams();
     const idValue = Array.isArray(params.id) ? params.id[0] : params.id;
-    const [startup, setStartup] = useState<any>(null);
+    const [startup, setStartup] = useState<Record<string, unknown> | null>(null);
     const [loading, setLoading] = useState(true);
     const [playingVideoIdx, setPlayingVideoIdx] = useState<number | null>(null);
 
@@ -23,7 +23,7 @@ export default function StartupProfile() {
                 const res = await fetch('/api/startups');
                 const json = await res.json();
                 if (json.success) {
-                    const match = json.data.find((s: any) => s._id === idValue || s.id === Number(idValue));
+                    const match = json.data.find((s: Record<string, unknown>) => String(s._id) === idValue || String(s.id) === String(idValue));
                     setStartup(match);
                 }
             } catch (error) {
@@ -134,14 +134,16 @@ export default function StartupProfile() {
                 {/* Main Content */}
                 <div className="md:col-span-2 space-y-8">
                     {/* Pitch Section */}
-                    <div className="bg-white border border-slate-200 shadow-sm rounded-2xl p-8 rounded-2xl border border-slate-200 bg-white">
+                    <div className="bg-white border border-slate-200 shadow-sm rounded-2xl p-8">
                         <h2 className="text-xl font-bold text-slate-900 mb-4 border-b border-slate-200 pb-4 flex items-center gap-2">
                             <Presentation className="w-5 h-5 text-indigo-400" /> Executive Standard Pitch
                         </h2>
                         <p className="text-slate-500 leading-relaxed font-inter">{startup.desc}</p>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-8">
-                            {startup.videos?.map((vid: any, idx: number) => (
+                            {Array.isArray(startup.videos) && startup.videos.map((v: unknown, idx: number) => {
+                                const vid = v as Record<string, string>;
+                                return (
                                 <div key={idx} className="aspect-video bg-white border border-slate-200 rounded-xl flex items-center justify-center relative overflow-hidden group shadow-lg">
                                     {(playingVideoIdx === idx && vid.url) ? (
                                         <iframe
@@ -158,7 +160,7 @@ export default function StartupProfile() {
                                                 if (vid.url) {
                                                     setPlayingVideoIdx(idx);
                                                 } else {
-                                                    alert("No video URL is currently provided for this pitch.");
+                                                    console.warn("No video URL is currently provided for this pitch.");
                                                 }
                                             }}
                                         >
@@ -175,12 +177,12 @@ export default function StartupProfile() {
                                         </div>
                                     )}
                                 </div>
-                            ))}
+                            )})}
                         </div>
                     </div>
 
                     {/* Advanced Financial Chart */}
-                    <div className="bg-white border border-slate-200 shadow-sm rounded-2xl bg-white rounded-2xl p-6 shadow-xl border border-slate-200 space-y-8">
+                    <div className="bg-white border border-slate-200 shadow-xl rounded-2xl p-6 space-y-8">
                         <div>
                             <div className="flex justify-between items-center mb-4">
                                 <h3 className="text-slate-900 font-bold text-lg flex items-center gap-2"><LineChart className="w-4 h-4 text-emerald-600" /> Revenue Growth (12M)</h3>
@@ -255,7 +257,7 @@ export default function StartupProfile() {
 
                 {/* Sidebar Data */}
                 <div className="space-y-6">
-                    <div className="bg-white border border-slate-200 shadow-sm rounded-2xl p-6 rounded-2xl sticky top-24 border border-slate-200 bg-white">
+                    <div className="bg-white border border-slate-200 shadow-sm rounded-2xl p-6 sticky top-24">
                         <h3 className="text-lg font-bold text-slate-900 mb-6 border-b border-slate-200 pb-4 flex items-center gap-2">
                             <TrendingUp className="w-5 h-5 text-emerald-600" /> Financial Ask
                         </h3>

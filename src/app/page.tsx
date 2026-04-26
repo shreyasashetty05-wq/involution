@@ -1,5 +1,6 @@
 import Link from 'next/link';
-import { Activity, BarChart2, TrendingUp, ShieldCheck, CheckCircle, Zap, ArrowRight } from 'lucide-react';
+import { Activity, BarChart2, ShieldCheck, CheckCircle, Zap, ArrowRight } from 'lucide-react';
+import { TypewriterText } from '@/components/TypewriterText';
 
 export default function Home() {
   return (
@@ -25,8 +26,12 @@ export default function Home() {
           </h1>
           <span className="block divider-emerald mx-auto mb-6" />
 
-          <p className="max-w-2xl mx-auto text-lg text-slate-500 mb-10 leading-relaxed animate-fade-in-up" style={{ animationDelay: '0.15s' }}>
-            Automated KYC · AI Due Diligence · Verifiable Financial Metrics. The secure deal-flow platform built for serious capital.
+          <p className="max-w-2xl mx-auto text-lg text-slate-500 mb-10 leading-relaxed font-medium">
+            <TypewriterText 
+              text="Automated KYC · AI Due Diligence · Verifiable Financial Metrics. The secure deal-flow platform built for serious capital." 
+              delay={0.3} 
+              highlightWords={["KYC", "AI", "Verifiable", "secure"]}
+            />
           </p>
 
           <div className="flex flex-col sm:flex-row gap-3 items-center justify-center mb-16 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
@@ -133,9 +138,13 @@ export default function Home() {
             <div className="section-label mx-auto w-fit mb-5">
               <Activity className="w-3.5 h-3.5" /> Startup Health Monitor
             </div>
-            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 font-outfit">Real-time startup vitals at a glance</h2>
+            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 font-outfit">
+              <TypewriterText text="Real-time startup vitals at a glance" />
+            </h2>
             <span className="block divider-emerald mx-auto mt-3" />
-            <p className="text-slate-500 mt-4 max-w-lg mx-auto text-sm">AI monitors 6 financial dimensions and flags critical risks before investors find them.</p>
+            <p className="text-slate-500 mt-4 max-w-lg mx-auto text-sm">
+              <TypewriterText text="AI monitors 6 financial dimensions and flags critical risks before investors find them." delay={0.2} />
+            </p>
           </div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -180,8 +189,11 @@ export default function Home() {
               Automated deep-dive<br /><span className="text-gradient">before you commit capital</span>
             </h2>
             <span className="block divider-emerald" />
-            <p className="text-slate-500 text-sm leading-relaxed">
-              Our Gemini AI engine analyzes 42+ data points — market opportunity, competitive moat, business model, team credibility — and delivers a full Investability Report with flag summaries.
+            <p className="text-slate-500 text-sm leading-relaxed min-h-[60px]">
+              <TypewriterText 
+                text="Our AI engine analyzes 42+ data points — market opportunity, competitive moat, business model, team credibility — and delivers a full Investability Report with flag summaries." 
+                highlightWords={["AI", "Investability", "Report"]}
+              />
             </p>
             <div className="space-y-2.5 pt-1">
               {['Market Opportunity · Strong Fit', 'Competitive Moat · Proprietary IP', 'Business Model · Scalable SaaS'].map((l, i) => (
@@ -260,7 +272,9 @@ export default function Home() {
             Ready to transform <span className="text-gradient">your deal flow?</span>
           </h2>
           <span className="block divider-emerald mx-auto mb-6" />
-          <p className="text-slate-500 text-sm mb-10">Join 100+ startups and investors already using InVolution to close better deals, faster.</p>
+          <p className="text-slate-500 text-sm mb-10 h-6">
+            <TypewriterText text="Join 100+ startups and investors already using InVolution to close better deals, faster." delay={0.1} />
+          </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link href="/login" className="btn-primary inline-block">Invest Now</Link>
             <Link href="/startups/publish" className="btn-secondary inline-block">Publish Startup</Link>

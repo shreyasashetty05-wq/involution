@@ -31,31 +31,36 @@ export async function POST(req: NextRequest) {
 
         const stats = { verified: 0, failed: 0 };
 
-        // Simple verification logic (can be expanded based on rules)
-        for (const pred of predictions) {
-            pred.actualValue = actualValue;
-            pred.verificationDate = new Date();
+        // Simple verification logic — runs all saves in parallel (no await-in-loop)
+        const results = await Promise.all(
+            predictions.map(async (pred) => {
+                pred.actualValue = actualValue;
+                pred.verificationDate = new Date();
 
-            let isAccurate = false;
-            if (pred.predictedMetric === 'healthScore') {
-                // If actual health is within 10 points of predicted
-                isAccurate = Math.abs(pred.predictedValue - actualValue) <= 10;
-            } else if (pred.predictedMetric === 'runwayMonths') {
-                // If actual runway was within 2 months of predicted
-                isAccurate = Math.abs(pred.predictedValue - actualValue) <= 2;
-            } else if (pred.predictedMetric === 'burnRate') {
-                // Within 15% margin of error
-                isAccurate = Math.abs(pred.predictedValue - actualValue) <= (actualValue * 0.15);
-            } else {
-                isAccurate = pred.predictedValue === actualValue; // Exact match fallback
-            }
+                let isAccurate = false;
+                if (pred.predictedMetric === 'healthScore') {
+                    // If actual health is within 10 points of predicted
+                    isAccurate = Math.abs(pred.predictedValue - actualValue) <= 10;
+                } else if (pred.predictedMetric === 'runwayMonths') {
+                    // If actual runway was within 2 months of predicted
+                    isAccurate = Math.abs(pred.predictedValue - actualValue) <= 2;
+                } else if (pred.predictedMetric === 'burnRate') {
+                    // Within 15% margin of error
+                    isAccurate = Math.abs(pred.predictedValue - actualValue) <= (actualValue * 0.15);
+                } else {
+                    isAccurate = pred.predictedValue === actualValue; // Exact match fallback
+                }
 
-            pred.status = isAccurate ? 'verified' : 'failed';
-            await pred.save();
+                pred.status = isAccurate ? 'verified' : 'failed';
+                await pred.save();
+                return isAccurate;
+            })
+        );
 
-            if (isAccurate) stats.verified++;
-            else stats.failed++;
-        }
+        results.forEach((isAccurate) => {
+            if (isAccurate) stats.verified += 1;
+            else stats.failed += 1;
+        });
 
         return NextResponse.json({
             success: true,

@@ -20,14 +20,14 @@ const AIPredictionSchema: Schema = new Schema({
         required: true
     },
     predictedValue: { type: Number, required: true },
-    actualValue: { type: Number, required: false },
-    verificationDate: { type: Date, required: false },
+    actualValue: { type: Number },
+    verificationDate: { type: Date },
     status: {
         type: String,
         enum: ['pending', 'verified', 'failed'],
         default: 'pending'
     },
-    confidenceScore: { type: Number, required: false }
+    confidenceScore: { type: Number }
 }, {
     timestamps: true
 });

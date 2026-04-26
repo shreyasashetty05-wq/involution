@@ -465,18 +465,28 @@ function DealWorkspace() {
                                         {negotiationPhase === 'startup_drafting' ? (
                                             <>
                                                 <div className="grid grid-cols-2 gap-3">
-                                                    {[['Invest Amount', termAmount, setTermAmount], ['Equity Exch.', termEquity, setTermEquity]].map(([label, val, fn]) => (
-                                                        <div key={label as string}>
-                                                            <label className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">{label as string}</label>
-                                                            <input type="text" value={val as string} onChange={e => (fn as Function)(e.target.value)}
+                                                    {(
+                                                        [
+                                                            ['Invest Amount', termAmount, setTermAmount],
+                                                            ['Equity Exch.', termEquity, setTermEquity],
+                                                        ] as [string, string, (v: string) => void][]
+                                                    ).map(([label, val, fn]) => (
+                                                        <div key={label}>
+                                                            <label className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">{label}</label>
+                                                            <input type="text" value={val} onChange={e => fn(e.target.value)}
                                                                 className="w-full mt-1 bg-white border border-slate-200 rounded-lg px-3 py-2 text-slate-800 text-sm focus:ring-2 focus:ring-pink-400 outline-none" />
                                                         </div>
                                                     ))}
                                                 </div>
-                                                {[['Payment Method', paymentMethod, setPaymentMethod], ['Company Address', companyAddress, setCompanyAddress]].map(([label, val, fn]) => (
-                                                    <div key={label as string}>
-                                                        <label className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">{label as string}</label>
-                                                        <input type="text" value={val as string} onChange={e => (fn as Function)(e.target.value)}
+                                                {(
+                                                    [
+                                                        ['Payment Method', paymentMethod, setPaymentMethod],
+                                                        ['Company Address', companyAddress, setCompanyAddress],
+                                                    ] as [string, string, (v: string) => void][]
+                                                ).map(([label, val, fn]) => (
+                                                    <div key={label}>
+                                                        <label className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">{label}</label>
+                                                        <input type="text" value={val} onChange={e => fn(e.target.value)}
                                                             className="w-full mt-1 bg-white border border-slate-200 rounded-lg px-3 py-2 text-slate-800 text-sm focus:ring-2 focus:ring-pink-400 outline-none" />
                                                     </div>
                                                 ))}

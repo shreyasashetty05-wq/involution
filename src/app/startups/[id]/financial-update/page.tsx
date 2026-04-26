@@ -70,8 +70,8 @@ export default function FinancialUpdatePage({ params }: { params: Promise<{ id: 
                 router.refresh();
             }, 2500);
 
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : String(err));
         } finally {
             setIsSaving(false);
         }

@@ -15,17 +15,17 @@ export interface IAIFeedback extends Document {
 
 const AIFeedbackSchema: Schema = new Schema({
     startupId: { type: Schema.Types.ObjectId, ref: 'Startup', required: true },
-    investorEmail: { type: String, required: false },
+    investorEmail: { type: String },
     module: {
         type: String,
         enum: ['chat', 'health', 'due-diligence', 'compliance', 'trust'],
         required: true
     },
-    context: { type: String, required: false },
+    context: { type: String },
     aiResponse: { type: String, required: true },
     feedbackType: { type: String, enum: ['upvote', 'downvote'], required: true },
-    correction: { type: String, required: false },
-    embedding: { type: [Number], required: false }
+    correction: { type: String },
+    embedding: { type: [Number] }
 }, {
     timestamps: true
 });

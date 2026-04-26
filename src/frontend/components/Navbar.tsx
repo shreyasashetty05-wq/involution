@@ -20,7 +20,7 @@ export default function Navbar() {
                     <Link href="/about" className="hover:text-emerald-700 transition-colors">About</Link>
 
                     {status === "authenticated" ? (
-                        (session?.user as any)?.role === "investor" ? (
+                        (session?.user as Record<string, unknown>)?.role === "investor" ? (
                             <Link href="/investors/dashboard" className="hover:text-emerald-700 transition-colors">Portfolio</Link>
                         ) : (
                             <Link href="/startups/dashboard" className="hover:text-emerald-700 transition-colors">Dashboard</Link>
@@ -40,13 +40,19 @@ export default function Navbar() {
                     {status === "authenticated" ? (
                         <>
                             <Link
-                                href={(session?.user as any)?.role === "investor" ? "/investors/search" : "/startups/dashboard"}
+                                href={(session?.user as Record<string, unknown>)?.role === "investor" ? "/investors/search" : "/startups/dashboard"}
                                 className="hidden md:block text-sm font-semibold text-slate-500 hover:text-emerald-700 transition-colors"
                             >
-                                {(session?.user as any)?.role === "investor" ? "Discover" : "Dashboard"}
+                                {(session?.user as Record<string, unknown>)?.role === "investor" ? "Discover" : "Dashboard"}
                             </Link>
                             <div className="flex items-center gap-3 pl-3 border-l border-slate-200">
-                                <img src={session.user?.image || ""} alt="Avatar" className="w-7 h-7 rounded-full border-2 border-emerald-200 shadow-sm" />
+                                {session.user?.image ? (
+                                    <Image src={session.user.image} alt="Avatar" width={28} height={28} className="w-7 h-7 rounded-full border-2 border-emerald-200 shadow-sm" />
+                                ) : (
+                                    <div className="w-7 h-7 rounded-full border-2 border-emerald-200 shadow-sm bg-emerald-100 flex items-center justify-center text-xs font-bold text-emerald-700">
+                                        {session.user?.name?.charAt(0) || "U"}
+                                    </div>
+                                )}
                                 <button onClick={() => signOut()} className="text-xs font-semibold text-slate-400 hover:text-rose-500 transition-colors">
                                     Sign Out
                                 </button>

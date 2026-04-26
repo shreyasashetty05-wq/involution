@@ -1,17 +1,24 @@
 import { NextResponse } from 'next/server';
-import dbConnect from "@/database/mongodb";
-import Startup from "@/database/models/Startup";
 
+/**
+ * Seed route: blocked in production. Only callable in development.
+ * Populates DB with the Solaris AI dummy startup for testing.
+ */
 export async function GET() {
-    // Only allow in development
-    if (process.env.NODE_ENV === 'production' && !process.env.ALLOW_SEED) {
-        return NextResponse.json({ success: false, error: 'Seeding not allowed in production' }, { status: 403 });
+    // Hard block in production — no environment variable override allowed
+    if (process.env.NODE_ENV === 'production') {
+        return NextResponse.json(
+            { success: false, error: 'Seeding is not available in production.' },
+            { status: 403 }
+        );
     }
+
+    const { default: dbConnect } = await import("@/database/mongodb");
+    const { default: Startup } = await import("@/database/models/Startup");
 
     try {
         await dbConnect();
 
-        // Delete existing Solaris AI if any
         await Startup.deleteMany({ name: "Solaris AI" });
 
         const dummyStartup = {
