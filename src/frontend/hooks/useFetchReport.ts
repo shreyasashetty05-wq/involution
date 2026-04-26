@@ -17,7 +17,7 @@ interface UseFetchReportResult<R, S> {
  *   GET /api/startups/:id/<module>
  *   → { success: boolean, report: R, startup: S, error?: string }
  */
-export function useFetchReport<R = unknown, S = unknown>(
+export function useFetchReport<R = Record<string, any>, S = Record<string, any>>(
     id: string | undefined,
     module: string
 ): UseFetchReportResult<R, S> {

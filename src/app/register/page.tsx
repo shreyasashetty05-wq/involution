@@ -23,15 +23,15 @@ export default function RegisterPage() {
 
             <div className="w-full max-w-md relative z-10 animate-fade-in-up">
                 <Link href="/" className="inline-flex items-center gap-2 text-slate-400 hover:text-emerald-600 mb-8 transition-colors text-sm font-medium">
-                    <ArrowLeft className="w-4 h-4" /> Back to Home
+                    <ArrowLeft className="size-4" /> Back to Home
                 </Link>
 
                 <div className="bg-white rounded-3xl shadow-xl border border-slate-200 p-8 md:p-10 text-center relative overflow-hidden">
                     {/* Top accent bar */}
                     <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 to-emerald-400" />
 
-                    <div className="w-16 h-16 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                        <UserPlus className="w-8 h-8 text-emerald-600" />
+                    <div className="size-16 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                        <UserPlus className="size-8 text-emerald-600" />
                     </div>
 
                     <h1 className="text-3xl font-outfit font-bold text-slate-900 mb-2">Join InVolution</h1>
@@ -46,7 +46,7 @@ export default function RegisterPage() {
                             className="flex flex-col items-center gap-2 p-5 rounded-2xl border border-slate-200 bg-slate-50 hover:border-emerald-400 hover:bg-emerald-50 transition-all group disabled:opacity-50 disabled:pointer-events-none shadow-sm"
                         >
                             {isLoading === "startup" && (
-                                <div className="w-5 h-5 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin" />
+                                <div className="size-5 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin" />
                             )}
                             <h3 className="text-base font-bold text-slate-800 group-hover:text-emerald-700">I am a Founder</h3>
                             <p className="text-xs text-slate-400">Raise verified capital for your startup.</p>
@@ -58,7 +58,7 @@ export default function RegisterPage() {
                             className="flex flex-col items-center gap-2 p-5 rounded-2xl border border-slate-200 bg-slate-50 hover:border-emerald-400 hover:bg-emerald-50 transition-all group disabled:opacity-50 disabled:pointer-events-none shadow-sm"
                         >
                             {isLoading === "investor" && (
-                                <div className="w-5 h-5 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin" />
+                                <div className="size-5 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin" />
                             )}
                             <h3 className="text-base font-bold text-slate-800 group-hover:text-emerald-700">I am an Investor</h3>
                             <p className="text-xs text-slate-400">Discover and fund top-tier unicorns.</p>

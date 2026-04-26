@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import dbConnect from "@/database/mongodb";
 import { Deal } from "@/database/models/Deal";
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/authOptions";
 
 export async function GET() {
     // Hard block in production
@@ -55,3 +55,4 @@ export async function GET() {
         return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
 }
+

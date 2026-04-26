@@ -57,7 +57,7 @@ export default function AdminKYCDashboard() {
                     <div className="bg-white border border-slate-200 shadow-sm rounded-2xl p-16 text-center text-slate-500">Loading pending requests from Database...</div>
                 ) : list.length === 0 ? (
                     <div className="bg-white border border-slate-200 shadow-sm rounded-2xl rounded-2xl p-16 text-center">
-                        <CheckCircle className="w-16 h-16 text-slate-600 mx-auto mb-4" />
+                        <CheckCircle className="size-16 text-slate-600 mx-auto mb-4" />
                         <h3 className="text-xl font-bold text-slate-600">All Caught Up!</h3>
                         <p className="text-slate-500">No pending KYC applications to review.</p>
                     </div>
@@ -65,13 +65,13 @@ export default function AdminKYCDashboard() {
                     list.map((user) => (
                         <div key={user._id} className="bg-white border border-slate-200 shadow-sm rounded-2xl p-6 rounded-2xl flex flex-col lg:flex-row items-center justify-between gap-6 transition-all hover:bg-white/[0.08]">
                             <div className="flex items-center gap-6 w-full lg:w-auto">
-                                <div className={`w-14 h-14 rounded-full flex items-center justify-center font-bold text-xl ${user.matchScore > 80 ? 'bg-indigo-50 text-indigo-600' : 'bg-orange-500/20 text-orange-400'}`}>
+                                <div className={`size-14 rounded-full flex items-center justify-center font-bold text-xl ${user.matchScore > 80 ? 'bg-indigo-50 text-indigo-600' : 'bg-orange-500/20 text-orange-400'}`}>
                                     {user.matchScore}%
                                 </div>
                                 <div>
                                     <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">
                                         {user.name}
-                                        {user.matchScore < 50 && <span title="Low OCR Match Score"><ShieldAlert className="w-4 h-4 text-orange-400" /></span>}
+                                        {user.matchScore < 50 && <span title="Low OCR Match Score"><ShieldAlert className="size-4 text-orange-400" /></span>}
                                     </h3>
                                     <p className="text-slate-500 text-sm">{user.type}</p>
                                 </div>
@@ -93,21 +93,21 @@ export default function AdminKYCDashboard() {
                                     onClick={() => setViewDocsFor(user)}
                                     className="flex-1 lg:flex-none px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-600 transition-colors flex items-center justify-center gap-2"
                                 >
-                                    <FileSearch className="w-4 h-4" />
+                                    <FileSearch className="size-4" />
                                     <span className="hidden sm:inline">Docs</span>
                                 </button>
                                 <button
                                     onClick={() => handleAction(user._id, "Rejected")}
                                     className="flex-1 lg:flex-none px-4 py-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 transition-colors flex items-center justify-center gap-2"
                                 >
-                                    <XCircle className="w-4 h-4" />
+                                    <XCircle className="size-4" />
                                     Reject
                                 </button>
                                 <button
                                     onClick={() => handleAction(user._id, "Approved")}
                                     className="flex-1 lg:flex-none px-6 py-2 rounded-lg bg-green-500 hover:bg-green-600 text-slate-900 font-medium transition-colors flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(34,197,94,0.3)]"
                                 >
-                                    <CheckCircle className="w-4 h-4" />
+                                    <CheckCircle className="size-4" />
                                     Approve
                                 </button>
                             </div>
@@ -123,13 +123,13 @@ export default function AdminKYCDashboard() {
                         <div className="flex justify-between items-center mb-6 pb-4 border-b border-white/10">
                             <h2 className="text-2xl font-bold text-slate-900 font-outfit">KYC Profile: {viewDocsFor.name}</h2>
                             <button onClick={() => setViewDocsFor(null)} className="text-slate-500 hover:text-slate-900 transition-colors">
-                                <XCircle className="w-8 h-8" />
+                                <XCircle className="size-8" />
                             </button>
                         </div>
 
                         <div className="grid md:grid-cols-2 gap-8 mb-8">
                             <div className="space-y-3">
-                                <h4 className="text-sm font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-2"><ShieldAlert className="w-4 h-4" /> Aadhaar Document</h4>
+                                <h4 className="text-sm font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-2"><ShieldAlert className="size-4" /> Aadhaar Document</h4>
                                 <div className="bg-white p-2 rounded-xl border border-slate-800 flex items-center justify-center overflow-hidden min-h-[250px]">
                                     {viewDocsFor.aadhaarFile ? (
                                         <img src={viewDocsFor.aadhaarFile} alt="Aadhaar Scan" className="max-w-full max-h-[400px] object-contain" />
@@ -141,7 +141,7 @@ export default function AdminKYCDashboard() {
                             </div>
 
                             <div className="space-y-3">
-                                <h4 className="text-sm font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-2"><ShieldAlert className="w-4 h-4" /> PAN Document</h4>
+                                <h4 className="text-sm font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-2"><ShieldAlert className="size-4" /> PAN Document</h4>
                                 <div className="bg-white p-2 rounded-xl border border-slate-800 flex items-center justify-center overflow-hidden min-h-[250px]">
                                     {viewDocsFor.panFile ? (
                                         <img src={viewDocsFor.panFile} alt="PAN Scan" className="max-w-full max-h-[400px] object-contain" />

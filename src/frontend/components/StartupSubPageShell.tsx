@@ -16,7 +16,7 @@ export function PageLoading({ children }: { children: React.ReactNode }) {
 export function PageError({ message }: { message: string }) {
     return (
         <div className="min-h-screen flex items-center justify-center text-red-400 font-bold">
-            <XCircle className="w-6 h-6 mr-2" />{message}
+            <XCircle className="size-6 mr-2" />{message}
         </div>
     );
 }
@@ -40,7 +40,7 @@ export function SubPageHeader({
                 href={`/startups/${id}`}
                 className="flex items-center gap-2 text-slate-400 hover:text-emerald-600 text-sm mb-6 transition-colors"
             >
-                <ArrowLeft className="w-4 h-4" /> Back to Profile
+                <ArrowLeft className="size-4" /> Back to Profile
             </Link>
             <div className="flex items-center gap-3 mb-2">
                 {badgeIcon}
@@ -64,8 +64,8 @@ interface ScoreRingProps {
 /** Reusable circular score ring (SVG) used in Trust, Compliance, Due-Diligence */
 export function ScoreRing({ score, stroke, label, sublabel = "/ 100" }: ScoreRingProps) {
     return (
-        <div className="relative w-44 h-44 shrink-0">
-            <svg className="w-full h-full -rotate-90">
+        <div className="relative size-44 shrink-0">
+            <svg className="size-full -rotate-90">
                 <circle cx="88" cy="88" r="78" strokeWidth="10" fill="transparent" stroke="#27272a" />
                 <circle
                     cx="88" cy="88" r="78" strokeWidth="10" fill="transparent"

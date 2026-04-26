@@ -7,11 +7,11 @@ import { useSession, signOut } from "next-auth/react";
 export default function Navbar() {
     const { data: session, status } = useSession();
     return (
-        <nav className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-200/80 px-6 py-3 shadow-sm">
+        <nav className="fixed top-0 inset-x-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-200/80 px-6 py-3 shadow-sm">
             <div className="container mx-auto flex items-center justify-between">
                 {/* Logo */}
                 <Link href="/" className="font-outfit text-lg font-bold tracking-tight flex items-center gap-2.5 text-slate-900">
-                    <Image src="/logo.svg" alt="InVolution Logo" width={30} height={30} className="w-7 h-7 object-contain" />
+                    <Image src="/logo.svg" alt="InVolution Logo" width={30} height={30} className="size-7 object-contain" />
                     <span>InVolution</span>
                 </Link>
 
@@ -47,9 +47,9 @@ export default function Navbar() {
                             </Link>
                             <div className="flex items-center gap-3 pl-3 border-l border-slate-200">
                                 {session.user?.image ? (
-                                    <Image src={session.user.image} alt="Avatar" width={28} height={28} className="w-7 h-7 rounded-full border-2 border-emerald-200 shadow-sm" />
+                                    <Image src={session.user.image} alt="Avatar" width={28} height={28} className="size-7 rounded-full border-2 border-emerald-200 shadow-sm" />
                                 ) : (
-                                    <div className="w-7 h-7 rounded-full border-2 border-emerald-200 shadow-sm bg-emerald-100 flex items-center justify-center text-xs font-bold text-emerald-700">
+                                    <div className="size-7 rounded-full border-2 border-emerald-200 shadow-sm bg-emerald-100 flex items-center justify-center text-xs font-bold text-emerald-700">
                                         {session.user?.name?.charAt(0) || "U"}
                                     </div>
                                 )}

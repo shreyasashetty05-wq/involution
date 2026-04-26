@@ -40,13 +40,13 @@ function AgreementContent() {
                     onClick={() => router.back()}
                     className="flex items-center gap-2 px-4 py-2 hover:bg-slate-100 rounded-lg transition-colors"
                 >
-                    <ArrowLeft className="w-5 h-5" /> Back to Deal Room
+                    <ArrowLeft className="size-5" /> Back to Deal Room
                 </button>
                 <button
                     onClick={handlePrint}
                     className="flex items-center gap-2 px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-slate-900 font-semibold rounded-lg transition-colors"
                 >
-                    <Printer className="w-4 h-4" /> Print / Save as PDF
+                    <Printer className="size-4" /> Print / Save as PDF
                 </button>
             </div>
 
@@ -155,19 +155,19 @@ function AgreementContent() {
                     <div className="space-y-6">
                         <div className="flex items-end">
                             <span className="w-8 shrink-0">By:</span>
-                            <div className="border-b border-black flex-grow h-8 flex items-end pb-1 text-indigo-900 font-serif italic text-2xl">
+                            <div className="border-b border-black grow h-8 flex items-end pb-1 text-indigo-900 font-serif italic text-2xl">
                                 {startupSignature}
                             </div>
                         </div>
                         <div className="flex items-end">
                             <span className="w-20 shrink-0 text-sm">Print Name:</span>
-                            <div className="border-b border-black flex-grow h-6 flex items-end pb-1 font-bold">
+                            <div className="border-b border-black grow h-6 flex items-end pb-1 font-bold">
                                 {startupName}
                             </div>
                         </div>
                         <div className="flex items-end">
                             <span className="w-12 shrink-0 text-sm">Title:</span>
-                            <div className="border-b border-black flex-grow h-6 flex items-end pb-1">
+                            <div className="border-b border-black grow h-6 flex items-end pb-1">
                                 Authorized Signatory
                             </div>
                         </div>
@@ -177,19 +177,19 @@ function AgreementContent() {
                     <div className="space-y-6">
                         <div className="flex items-end">
                             <span className="w-8 shrink-0">By:</span>
-                            <div className="border-b border-black flex-grow h-8 flex items-end pb-1 text-indigo-900 font-serif italic text-2xl">
+                            <div className="border-b border-black grow h-8 flex items-end pb-1 text-indigo-900 font-serif italic text-2xl">
                                 {investorSignature}
                             </div>
                         </div>
                         <div className="flex items-end">
                             <span className="w-20 shrink-0 text-sm">Print Name:</span>
-                            <div className="border-b border-black flex-grow h-6 flex items-end pb-1 font-bold">
+                            <div className="border-b border-black grow h-6 flex items-end pb-1 font-bold">
                                 {investorSignature}
                             </div>
                         </div>
                         <div className="flex items-end">
                             <span className="w-12 shrink-0 text-sm">Title:</span>
-                            <div className="border-b border-black flex-grow h-6 flex items-end pb-1">
+                            <div className="border-b border-black grow h-6 flex items-end pb-1">
                                 Investor
                             </div>
                         </div>

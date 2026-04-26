@@ -125,7 +125,7 @@ export default function AISearchEngine() {
         <div className="container mx-auto px-6 py-12 max-w-7xl min-h-screen">
             <div className="text-center mb-12 animate-fade-in-up">
                 <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-50 text-emerald-600 text-sm font-semibold mb-6 border border-emerald-300">
-                    <BrainCircuit className="w-4 h-4" /> AI-Powered Matchmaking Active
+                    <BrainCircuit className="size-4" /> AI-Powered Matchmaking Active
                 </div>
                 <h1 className="text-4xl md:text-5xl font-outfit font-bold text-slate-900 mb-4">Discover Your Next Unicorn</h1>
                 <p className="text-slate-500 font-inter max-w-2xl mx-auto text-lg">
@@ -139,17 +139,17 @@ export default function AISearchEngine() {
                 <div className="lg:col-span-1 space-y-6">
                     <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 rounded-2xl sticky top-24 max-h-[85vh] overflow-y-auto custom-scrollbar border border-slate-200">
                         <div className="flex items-center justify-between mb-6">
-                            <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2"><Search className="w-5 h-5 text-emerald-600" /> Search</h2>
+                            <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2"><Search className="size-5 text-emerald-600" /> Search</h2>
                         </div>
 
                         <div className="space-y-5">
                             <div className="space-y-2">
                                 <label className="text-sm font-medium text-slate-500">Keywords</label>
                                 <div className="relative">
-                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-9000" />
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-slate-9000" />
                                     <input type="text"
                                         placeholder="AI, B2B, solar..."
-                                        className="w-full bg-white border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-lime-500 text-slate-700 placeholder-zinc-600"
+                                        className="w-full bg-white border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-lime-500 text-slate-700 placeholder:text-zinc-600"
                                         value={filters.keyword} onChange={(e) => setFilters({ ...filters, keyword: e.target.value })}
                                     />
                                 </div>
@@ -209,8 +209,8 @@ export default function AISearchEngine() {
                                     onClick={() => setShowAdvanced(!showAdvanced)}
                                     className="flex items-center justify-between w-full text-sm font-semibold text-emerald-600 hover:text-lime-300 transition-colors"
                                 >
-                                    <span className="flex items-center gap-2"><SlidersHorizontal className="w-4 h-4" /> Advanced Financials</span>
-                                    <ChevronRight className={`w-4 h-4 transform transition-transform ${showAdvanced ? 'rotate-90' : ''}`} />
+                                    <span className="flex items-center gap-2"><SlidersHorizontal className="size-4" /> Advanced Financials</span>
+                                    <ChevronRight className={`size-4  transition-transform ${showAdvanced ? 'rotate-90' : ''}`} />
                                 </button>
                             </div>
 
@@ -280,7 +280,7 @@ export default function AISearchEngine() {
                                         />
                                     </div>
                                     <label className="flex items-center gap-2 cursor-pointer pt-2">
-                                        <input type="checkbox" className="w-4 h-4 accent-lime-500" checked={filters.excludeLegalRisk} onChange={(e) => setFilters({ ...filters, excludeLegalRisk: e.target.checked })} />
+                                        <input type="checkbox" className="size-4 accent-lime-500" checked={filters.excludeLegalRisk} onChange={(e) => setFilters({ ...filters, excludeLegalRisk: e.target.checked })} />
                                         <span className="text-xs font-medium text-slate-500">Exclude Pending Legal Risks</span>
                                     </label>
                                 </div>
@@ -290,7 +290,7 @@ export default function AISearchEngine() {
                                 onClick={handleSearch}
                                 className="w-full py-3 mt-6 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition-colors shadow-[0_0_20px_-5px_rgba(163,230,53,0.4)] flex items-center justify-center gap-2"
                             >
-                                {isSearching ? <BrainCircuit className="w-5 h-5 animate-pulse" /> : <Search className="w-5 h-5" />}
+                                {isSearching ? <BrainCircuit className="size-5 animate-pulse" /> : <Search className="size-5" />}
                                 {isSearching ? "Processing Data..." : "Apply Filters"}
                             </button>
                         </div>
@@ -306,7 +306,7 @@ export default function AISearchEngine() {
 
                         {/* Sorting Dropdown */}
                         <div className="flex items-center gap-2">
-                            <ArrowUpDown className="w-4 h-4 text-slate-9000" />
+                            <ArrowUpDown className="size-4 text-slate-9000" />
                             <select
                                 className="bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-lime-500 text-slate-700"
                                 value={filters.sortBy}
@@ -327,7 +327,7 @@ export default function AISearchEngine() {
 
                     {isLoadingData ? (
                         <div className="py-24 text-center">
-                            <Activity className="w-16 h-16 text-emerald-600 animate-spin mx-auto mb-4" />
+                            <Activity className="size-16 text-emerald-600 animate-spin mx-auto mb-4" />
                             <h3 className="text-2xl font-bold text-slate-900">Synchronizing with Deal Flow Database...</h3>
                             <p className="text-slate-500">Evaluating multi-metric profiles and financials.</p>
                         </div>
@@ -342,8 +342,8 @@ export default function AISearchEngine() {
                                         style={{ animationDelay: `${idx * 100}ms` }}
                                     >
                                         {/* Score Circular badge */}
-                                        <div className="relative w-20 h-20 shrink-0 self-center md:self-start">
-                                            <svg className="w-full h-full transform -rotate-90">
+                                        <div className="relative size-20 shrink-0 self-center md:self-start">
+                                            <svg className="size-full  -rotate-90">
                                                 <circle cx="40" cy="40" r="36" stroke="currentColor" strokeWidth="6" fill="transparent" className="text-zinc-800" />
                                                 <circle cx="40" cy="40" r="36" stroke="currentColor" strokeWidth="6" fill="transparent" strokeDasharray="226" strokeDashoffset={226 - (226 * startup.score) / 100} className="text-emerald-600 transition-all duration-1000" />
                                             </svg>
@@ -353,7 +353,7 @@ export default function AISearchEngine() {
                                             </div>
                                         </div>
 
-                                        <div className="flex-grow space-y-3 text-center md:text-left">
+                                        <div className="grow space-y-3 text-center md:text-left">
                                             <div className="flex flex-wrap items-center justify-center md:justify-start gap-2">
                                                 <h3 className="text-2xl font-bold text-slate-800 font-outfit group-hover:text-emerald-600 transition-colors">{startup.name}</h3>
                                                 <span className="px-2.5 py-1 bg-slate-200 border border-slate-300 rounded-md text-xs font-medium text-slate-700">{startup.sector}</span>
@@ -365,10 +365,10 @@ export default function AISearchEngine() {
 
                                                 {/* Credibility Badges */}
                                                 {(startup.credibility?.gstRegistered || startup.credibility?.panVerified) && (
-                                                    <span className="px-2.5 py-1 bg-emerald-50 border border-emerald-300 text-emerald-600 rounded-md text-xs font-medium flex items-center gap-1"><ShieldCheck className="w-3 h-3" /> Verified</span>
+                                                    <span className="px-2.5 py-1 bg-emerald-50 border border-emerald-300 text-emerald-600 rounded-md text-xs font-medium flex items-center gap-1"><ShieldCheck className="size-3" /> Verified</span>
                                                 )}
                                                 {startup.credibility?.incubatorBacked && (
-                                                    <span className="px-2.5 py-1 bg-emerald-900/30 border border-emerald-500/30 text-emerald-600 rounded-md text-xs font-medium flex items-center gap-1"><Building2 className="w-3 h-3" /> VC Backed</span>
+                                                    <span className="px-2.5 py-1 bg-emerald-900/30 border border-emerald-500/30 text-emerald-600 rounded-md text-xs font-medium flex items-center gap-1"><Building2 className="size-3" /> VC Backed</span>
                                                 )}
                                             </div>
 
@@ -389,7 +389,7 @@ export default function AISearchEngine() {
                                                 </div>
                                                 <div>
                                                     <p className="text-slate-9000 text-xs flex items-center gap-1 mb-1 justify-center md:justify-start">
-                                                        <LineChart className="w-3 h-3 text-emerald-600" /> MRR
+                                                        <LineChart className="size-3 text-emerald-600" /> MRR
                                                     </p>
                                                     <p className="text-emerald-600 font-semibold text-sm font-mono whitespace-nowrap">₹{(startup.revenue / 100000).toFixed(2)}L</p>
                                                 </div>
@@ -407,7 +407,7 @@ export default function AISearchEngine() {
 
                                         <div className="shrink-0 flex items-center justify-center border-t md:border-t-0 md:border-l border-slate-200 pt-4 md:pt-0 md:pl-6 mt-2 md:mt-0">
                                             <Link href={`/startups/${startup._id}`} className="flex items-center gap-2 px-6 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm w-full md:w-auto justify-center transition-colors shadow-sm">
-                                                <ChevronRight className="w-4 h-4" /> View Deal
+                                                <ChevronRight className="size-4" /> View Deal
                                             </Link>
                                         </div>
                                     </div>
@@ -416,7 +416,7 @@ export default function AISearchEngine() {
 
                             {results.length === 0 && (
                                 <div className="py-24 text-center bg-white rounded-2xl border border-dashed border-slate-300">
-                                    <BrainCircuit className="w-16 h-16 text-slate-400 mx-auto mb-4" />
+                                    <BrainCircuit className="size-16 text-slate-400 mx-auto mb-4" />
                                     <h3 className="text-2xl font-bold text-slate-800">No matching deal flow found.</h3>
                                     <p className="text-slate-9000 mt-2 max-w-sm mx-auto">Try widening your Advanced Financials parameters or searching across all sectors.</p>
                                     <button

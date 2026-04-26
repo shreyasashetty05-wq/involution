@@ -16,7 +16,7 @@ export default function Home() {
         <div className="relative z-10 max-w-5xl mx-auto text-center">
           {/* Label pill */}
           <div className="section-label mx-auto w-fit mb-8 animate-fade-in-up">
-            <span className="flex h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span className="flex size-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
             InVolution 1.1 — AI-Powered Investment Platform
           </div>
 
@@ -37,17 +37,17 @@ export default function Home() {
           <div className="flex flex-col sm:flex-row gap-3 items-center justify-center mb-16 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
             <Link href="/login" className="btn-primary text-sm">Get Started &rarr;</Link>
             <Link href="/about" className="btn-secondary text-sm flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Watch Demo
+              <span className="size-2 rounded-full bg-emerald-400 animate-pulse"></span> Watch Demo
             </Link>
           </div>
 
           {/* Floating metric cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 max-w-3xl mx-auto animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
             {[
-              { label: 'Investability Score', value: '88 / 100', icon: <BarChart2 className="w-4 h-4 text-emerald-600" />, sub: '↑ Strong' },
-              { label: 'Trust Tier', value: 'PLATINUM', icon: <ShieldCheck className="w-4 h-4 text-emerald-600" />, sub: '✓ Verified' },
-              { label: 'Health Score', value: '98 / 100', icon: <Activity className="w-4 h-4 text-emerald-600" />, sub: '↑ Stable' },
-              { label: 'Match Accuracy', value: '99.9%', icon: <Zap className="w-4 h-4 text-emerald-600" />, sub: 'AI Powered' },
+              { label: 'Investability Score', value: '88 / 100', icon: <BarChart2 className="size-4 text-emerald-600" />, sub: '↑ Strong' },
+              { label: 'Trust Tier', value: 'PLATINUM', icon: <ShieldCheck className="size-4 text-emerald-600" />, sub: '✓ Verified' },
+              { label: 'Health Score', value: '98 / 100', icon: <Activity className="size-4 text-emerald-600" />, sub: '↑ Stable' },
+              { label: 'Match Accuracy', value: '99.9%', icon: <Zap className="size-4 text-emerald-600" />, sub: 'AI Powered' },
             ].map((c, i) => (
               <div key={i} className="dashboard-card p-4 text-left">
                 <div className="flex items-center gap-1.5 mb-2">{c.icon}<span className="text-[11px] text-slate-400 font-medium">{c.label}</span></div>
@@ -68,9 +68,9 @@ export default function Home() {
               {/* Chrome bar */}
               <div className="h-9 bg-slate-50 border-b border-slate-200 flex items-center px-4 gap-2">
                 <div className="flex gap-1.5">
-                  <div className="w-2.5 h-2.5 rounded-full bg-red-300/80"></div>
-                  <div className="w-2.5 h-2.5 rounded-full bg-amber-300/80"></div>
-                  <div className="w-2.5 h-2.5 rounded-full bg-emerald-400/80"></div>
+                  <div className="size-2.5 rounded-full bg-red-300/80"></div>
+                  <div className="size-2.5 rounded-full bg-amber-300/80"></div>
+                  <div className="size-2.5 rounded-full bg-emerald-400/80"></div>
                 </div>
                 <div className="mx-auto w-56 h-5 bg-slate-200 rounded-full text-[9px] flex items-center justify-center text-slate-400 font-mono">app.involution.in/dashboard</div>
               </div>
@@ -92,7 +92,7 @@ export default function Home() {
                 </div>
                 {/* Chart */}
                 <div className="h-32 relative rounded-lg overflow-hidden border border-slate-100 bg-slate-50">
-                  <svg viewBox="0 0 100 40" preserveAspectRatio="none" className="w-full h-full absolute inset-0">
+                  <svg viewBox="0 0 100 40" preserveAspectRatio="none" className="size-full absolute inset-0">
                     <defs>
                       <linearGradient id="g1" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="0%" stopColor="#10b981" stopOpacity="0.18" />
@@ -136,7 +136,7 @@ export default function Home() {
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
             <div className="section-label mx-auto w-fit mb-5">
-              <Activity className="w-3.5 h-3.5" /> Startup Health Monitor
+              <Activity className="size-3.5" /> Startup Health Monitor
             </div>
             <h2 className="text-3xl md:text-4xl font-bold text-slate-900 font-outfit">
               <TypewriterText text="Real-time startup vitals at a glance" />
@@ -183,7 +183,7 @@ export default function Home() {
           {/* Left */}
           <div className="lg:w-1/2 space-y-5">
             <div className="section-label">
-              <ShieldCheck className="w-3.5 h-3.5" /> AI Due Diligence
+              <ShieldCheck className="size-3.5" /> AI Due Diligence
             </div>
             <h2 className="text-3xl md:text-4xl font-bold text-slate-900 font-outfit leading-tight">
               Automated deep-dive<br /><span className="text-gradient">before you commit capital</span>
@@ -198,12 +198,12 @@ export default function Home() {
             <div className="space-y-2.5 pt-1">
               {['Market Opportunity · Strong Fit', 'Competitive Moat · Proprietary IP', 'Business Model · Scalable SaaS'].map((l, i) => (
                 <div key={i} className="flex items-center gap-2.5 text-sm text-slate-600">
-                  <CheckCircle className="w-4 h-4 text-emerald-500 shrink-0" /> {l}
+                  <CheckCircle className="size-4 text-emerald-500 shrink-0" /> {l}
                 </div>
               ))}
             </div>
             <Link href="/login" className="btn-primary inline-flex items-center gap-2 text-sm mt-2">
-              View Demo Report <ArrowRight className="w-4 h-4" />
+              View Demo Report <ArrowRight className="size-4" />
             </Link>
           </div>
 
@@ -211,8 +211,8 @@ export default function Home() {
           <div className="lg:w-1/2 space-y-4">
             {/* Score card */}
             <div className="tint-card p-7 flex items-center gap-7">
-              <div className="relative w-28 h-28 shrink-0">
-                <svg className="w-full h-full -rotate-90">
+              <div className="relative size-28 shrink-0">
+                <svg className="size-full -rotate-90">
                   <circle cx="56" cy="56" r="46" strokeWidth="7" fill="transparent" stroke="#e2e8f0" />
                   <circle cx="56" cy="56" r="46" strokeWidth="7" fill="transparent"
                     strokeDasharray="289" strokeDashoffset="52"
@@ -237,8 +237,8 @@ export default function Home() {
 
             {/* Trust card */}
             <div className="dashboard-card p-5 flex items-center gap-5">
-              <div className="w-12 h-12 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center shrink-0">
-                <ShieldCheck className="w-6 h-6 text-emerald-600" />
+              <div className="size-12 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center shrink-0">
+                <ShieldCheck className="size-6 text-emerald-600" />
               </div>
               <div>
                 <p className="text-[10px] text-slate-400 font-bold uppercase mb-1 tracking-wider">Trust Score</p>
@@ -269,7 +269,7 @@ export default function Home() {
         <div className="relative max-w-2xl mx-auto">
           <div className="section-label mx-auto w-fit mb-6">Join the Platform</div>
           <h2 className="text-3xl md:text-4xl font-bold text-slate-900 font-outfit mb-4">
-            Ready to transform <span className="text-gradient">your deal flow?</span>
+            Ready to  <span className="text-gradient">your deal flow?</span>
           </h2>
           <span className="block divider-emerald mx-auto mb-6" />
           <p className="text-slate-500 text-sm mb-10 h-6">

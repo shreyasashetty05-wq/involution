@@ -10,12 +10,12 @@ import { useFetchReport } from "@/frontend/hooks/useFetchReport";
 import { PageLoading, PageError, SubPageHeader } from "@/frontend/components/StartupSubPageShell";
 
 const PILLAR_ICONS: Record<string, ReactElement> = {
-    burn: <Flame className="w-5 h-5" />,
-    runway: <Clock className="w-5 h-5" />,
-    revenue: <TrendingUp className="w-5 h-5" />,
-    churn: <Activity className="w-5 h-5" />,
-    margin: <BarChart2 className="w-5 h-5" />,
-    growth: <TrendingUp className="w-5 h-5" />,
+    burn: <Flame className="size-5" />,
+    runway: <Clock className="size-5" />,
+    revenue: <TrendingUp className="size-5" />,
+    churn: <Activity className="size-5" />,
+    margin: <BarChart2 className="size-5" />,
+    growth: <TrendingUp className="size-5" />,
 };
 
 const PILLAR_COLORS: Record<string, string> = {
@@ -29,9 +29,9 @@ const GAUGE_COLORS: Record<string, string> = {
 };
 
 const ALERT_STYLES: Record<string, { bg: string; border: string; icon: ReactElement; text: string }> = {
-    critical: { bg: "bg-red-950/40", border: "border-red-500/30", icon: <XCircle className="w-4 h-4 text-red-400 shrink-0" />, text: "text-red-400" },
-    warning: { bg: "bg-amber-100", border: "border-amber-300", icon: <AlertTriangle className="w-4 h-4 text-amber-700 shrink-0" />, text: "text-amber-700" },
-    info: { bg: "bg-blue-950/40", border: "border-blue-500/30", icon: <Info className="w-4 h-4 text-blue-400 shrink-0" />, text: "text-blue-400" },
+    critical: { bg: "bg-red-950/40", border: "border-red-500/30", icon: <XCircle className="size-4 text-red-400 shrink-0" />, text: "text-red-400" },
+    warning: { bg: "bg-amber-100", border: "border-amber-300", icon: <AlertTriangle className="size-4 text-amber-700 shrink-0" />, text: "text-amber-700" },
+    info: { bg: "bg-blue-950/40", border: "border-blue-500/30", icon: <Info className="size-4 text-blue-400 shrink-0" />, text: "text-blue-400" },
 };
 
 export default function HealthMonitorPage() {
@@ -41,7 +41,7 @@ export default function HealthMonitorPage() {
 
     if (loading) return (
         <PageLoading>
-            <Activity className="w-14 h-14 text-emerald-600 animate-pulse mx-auto mb-4" />
+            <Activity className="size-14 text-emerald-600 animate-pulse mx-auto mb-4" />
             <p className="text-slate-900 font-bold">Health Monitor Computing Vitals...</p>
         </PageLoading>
     );
@@ -55,7 +55,7 @@ export default function HealthMonitorPage() {
         <div className="container mx-auto px-6 py-12 max-w-5xl min-h-screen">
             <SubPageHeader
                 id={id}
-                badgeIcon={<Activity className="w-6 h-6 text-emerald-600" />}
+                badgeIcon={<Activity className="size-6 text-emerald-600" />}
                 badgeLabel="Startup Health Monitor"
                 badgeColorClasses="text-emerald-600 bg-emerald-900/30 border-emerald-500/20"
                 startupName={startup?.name}
@@ -78,13 +78,13 @@ export default function HealthMonitorPage() {
                         <text x="100" y="108" textAnchor="middle" fontSize="10" fill="#a1a1aa">/ 100</text>
                     </svg>
                 </div>
-                <div className="flex-grow text-center md:text-left">
+                <div className="grow text-center md:text-left">
                     <p className="text-4xl font-bold" style={{ color: gaugeColor }}>{report.healthLabel}</p>
                     <p className="text-slate-500 mt-2 max-w-md">Real-time health analysis across 6 operational dimensions. Updated each time the startup submits a financial report.</p>
                     <div className="mt-4 flex flex-wrap gap-3">
                         {report.alerts?.length === 0 && (
                             <span className="flex items-center gap-1 text-sm text-emerald-600 bg-emerald-900/30 px-3 py-1 rounded-full border border-emerald-500/20 font-medium">
-                                <CheckCircle className="w-4 h-4" /> All vitals clear
+                                <CheckCircle className="size-4" /> All vitals clear
                             </span>
                         )}
                         {report.alerts?.slice(0, 2).map((a: Record<string, unknown>, i: number) => {
@@ -104,7 +104,7 @@ export default function HealthMonitorPage() {
             {report.alerts?.length > 0 && (
                 <div className="mb-8 space-y-3">
                     <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                        <AlertTriangle className="w-5 h-5 text-amber-700" /> Live Alerts
+                        <AlertTriangle className="size-5 text-amber-700" /> Live Alerts
                     </h2>
                     {report.alerts.map((a: Record<string, unknown>, i: number) => {
                         const level = String(a.level);
@@ -122,7 +122,7 @@ export default function HealthMonitorPage() {
             {/* Pillar Scores Grid */}
             <div className="mb-8">
                 <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-                    <BarChart2 className="w-5 h-5 text-indigo-400" /> Health Pillars
+                    <BarChart2 className="size-5 text-indigo-400" /> Health Pillars
                 </h2>
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {report.pillars?.map((p: Record<string, unknown>) => {
@@ -136,8 +136,8 @@ export default function HealthMonitorPage() {
                         return (
                             <div key={id} className="bg-white border border-slate-200 shadow-sm rounded-2xl p-5">
                                 <div className="flex items-center gap-3 mb-3">
-                                    <div className={`w-9 h-9 rounded-full flex items-center justify-center bg-${color}-900/30 text-${color}-400 border border-${color}-500/20`}>
-                                        {PILLAR_ICONS[id] ?? <Activity className="w-4 h-4" />}
+                                    <div className={`size-9 rounded-full flex items-center justify-center bg-${color}-900/30 text-${color}-400 border border-${color}-500/20`}>
+                                        {PILLAR_ICONS[id] ?? <Activity className="size-4" />}
                                     </div>
                                     <div>
                                         <p className="text-sm font-bold text-slate-800">{String(p.label)}</p>
@@ -145,7 +145,7 @@ export default function HealthMonitorPage() {
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-3">
-                                    <div className="flex-grow h-2 bg-slate-200 rounded-full overflow-hidden">
+                                    <div className="grow h-2 bg-slate-200 rounded-full overflow-hidden">
                                         <div className={`h-full ${barColorClass} rounded-full transition-all duration-700`} style={{ width: `${score}%` }} />
                                     </div>
                                     <span className="text-sm font-mono font-bold text-slate-600 shrink-0">{score}</span>
@@ -160,7 +160,7 @@ export default function HealthMonitorPage() {
             {report.revenueTrend?.length > 0 && (
                 <div className="bg-white border border-slate-200 shadow-sm rounded-2xl p-6 mb-8">
                     <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-                        <TrendingUp className="w-5 h-5 text-emerald-600" /> 6-Month Revenue vs Expense Trend
+                        <TrendingUp className="size-5 text-emerald-600" /> 6-Month Revenue vs Expense Trend
                     </h2>
                     <div className="flex items-end gap-2 h-32">
                         {report.revenueTrend.map((rev: number, i: number) => {
@@ -180,8 +180,8 @@ export default function HealthMonitorPage() {
                         })}
                     </div>
                     <div className="flex gap-4 mt-3 text-xs text-slate-500 font-medium">
-                        <span className="flex items-center gap-1"><span className="w-3 h-3 bg-emerald-500/70 rounded" /> Revenue</span>
-                        <span className="flex items-center gap-1"><span className="w-3 h-3 bg-red-500/50 rounded" /> Expenses</span>
+                        <span className="flex items-center gap-1"><span className="size-3 bg-emerald-500/70 rounded" /> Revenue</span>
+                        <span className="flex items-center gap-1"><span className="size-3 bg-red-500/50 rounded" /> Expenses</span>
                     </div>
                 </div>
             )}

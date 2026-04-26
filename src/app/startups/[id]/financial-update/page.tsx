@@ -80,13 +80,13 @@ export default function FinancialUpdatePage({ params }: { params: Promise<{ id: 
     if (success) {
         return (
             <div className="container mx-auto px-6 py-24 max-w-2xl min-h-[calc(100vh-80px)] text-center">
-                <div className="w-24 h-24 bg-emerald-900/40 border border-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-8 animate-in zoom-in duration-500 shadow-[0_0_30px_rgba(52,211,153,0.2)]">
-                    <Save className="w-12 h-12 text-emerald-600" />
+                <div className="size-24 bg-emerald-900/40 border border-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-8 animate-in zoom-in duration-500 shadow-[0_0_30px_rgba(52,211,153,0.2)]">
+                    <Save className="size-12 text-emerald-600" />
                 </div>
                 <h2 className="text-3xl font-bold font-outfit text-slate-900 mb-4">Financial Update Verified</h2>
                 <p className="text-slate-500 mb-8 text-lg">Your data has been securely logged on the blockchain and an AI snapshot has been generated with a confidence score of <span className="text-emerald-600 font-bold">{aiScore}/100</span>.</p>
                 <div className="flex justify-center">
-                    <Loader2 className="w-6 h-6 text-emerald-500 animate-spin" />
+                    <Loader2 className="size-6 text-emerald-500 animate-spin" />
                 </div>
             </div>
         );
@@ -97,7 +97,7 @@ export default function FinancialUpdatePage({ params }: { params: Promise<{ id: 
             <div className="mb-10">
                 <Link href="/startups/dashboard" className="text-slate-400 hover:text-emerald-600 text-sm font-semibold mb-4 inline-block transition-colors">&larr; Back to Dashboard</Link>
                 <h1 className="text-3xl font-outfit font-bold text-slate-900 mb-2 flex items-center gap-3">
-                    <LineChart className="w-8 h-8 text-emerald-600" /> Post Financial Update
+                    <LineChart className="size-8 text-emerald-600" /> Post Financial Update
                 </h1>
                 <p className="text-slate-500 font-inter">Continuous disclosure dramatically increases your AI Match Score and Deal Room visibility.</p>
             </div>
@@ -109,14 +109,14 @@ export default function FinancialUpdatePage({ params }: { params: Promise<{ id: 
 
                         {error && (
                             <div className="bg-red-950/40 border border-red-500/30 rounded-xl p-4 flex items-start gap-3">
-                                <AlertCircle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
+                                <AlertCircle className="size-5 text-red-400 shrink-0 mt-0.5" />
                                 <p className="text-red-400 text-sm font-medium">{error}</p>
                             </div>
                         )}
 
                         <div className="space-y-2">
                             <label className="text-sm font-bold text-slate-600 flex items-center gap-2">
-                                <CalendarDays className="w-4 h-4 text-slate-400" /> Reporting Month & Year
+                                <CalendarDays className="size-4 text-slate-400" /> Reporting Month & Year
                             </label>
                             <input type="month" required className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-1 focus:ring-emerald-500/50 focus:border-emerald-500/50 text-slate-800 transition-all [color-scheme:dark]" value={formData.monthYear} onChange={(e) => setFormData({ ...formData, monthYear: e.target.value })} />
                         </div>
@@ -124,24 +124,24 @@ export default function FinancialUpdatePage({ params }: { params: Promise<{ id: 
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <label className="text-sm font-bold text-slate-600 flex items-center gap-2">
-                                    <DollarSign className="w-4 h-4 text-slate-400" /> Total Revenue (₹)
+                                    <DollarSign className="size-4 text-slate-400" /> Total Revenue (₹)
                                 </label>
-                                <input type="number" required className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-1 focus:ring-emerald-500/50 focus:border-emerald-500/50 font-mono text-slate-800 placeholder-zinc-700 transition-all" placeholder="0" value={formData.revenue} onChange={(e) => setFormData({ ...formData, revenue: e.target.value })} />
+                                <input type="number" required className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-1 focus:ring-emerald-500/50 focus:border-emerald-500/50 font-mono text-slate-800 placeholder:text-zinc-700 transition-all" placeholder="0" value={formData.revenue} onChange={(e) => setFormData({ ...formData, revenue: e.target.value })} />
                             </div>
                             <div className="space-y-2">
                                 <label className="text-sm font-bold text-slate-600 flex items-center gap-2">
-                                    <TrendingUp className="w-4 h-4 text-slate-400" /> Net Profit (₹)
+                                    <TrendingUp className="size-4 text-slate-400" /> Net Profit (₹)
                                 </label>
-                                <input type="number" required className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-1 focus:ring-emerald-500/50 focus:border-emerald-500/50 font-mono text-slate-800 placeholder-zinc-700 transition-all" placeholder="0 or negative for loss" value={formData.profit} onChange={(e) => setFormData({ ...formData, profit: e.target.value })} />
+                                <input type="number" required className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-1 focus:ring-emerald-500/50 focus:border-emerald-500/50 font-mono text-slate-800 placeholder:text-zinc-700 transition-all" placeholder="0 or negative for loss" value={formData.profit} onChange={(e) => setFormData({ ...formData, profit: e.target.value })} />
                             </div>
                         </div>
 
                         <div className="space-y-2 pt-4 border-t border-slate-200">
                             <label className="text-sm font-bold text-emerald-600 flex items-center gap-2">
-                                <LinkIcon className="w-4 h-4" /> Supporting Document URL (Optional but Highly Recommended)
+                                <LinkIcon className="size-4" /> Supporting Document URL (Optional but Highly Recommended)
                             </label>
                             <p className="text-xs text-slate-400 mb-2">Link a verified bank statement, GST filing, or MIS report. This massively boosts your AI Confidence Score.</p>
-                            <input type="url" className="w-full bg-emerald-950/20 border border-emerald-500/30 rounded-xl px-4 py-3 focus:outline-none focus:ring-1 focus:ring-emerald-500/50 focus:border-emerald-500/50 text-emerald-100 placeholder-emerald-900/50 transition-all" placeholder="https://drive.google.com/file/d/..." value={formData.documentUrl} onChange={(e) => setFormData({ ...formData, documentUrl: e.target.value })} />
+                            <input type="url" className="w-full bg-emerald-950/20 border border-emerald-500/30 rounded-xl px-4 py-3 focus:outline-none focus:ring-1 focus:ring-emerald-500/50 focus:border-emerald-500/50 text-emerald-100 placeholder:text-emerald-900/50 transition-all" placeholder="https://drive.google.com/file/d/..." value={formData.documentUrl} onChange={(e) => setFormData({ ...formData, documentUrl: e.target.value })} />
                         </div>
 
                         <div className="pt-6">
@@ -150,7 +150,7 @@ export default function FinancialUpdatePage({ params }: { params: Promise<{ id: 
                                 disabled={isSaving}
                                 className="w-full py-4 bg-emerald-500 hover:bg-emerald-400 text-white font-bold rounded-xl transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_25px_rgba(16,185,129,0.5)] flex items-center justify-center gap-2 disabled:opacity-70"
                             >
-                                {isSaving ? <><Loader2 className="w-5 h-5 animate-spin" /> Committing Data...</> : "Submit Monthly Update"}
+                                {isSaving ? <><Loader2 className="size-5 animate-spin" /> Committing Data...</> : "Submit Monthly Update"}
                             </button>
                         </div>
                     </form>
@@ -160,18 +160,18 @@ export default function FinancialUpdatePage({ params }: { params: Promise<{ id: 
                     <div className="bg-white border border-slate-200 shadow-sm rounded-2xl bg-white p-8 rounded-2xl sticky top-24 border border-slate-200 shadow-2xl relative overflow-hidden group">
                         <div className="absolute top-0 left-0 w-1 h-full bg-indigo-500/50"></div>
                         <div className="absolute top-0 right-0 p-4 opacity-[0.03] group-hover:opacity-10 transition-opacity">
-                            <Bot className="w-32 h-32 text-indigo-400" />
+                            <Bot className="size-32 text-indigo-400" />
                         </div>
 
                         <div className="relative z-10">
                             <h3 className="text-sm font-bold text-indigo-400 uppercase tracking-widest flex items-center gap-2 mb-6">
-                                <Activity className="w-4 h-4" /> Live AI Analysis
+                                <Activity className="size-4" /> Live AI Analysis
                             </h3>
 
                             <div className="text-center py-6">
                                 {/* Circular Score Display */}
-                                <div className="relative w-32 h-32 mx-auto mb-4">
-                                    <svg className="w-full h-full transform -rotate-90">
+                                <div className="relative size-32 mx-auto mb-4">
+                                    <svg className="size-full  -rotate-90">
                                         <circle cx="64" cy="64" r="58" stroke="currentColor" strokeWidth="8" fill="transparent" className="text-zinc-800" />
                                         <circle cx="64" cy="64" r="58" stroke="currentColor" strokeWidth="8" fill="transparent"
                                             strokeDasharray="364"
@@ -191,19 +191,19 @@ export default function FinancialUpdatePage({ params }: { params: Promise<{ id: 
 
                             <div className="space-y-4 mt-4 text-sm">
                                 <div className="flex items-center gap-3 text-slate-600">
-                                    {formData.monthYear ? <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" /> : <div className="w-4 h-4 rounded-full border border-slate-300 shrink-0" />}
+                                    {formData.monthYear ? <CheckCircle2 className="size-4 text-emerald-600 shrink-0" /> : <div className="size-4 rounded-full border border-slate-300 shrink-0" />}
                                     <span className="font-medium">Temporal Logic Verified</span>
                                 </div>
                                 <div className="flex items-center gap-3 text-slate-600">
-                                    {Number(formData.revenue) > 0 ? <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" /> : <div className="w-4 h-4 rounded-full border border-slate-300 shrink-0" />}
+                                    {Number(formData.revenue) > 0 ? <CheckCircle2 className="size-4 text-emerald-600 shrink-0" /> : <div className="size-4 rounded-full border border-slate-300 shrink-0" />}
                                     <span className="font-medium">Revenue Bounds Checked</span>
                                 </div>
                                 <div className="flex items-center gap-3 text-slate-600">
-                                    {formData.profit !== "" ? <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" /> : <div className="w-4 h-4 rounded-full border border-slate-300 shrink-0" />}
+                                    {formData.profit !== "" ? <CheckCircle2 className="size-4 text-emerald-600 shrink-0" /> : <div className="size-4 rounded-full border border-slate-300 shrink-0" />}
                                     <span className="font-medium">Profit/Loss Ratio Intact</span>
                                 </div>
                                 <div className="flex items-center gap-3 text-slate-600">
-                                    {formData.documentUrl.length > 5 ? <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" /> : <div className="w-4 h-4 rounded-full border border-slate-300 shrink-0" />}
+                                    {formData.documentUrl.length > 5 ? <CheckCircle2 className="size-4 text-emerald-600 shrink-0" /> : <div className="size-4 rounded-full border border-slate-300 shrink-0" />}
                                     <span className="font-medium">External Audit Sourced</span>
                                 </div>
                             </div>
@@ -211,7 +211,7 @@ export default function FinancialUpdatePage({ params }: { params: Promise<{ id: 
                             {aiScore < 80 && (
                                 <div className="mt-8 p-4 bg-amber-950/30 border border-amber-300 rounded-xl">
                                     <p className="text-xs text-amber-700 leading-relaxed font-medium">
-                                        <AlertCircle className="w-4 h-4 inline mr-1.5 -mt-0.5" />
+                                        <AlertCircle className="size-4 inline mr-1.5 -mt-0.5" />
                                         Provide a verifiable document URL (GST/Bank) to drastically maximize your Confidence Score parameters for investors.
                                     </p>
                                 </div>

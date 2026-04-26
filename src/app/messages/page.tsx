@@ -205,7 +205,7 @@ function DealWorkspace() {
             <div className="bg-slate-900 text-white px-6 py-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 shadow-lg">
                 <div>
                     <h1 className="text-xl font-bold font-outfit flex items-center gap-2">
-                        <Lock className="w-5 h-5 text-emerald-400" />
+                        <Lock className="size-5 text-emerald-400" />
                         Secure Deal Workspace
                         <span className="text-sm font-medium px-3 py-0.5 bg-white/10 rounded-full text-slate-300 border border-white/10">with {startupName}</span>
                     </h1>
@@ -218,9 +218,9 @@ function DealWorkspace() {
                             onClick={advancePhase}
                             className="relative flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg text-sm transition-all shadow-md hover:shadow-emerald-600/30 hover:scale-105 active:scale-95"
                         >
-                            <Sparkles className="w-4 h-4" />
+                            <Sparkles className="size-4" />
                             Advance to Phase {currentPhase + 1}
-                            <ChevronRight className="w-4 h-4" />
+                            <ChevronRight className="size-4" />
                         </button>
                     )}
                 </div>
@@ -233,7 +233,7 @@ function DealWorkspace() {
 
                     {/* Vertical connecting line container */}
                     <div className="relative flex flex-col gap-0">
-                        <div className="absolute left-5 top-6 bottom-6 w-0.5 bg-slate-700 z-0" />
+                        <div className="absolute left-5 inset-y-6 w-0.5 bg-slate-700 z-0" />
 
                         {phases.map((phase) => {
                             const isPast = phase.num < currentPhase;
@@ -244,11 +244,11 @@ function DealWorkspace() {
                             return (
                                 <div key={phase.num} className={`relative z-10 flex gap-3 items-start py-3 px-2 rounded-xl transition-all ${isCurrent ? 'bg-white/8 ' : ''} ${isLocked ? 'opacity-35' : ''}`}>
                                     {/* Phase bubble */}
-                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-300 ${isPast ? 'bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.4)]' :
+                                    <div className={`size-10 rounded-full flex items-center justify-center shrink-0 transition-all duration-300 ${isPast ? 'bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.4)]' :
                                         isCurrent ? `${PHASE_COLOR[phase.num]} shadow-[0_0_16px_rgba(99,102,241,0.5)] ring-2 ring-white/30` :
                                             'bg-slate-700 border border-slate-600'
                                         }`}>
-                                        {isPast ? <CheckCircle2 className="w-5 h-5 text-white" /> : <Icon className="w-4 h-4 text-white" />}
+                                        {isPast ? <CheckCircle2 className="size-5 text-white" /> : <Icon className="size-4 text-white" />}
                                     </div>
 
                                     <div className="pt-0.5">
@@ -303,13 +303,13 @@ function DealWorkspace() {
                             <>
                                 {/* Chat header */}
                                 <div className="px-5 py-3 border-b border-slate-100 bg-slate-50 flex items-center gap-3 shrink-0">
-                                    <div className="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center">
-                                        <User className="text-indigo-600 w-4 h-4" />
+                                    <div className="size-9 rounded-full bg-indigo-100 flex items-center justify-center">
+                                        <User className="text-indigo-600 size-4" />
                                     </div>
                                     <div>
                                         <p className="font-semibold text-slate-800 text-sm">{startupName}</p>
                                         <p className="text-[11px] text-emerald-600 flex items-center gap-1">
-                                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse inline-block" /> Encrypted P2P Connection
+                                            <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse inline-block" /> Encrypted P2P Connection
                                         </p>
                                     </div>
                                 </div>
@@ -332,7 +332,7 @@ function DealWorkspace() {
                                     ))}
                                     {messages.length === 0 && (
                                         <div className="text-center py-16 opacity-40">
-                                            <Lock className="w-10 h-10 mx-auto mb-2 text-slate-400" />
+                                            <Lock className="size-10 mx-auto mb-2 text-slate-400" />
                                             <p className="text-sm text-slate-400">Secure channel open – send your first message</p>
                                         </div>
                                     )}
@@ -343,13 +343,13 @@ function DealWorkspace() {
                                     <input
                                         type="text"
                                         placeholder="Type your secure message..."
-                                        className="flex-grow bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-400 transition-all"
+                                        className="grow bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-400 transition-all"
                                         value={inputMessage}
                                         onChange={e => setInputMessage(e.target.value)}
                                     />
                                     <button type="submit" disabled={!inputMessage.trim()}
-                                        className="w-11 h-11 shrink-0 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-200 disabled:cursor-not-allowed rounded-xl flex items-center justify-center text-white transition-all">
-                                        <Send className="w-4 h-4" />
+                                        className="size-11 shrink-0 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-200 disabled:cursor-not-allowed rounded-xl flex items-center justify-center text-white transition-all">
+                                        <Send className="size-4" />
                                     </button>
                                 </form>
                             </>
@@ -360,7 +360,7 @@ function DealWorkspace() {
                             <div className="p-6 flex flex-col md:flex-row gap-8 overflow-y-auto">
                                 <div className="md:w-1/2 space-y-5">
                                     <div>
-                                        <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2"><Video className="text-indigo-600 w-5 h-5" /> Trust Building Meetings</h2>
+                                        <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2"><Video className="text-indigo-600 size-5" /> Trust Building Meetings</h2>
                                         <p className="text-sm text-slate-500 mt-2 leading-relaxed">Short, structured 10-minute Google Meet sessions for mutual alignment.</p>
                                     </div>
                                     <form onSubmit={scheduleMeeting} className="bg-slate-50 border border-slate-200 p-5 rounded-2xl space-y-4">
@@ -386,7 +386,7 @@ function DealWorkspace() {
                                             </div>
                                         </div>
                                         <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-3 flex gap-2">
-                                            <Clock className="w-4 h-4 text-indigo-600 shrink-0 mt-0.5" />
+                                            <Clock className="size-4 text-indigo-600 shrink-0 mt-0.5" />
                                             <p className="text-xs text-indigo-700 leading-snug">A Google Meet link will be generated. Both parties must honor the 10-minute hard stop.</p>
                                         </div>
                                         <button type="submit" className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg text-sm transition-colors">
@@ -398,14 +398,14 @@ function DealWorkspace() {
                                     <h3 className="text-sm font-semibold text-slate-700 border-b border-slate-200 pb-3">Scheduled Sessions</h3>
                                     {meetings.length === 0 ? (
                                         <div className="py-12 text-center border border-dashed border-slate-300 rounded-2xl">
-                                            <Calendar className="w-10 h-10 text-slate-300 mx-auto mb-2" />
+                                            <Calendar className="size-10 text-slate-300 mx-auto mb-2" />
                                             <p className="text-sm text-slate-400">No trust sessions scheduled yet.</p>
                                         </div>
                                     ) : meetings.map(m => (
                                         <div key={m.id} className="bg-slate-50 border border-slate-200 rounded-xl p-4 flex justify-between items-center gap-4 hover:border-indigo-300 transition-colors">
                                             <div>
                                                 <div className="flex items-center gap-2 mb-1">
-                                                    <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                                                    <span className="size-2 rounded-full bg-emerald-500"></span>
                                                     <h4 className="text-sm font-bold text-slate-800">{m.title}</h4>
                                                     <span className="text-[10px] bg-slate-200 text-slate-500 px-2 py-0.5 rounded-full">10 Min</span>
                                                 </div>
@@ -413,7 +413,7 @@ function DealWorkspace() {
                                             </div>
                                             <a href={m.link} target="_blank" rel="noopener noreferrer"
                                                 className="px-3 py-1.5 bg-white border border-slate-200 hover:bg-indigo-50 hover:border-indigo-300 text-indigo-600 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors whitespace-nowrap">
-                                                <PlayCircle className="w-3.5 h-3.5" /> Join Meet
+                                                <PlayCircle className="size-3.5" /> Join Meet
                                             </a>
                                         </div>
                                     ))}
@@ -425,19 +425,19 @@ function DealWorkspace() {
                         {/* ── DUE DILIGENCE ── */}
                         {activeTab === 'diligence' && currentPhase >= 4 && (
                             <div className="p-6 overflow-y-auto">
-                                <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2 mb-5"><CheckSquare className="text-amber-600 w-5 h-5" /> Due Diligence Portal</h2>
+                                <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2 mb-5"><CheckSquare className="text-amber-600 size-5" /> Due Diligence Portal</h2>
                                 <div className="grid md:grid-cols-2 gap-5">
                                     <div className="bg-slate-50 border border-slate-200 p-5 rounded-2xl">
                                         <h3 className="text-sm font-semibold text-slate-700 mb-4 pb-2 border-b border-slate-200">Financial Audit Check</h3>
                                         {['Revenue Statements Authenticated', 'Burn Rate Anomalies Cleared', 'Cap Table Verified'].map((l, i) => (
                                             <label key={i} className="flex items-center gap-3 p-2.5 bg-white rounded-lg cursor-pointer hover:bg-slate-50 border border-transparent hover:border-slate-200 transition-all mb-2">
-                                                <input type="checkbox" className="w-4 h-4 rounded text-emerald-600" />
+                                                <input type="checkbox" className="size-4 rounded text-emerald-600" />
                                                 <span className="text-sm text-slate-700">{l}</span>
                                             </label>
                                         ))}
                                     </div>
                                     <div className="bg-amber-50 border border-amber-200 p-5 rounded-2xl relative overflow-hidden">
-                                        <div className="absolute top-0 right-0 w-24 h-24 bg-amber-100 rounded-bl-full" />
+                                        <div className="absolute top-0 right-0 size-24 bg-amber-100 rounded-bl-full" />
                                         <h3 className="text-sm font-semibold text-slate-700 mb-4 pb-2 border-b border-amber-200">AI Credibility Report</h3>
                                         <div className="flex items-center justify-center p-4">
                                             <div className="text-center">
@@ -457,7 +457,7 @@ function DealWorkspace() {
                             <div className="p-6 flex flex-col md:flex-row gap-8 overflow-y-auto bg-slate-50">
                                 <div className="md:w-1/2 space-y-4">
                                     <div className="flex items-center gap-2 text-pink-600 mb-1">
-                                        <ShieldCheck className="w-5 h-5" />
+                                        <ShieldCheck className="size-5" />
                                         <h2 className="text-lg font-bold">Smart Agreement</h2>
                                     </div>
                                     <p className="text-xs text-slate-500 border-b border-slate-200 pb-4">These terms will be deployed to an on-chain legally binding digital contract.</p>
@@ -503,13 +503,13 @@ function DealWorkspace() {
                                 <div className="md:w-1/2 flex flex-col justify-center gap-5">
                                     {negotiationPhase === 'executed' ? (
                                         <div className="bg-emerald-50 border border-emerald-200 p-8 rounded-2xl text-center">
-                                            <CheckCircle2 className="w-14 h-14 text-emerald-500 mx-auto mb-3" />
+                                            <CheckCircle2 className="size-14 text-emerald-500 mx-auto mb-3" />
                                             <h3 className="text-emerald-700 font-bold text-xl mb-2">Deal Executed!</h3>
                                             <p className="text-sm text-emerald-600/70 mb-6 border-b border-emerald-200 pb-4">Countersigned by both parties. Investment round is finalized.</p>
                                             <button
                                                 onClick={() => router.push(`/messages/agreement?startup=${encodeURIComponent(startupName)}&amount=${encodeURIComponent(termAmount)}&equity=${encodeURIComponent(termEquity)}&signature=${encodeURIComponent(investorSignature)}&startupSig=${encodeURIComponent(startupSignature)}&cAddress=${encodeURIComponent(companyAddress)}&iAddress=${encodeURIComponent(investorAddress)}&payment=${encodeURIComponent(paymentMethod)}&period=${encodeURIComponent(investmentPeriod)}&execs=${encodeURIComponent(executives)}&board=${encodeURIComponent(board)}`)}
                                                 className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl flex items-center justify-center gap-2 transition-colors">
-                                                <FileText className="w-4 h-4" /> View Official Term Sheet
+                                                <FileText className="size-4" /> View Official Term Sheet
                                             </button>
                                         </div>
                                     ) : negotiationPhase === 'startup_drafting' ? (
@@ -564,8 +564,8 @@ function PhaseLock({ phase }: { phase: number }) {
     return (
         <div className="flex-1 flex items-center justify-center p-8 text-center bg-slate-50">
             <div className="bg-white border border-slate-200 rounded-2xl p-8 max-w-xs shadow-sm">
-                <div className="w-14 h-14 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4">
-                    <Lock className="w-6 h-6 text-slate-400" />
+                <div className="size-14 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4">
+                    <Lock className="size-6 text-slate-400" />
                 </div>
                 <h3 className="text-base font-bold text-slate-800 mb-2">Phase {phase} Locked</h3>
                 <p className="text-sm text-slate-400">Advance the deal lifecycle to Phase {phase} to unlock this section.</p>

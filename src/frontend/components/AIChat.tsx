@@ -74,11 +74,11 @@ export default function AIChat({ startupId }: AIChatProps) {
     };
 
     return (
-        <div className="w-full h-full flex flex-col bg-gray-900/50 backdrop-blur-xl border border-gray-800 rounded-2xl overflow-hidden shadow-2xl">
+        <div className="size-full flex flex-col bg-gray-900/50 backdrop-blur-xl border border-gray-800 rounded-2xl overflow-hidden shadow-2xl">
             {/* Header */}
             <div className="bg-gradient-to-r from-emerald-600/20 to-blue-600/20 p-4 border-b border-gray-800 flex items-center gap-3">
                 <div className="p-2 bg-emerald-500/10 rounded-lg">
-                    <Bot className="w-6 h-6 text-emerald-400" />
+                    <Bot className="size-6 text-emerald-400" />
                 </div>
                 <div>
                     <h3 className="font-semibold text-white">InVolution AI Analyst</h3>
@@ -91,8 +91,8 @@ export default function AIChat({ startupId }: AIChatProps) {
                 {messages.map((msg, i) => (
                     <div key={i} className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                         {msg.role === 'ai' && (
-                            <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center shrink-0">
-                                <Bot className="w-4 h-4 text-emerald-400" />
+                            <div className="size-8 rounded-full bg-emerald-500/20 flex items-center justify-center shrink-0">
+                                <Bot className="size-4 text-emerald-400" />
                             </div>
                         )}
                         <div className="flex flex-col gap-1 max-w-[85%]">
@@ -110,7 +110,7 @@ export default function AIChat({ startupId }: AIChatProps) {
                                         className={`p-1 rounded hover:bg-gray-800 transition-colors ${msg.feedback === 'upvote' ? 'text-emerald-400' : 'text-gray-500'}`}
                                         title="Good response"
                                     >
-                                        <ThumbsUp className="w-3.5 h-3.5" />
+                                        <ThumbsUp className="size-3.5" />
                                     </button>
                                     <button
                                         onClick={() => handleFeedback(i, 'downvote')}
@@ -118,25 +118,25 @@ export default function AIChat({ startupId }: AIChatProps) {
                                         className={`p-1 rounded hover:bg-gray-800 transition-colors ${msg.feedback === 'downvote' ? 'text-red-400' : 'text-gray-500'}`}
                                         title="Bad response"
                                     >
-                                        <ThumbsDown className="w-3.5 h-3.5" />
+                                        <ThumbsDown className="size-3.5" />
                                     </button>
                                 </div>
                             )}
                         </div>
                         {msg.role === 'user' && (
-                            <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center shrink-0">
-                                <User className="w-4 h-4 text-gray-300" />
+                            <div className="size-8 rounded-full bg-gray-700 flex items-center justify-center shrink-0">
+                                <User className="size-4 text-gray-300" />
                             </div>
                         )}
                     </div>
                 ))}
                 {isLoading && (
                     <div className="flex gap-3 justify-start">
-                        <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center shrink-0">
-                            <Bot className="w-4 h-4 text-emerald-400" />
+                        <div className="size-8 rounded-full bg-emerald-500/20 flex items-center justify-center shrink-0">
+                            <Bot className="size-4 text-emerald-400" />
                         </div>
                         <div className="px-4 py-3 rounded-2xl bg-gray-800 text-emerald-400 rounded-tl-none border border-gray-700 flex items-center gap-2">
-                            <Loader2 className="w-4 h-4 animate-spin" />
+                            <Loader2 className="size-4 animate-spin" />
                             <span className="text-sm">Analyzing data...</span>
                         </div>
                     </div>
@@ -151,7 +151,7 @@ export default function AIChat({ startupId }: AIChatProps) {
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
                         placeholder="e.g. What is the biggest risk here?"
-                        className="w-full bg-gray-800 border border-gray-700 text-white placeholder-gray-500 text-sm rounded-xl pl-4 pr-12 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all"
+                        className="w-full bg-gray-800 border border-gray-700 text-white placeholder:text-gray-500 text-sm rounded-xl pl-4 pr-12 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all"
                         disabled={isLoading}
                     />
                     <button
@@ -159,7 +159,7 @@ export default function AIChat({ startupId }: AIChatProps) {
                         disabled={!input.trim() || isLoading}
                         className="absolute right-2 p-2 bg-emerald-600 hover:bg-emerald-500 disabled:bg-gray-700 disabled:opacity-50 text-white rounded-lg transition-colors"
                     >
-                        <Send className="w-4 h-4" />
+                        <Send className="size-4" />
                     </button>
                 </div>
             </form>

@@ -39,7 +39,7 @@ export default function InvestorDashboard() {
     if (loading) {
         return (
             <div className="container mx-auto px-6 py-24 max-w-7xl min-h-[calc(100vh-80px)] flex flex-col items-center justify-center">
-                <Loader2 className="w-12 h-12 animate-spin text-emerald-500 mb-4" />
+                <Loader2 className="size-12 animate-spin text-emerald-500 mb-4" />
                 <h2 className="text-xl font-outfit text-slate-800">Loading your portfolio...</h2>
             </div>
         );
@@ -63,13 +63,13 @@ export default function InvestorDashboard() {
                 <div className="lg:col-span-2 space-y-6">
                     <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 rounded-2xl border border-slate-200">
                         <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2 border-b border-slate-200 pb-4">
-                            <FileText className="w-5 h-5 text-emerald-600" /> Executed Agreements
+                            <FileText className="size-5 text-emerald-600" /> Executed Agreements
                         </h2>
 
                         <div className="space-y-4">
                             {agreements.length === 0 ? (
                                 <div className="text-center py-8 opacity-50 bg-slate-50 rounded-xl border border-slate-100">
-                                    <FileText className="w-8 h-8 text-zinc-700 mx-auto mb-2" />
+                                    <FileText className="size-8 text-zinc-700 mx-auto mb-2" />
                                     <p className="text-slate-900 text-sm">No executed agreements yet.</p>
                                     <Link href="/investors/search" className="text-emerald-600 font-bold text-sm hover:underline mt-2 inline-block">Find Startups to invest in.</Link>
                                 </div>
@@ -104,7 +104,7 @@ export default function InvestorDashboard() {
                                                     className="p-2 bg-slate-50 border border-slate-300 hover:bg-slate-200 text-slate-500 hover:text-emerald-600 rounded-lg transition-colors group"
                                                     title="View Document"
                                                 >
-                                                    <Eye className="w-4 h-4" />
+                                                    <Eye className="size-4" />
                                                 </Link>
                                                 {/* In a real app, this would trigger a PDF blob download. Here it takes them to the printable view where they can 'Save as PDF' */}
                                                 <Link
@@ -112,7 +112,7 @@ export default function InvestorDashboard() {
                                                     className="p-2 bg-slate-50 border border-slate-300 hover:bg-slate-200 text-slate-500 hover:text-emerald-600 rounded-lg transition-colors"
                                                     title="Download PDF"
                                                 >
-                                                    <Download className="w-4 h-4" />
+                                                    <Download className="size-4" />
                                                 </Link>
                                             </div>
                                         </div>
@@ -124,8 +124,8 @@ export default function InvestorDashboard() {
                     {/* Active Portfolio Stats */}
                     <div className="grid grid-cols-2 gap-6">
                         <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 rounded-2xl flex items-center gap-4 border border-slate-200">
-                            <div className="w-12 h-12 bg-emerald-50 rounded-full flex items-center justify-center border border-emerald-300">
-                                <TrendingUp className="w-6 h-6 text-emerald-600" />
+                            <div className="size-12 bg-emerald-50 rounded-full flex items-center justify-center border border-emerald-300">
+                                <TrendingUp className="size-6 text-emerald-600" />
                             </div>
                             <div>
                                 <p className="text-sm text-slate-9000">Total Deployed Capital</p>
@@ -133,8 +133,8 @@ export default function InvestorDashboard() {
                             </div>
                         </div>
                         <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 rounded-2xl flex items-center gap-4 border border-slate-200">
-                            <div className="w-12 h-12 bg-emerald-900/30 rounded-full flex items-center justify-center border border-emerald-500/30">
-                                <ShieldCheck className="w-6 h-6 text-emerald-600" />
+                            <div className="size-12 bg-emerald-900/30 rounded-full flex items-center justify-center border border-emerald-500/30">
+                                <ShieldCheck className="size-6 text-emerald-600" />
                             </div>
                             <div>
                                 <p className="text-sm text-slate-9000">Active Startups</p>
@@ -148,7 +148,7 @@ export default function InvestorDashboard() {
                 <div className="lg:col-span-1">
                     <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 rounded-2xl h-full border border-slate-200">
                         <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2 border-b border-slate-200 pb-4">
-                            <MessageSquare className="w-5 h-5 text-emerald-600" /> Active Negotiations
+                            <MessageSquare className="size-5 text-emerald-600" /> Active Negotiations
                         </h2>
 
                         <div className="space-y-4">
@@ -156,13 +156,13 @@ export default function InvestorDashboard() {
                                 <Link href={`/messages?startupId=${chat.startupId}&name=${encodeURIComponent(chat.startup)}`} key={chat.id} className="block bg-white hover:bg-slate-200 border border-slate-200 hover:border-emerald-400 rounded-xl p-4 transition-all group shadow-sm">
                                     <div className="flex justify-between items-start mb-2">
                                         <h3 className="font-bold text-slate-800 group-hover:text-emerald-600 transition-colors">{chat.startup}</h3>
-                                        <span className="text-xs text-slate-9000 flex items-center gap-1"><Clock className="w-3 h-3" /> {chat.time}</span>
+                                        <span className="text-xs text-slate-9000 flex items-center gap-1"><Clock className="size-3" /> {chat.time}</span>
                                     </div>
                                     <p className="text-sm text-slate-500 line-clamp-2 mb-3">{chat.lastMessage}</p>
                                     <div className="flex justify-between items-center">
                                         <span className="text-xs font-medium text-emerald-600">Continue Deal Room &rarr;</span>
                                         {chat.unread > 0 && (
-                                            <span className="w-5 h-5 bg-emerald-500 rounded-full text-[10px] font-bold text-white flex items-center justify-center">
+                                            <span className="size-5 bg-emerald-500 rounded-full text-[10px] font-bold text-white flex items-center justify-center">
                                                 {chat.unread}
                                             </span>
                                         )}
@@ -172,7 +172,7 @@ export default function InvestorDashboard() {
 
                             {chats.length === 0 && (
                                 <div className="text-center py-8 opacity-50 bg-slate-50 rounded-xl">
-                                    <MessageSquare className="w-8 h-8 text-zinc-700 mx-auto mb-2" />
+                                    <MessageSquare className="size-8 text-zinc-700 mx-auto mb-2" />
                                     <p className="text-slate-900 text-sm">No active negotiations.</p>
                                 </div>
                             )}

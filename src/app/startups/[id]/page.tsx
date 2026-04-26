@@ -11,7 +11,7 @@ import AIChat from "@/frontend/components/AIChat";
 export default function StartupProfile() {
     const params = useParams();
     const idValue = Array.isArray(params.id) ? params.id[0] : params.id;
-    const [startup, setStartup] = useState<Record<string, unknown> | null>(null);
+    const [startup, setStartup] = useState<Record<string, any> | null>(null);
     const [loading, setLoading] = useState(true);
     const [playingVideoIdx, setPlayingVideoIdx] = useState<number | null>(null);
 
@@ -39,7 +39,7 @@ export default function StartupProfile() {
         return (
             <div className="min-h-screen flex items-center justify-center pt-24 pb-20">
                 <div className="py-24 text-center">
-                    <Activity className="w-16 h-16 text-emerald-600 animate-spin mx-auto mb-4" />
+                    <Activity className="size-16 text-emerald-600 animate-spin mx-auto mb-4" />
                     <h3 className="text-2xl font-bold text-slate-900">Decrypting Profile...</h3>
                 </div>
             </div>
@@ -50,7 +50,7 @@ export default function StartupProfile() {
         return (
             <div className="min-h-screen flex items-center justify-center pt-24 pb-20">
                 <div className="text-center">
-                    <AlertTriangle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+                    <AlertTriangle className="size-16 text-red-500 mx-auto mb-4" />
                     <h3 className="text-2xl font-bold text-slate-900 mb-2">Startup Not Found</h3>
                     <p className="text-slate-400">This profile might have been delisted or restricted.</p>
                     <Link href="/investors/search" className="mt-6 inline-block px-6 py-2 bg-slate-50 border border-slate-300 hover:border-emerald-400 hover:text-emerald-600 text-slate-700 rounded-lg transition-colors">Return to Search</Link>
@@ -99,31 +99,31 @@ export default function StartupProfile() {
             <div className="bg-white border-b border-slate-200 pt-8 pb-16">
                 <div className="container mx-auto px-6 max-w-5xl">
                     <Link href="/investors/search" className="inline-flex items-center gap-2 text-slate-400 hover:text-emerald-600 mb-8 transition-colors">
-                        <ArrowLeft className="w-4 h-4" /> Back to Search
+                        <ArrowLeft className="size-4" /> Back to Search
                     </Link>
 
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
                         <div className="flex items-center gap-6">
-                            <div className="w-24 h-24 rounded-2xl bg-slate-200 border border-slate-300 flex items-center justify-center shadow-xl">
+                            <div className="size-24 rounded-2xl bg-slate-200 border border-slate-300 flex items-center justify-center shadow-xl">
                                 <span className="text-4xl font-bold font-outfit text-slate-600">{startup.name.charAt(0)}</span>
                             </div>
                             <div>
                                 <div className="flex items-center gap-3 mb-2">
                                     <h1 className="text-4xl font-bold font-outfit text-slate-900">{startup.name}</h1>
                                     <span className="px-3 py-1 bg-emerald-900/30 border border-emerald-500/30 rounded-full text-xs font-bold text-emerald-600 flex items-center gap-1">
-                                        <CheckCircle2 className="w-3 h-3" /> KYC Verified
+                                        <CheckCircle2 className="size-3" /> KYC Verified
                                     </span>
                                 </div>
                                 <div className="flex items-center gap-4 text-sm text-slate-500 font-medium">
-                                    <span className="flex items-center gap-1"><Factory className="w-4 h-4 text-slate-400" /> {startup.sector} • {startup.businessModel}</span>
+                                    <span className="flex items-center gap-1"><Factory className="size-4 text-slate-400" /> {startup.sector} • {startup.businessModel}</span>
                                     <span className="flex items-center gap-1 text-zinc-700">|</span>
-                                    <span className="flex items-center gap-1"><AlertTriangle className={`w-4 h-4 ${startup.risk === 'Low' ? 'text-emerald-600' : 'text-yellow-500'}`} /> {startup.risk} Risk Profile</span>
+                                    <span className="flex items-center gap-1"><AlertTriangle className={`size-4 ${startup.risk === 'Low' ? 'text-emerald-600' : 'text-yellow-500'}`} /> {startup.risk} Risk Profile</span>
                                 </div>
                             </div>
                         </div>
 
                         <Link href={`/messages?startupId=${startup._id?.toString() || idValue}&name=${encodeURIComponent(startup.name)}`} className="px-8 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition-colors shadow-[0_0_15px_-3px_rgba(163,230,53,0.3)] flex items-center gap-2 w-full md:w-auto justify-center">
-                            <MessageSquare className="w-5 h-5" /> Open Deal Room
+                            <MessageSquare className="size-5" /> Open Deal Room
                         </Link>
                     </div>
                 </div>
@@ -136,7 +136,7 @@ export default function StartupProfile() {
                     {/* Pitch Section */}
                     <div className="bg-white border border-slate-200 shadow-sm rounded-2xl p-8">
                         <h2 className="text-xl font-bold text-slate-900 mb-4 border-b border-slate-200 pb-4 flex items-center gap-2">
-                            <Presentation className="w-5 h-5 text-indigo-400" /> Executive Standard Pitch
+                            <Presentation className="size-5 text-indigo-400" /> Executive Standard Pitch
                         </h2>
                         <p className="text-slate-500 leading-relaxed font-inter">{startup.desc}</p>
 
@@ -149,7 +149,7 @@ export default function StartupProfile() {
                                         <iframe
                                             src={`${vid.url}${vid.url.includes('?') ? '&' : '?'}autoplay=1`}
                                             title={vid.title}
-                                            className="absolute inset-0 w-full h-full object-cover"
+                                            className="absolute inset-0 size-full object-cover"
                                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                             allowFullScreen
                                         ></iframe>
@@ -169,11 +169,11 @@ export default function StartupProfile() {
                                                 {idx === 0 && <p className="text-slate-500 text-[10px] mt-1">Exclusive Verified Pitch</p>}
                                             </div>
                                             <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
-                                                <div className="w-12 h-12 rounded-full bg-white/20 group-hover:bg-emerald-600/80 backdrop-blur-md flex items-center justify-center transition-all group-hover:scale-110">
-                                                    <div className="w-0 h-0 border-t-[8px] border-t-transparent border-l-[14px] border-l-white group-hover:border-l-zinc-950 border-b-[8px] border-b-transparent ml-1"></div>
+                                                <div className="size-12 rounded-full bg-white/20 group-hover:bg-emerald-600/80 backdrop-blur-md flex items-center justify-center transition-all group-hover:scale-110">
+                                                    <div className="size-0 border-t-[8px] border-t-transparent border-l-[14px] border-l-white group-hover:border-l-zinc-950 border-b-[8px] border-b-transparent ml-1"></div>
                                                 </div>
                                             </div>
-                                            <img src={vid.thumb} alt={vid.title} className="absolute inset-0 w-full h-full object-cover opacity-60 mix-blend-overlay group-hover:opacity-80 transition-opacity duration-500 delay-75 pointer-events-none" />
+                                            <img src={vid.thumb} alt={vid.title} className="absolute inset-0 size-full object-cover opacity-60 mix-blend-overlay group-hover:opacity-80 transition-opacity duration-500 delay-75 pointer-events-none" />
                                         </div>
                                     )}
                                 </div>
@@ -185,14 +185,14 @@ export default function StartupProfile() {
                     <div className="bg-white border border-slate-200 shadow-xl rounded-2xl p-6 space-y-8">
                         <div>
                             <div className="flex justify-between items-center mb-4">
-                                <h3 className="text-slate-900 font-bold text-lg flex items-center gap-2"><LineChart className="w-4 h-4 text-emerald-600" /> Revenue Growth (12M)</h3>
+                                <h3 className="text-slate-900 font-bold text-lg flex items-center gap-2"><LineChart className="size-4 text-emerald-600" /> Revenue Growth (12M)</h3>
                                 <div className="text-right">
                                     <span className="text-emerald-600 font-mono text-sm font-bold block">Max: ₹{revChart.max}K</span>
                                     <span className="text-slate-400 font-mono text-xs block">Min: ₹{revChart.min}K</span>
                                 </div>
                             </div>
                             <div className="relative h-40 w-full overflow-hidden rounded-xl border border-slate-200 bg-white/50">
-                                <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+                                <svg className="size-full" viewBox="0 0 100 100" preserveAspectRatio="none">
                                     <defs>
                                         <linearGradient id="revGradient" x1="0" y1="0" x2="0" y2="1">
                                             <stop offset="0%" stopColor="#34d399" stopOpacity="0.2" />
@@ -207,13 +207,13 @@ export default function StartupProfile() {
 
                         <div>
                             <div className="flex justify-between items-center mb-4">
-                                <h3 className="text-slate-900 font-bold text-lg flex items-center gap-2"><TrendingUp className="w-4 h-4 text-emerald-600" /> Net Profit Margin</h3>
+                                <h3 className="text-slate-900 font-bold text-lg flex items-center gap-2"><TrendingUp className="size-4 text-emerald-600" /> Net Profit Margin</h3>
                                 <div className="text-right">
                                     <span className="text-emerald-600 font-mono text-sm font-bold block">Peak: ₹{profitChart.max}K</span>
                                 </div>
                             </div>
                             <div className="relative h-40 w-full overflow-hidden rounded-xl border border-slate-200 bg-white/50">
-                                <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+                                <svg className="size-full" viewBox="0 0 100 100" preserveAspectRatio="none">
                                     <defs>
                                         <linearGradient id="profitGradient" x1="0" y1="0" x2="0" y2="1">
                                             <stop offset="0%" stopColor="#a3e635" stopOpacity="0.2" />
@@ -259,7 +259,7 @@ export default function StartupProfile() {
                 <div className="space-y-6">
                     <div className="bg-white border border-slate-200 shadow-sm rounded-2xl p-6 sticky top-24">
                         <h3 className="text-lg font-bold text-slate-900 mb-6 border-b border-slate-200 pb-4 flex items-center gap-2">
-                            <TrendingUp className="w-5 h-5 text-emerald-600" /> Financial Ask
+                            <TrendingUp className="size-5 text-emerald-600" /> Financial Ask
                         </h3>
 
                         <div className="space-y-4 mb-8">
@@ -280,7 +280,7 @@ export default function StartupProfile() {
                         </div>
 
                         <h3 className="text-lg font-bold text-slate-900 mb-4 border-b border-slate-200 pb-4 flex items-center gap-2">
-                            <Briefcase className="w-5 h-5 text-emerald-600" /> Current Metrics
+                            <Briefcase className="size-5 text-emerald-600" /> Current Metrics
                         </h3>
 
                         <div className="space-y-4 mb-8">
@@ -301,12 +301,12 @@ export default function StartupProfile() {
                         {activityStatus && (
                             <>
                                 <h3 className="text-lg font-bold text-slate-900 mb-4 border-b border-slate-200 pb-4 flex items-center gap-2">
-                                    <Clock className="w-5 h-5 text-emerald-600" /> Founder Activity
+                                    <Clock className="size-5 text-emerald-600" /> Founder Activity
                                 </h3>
                                 <div className="mb-8 p-4 rounded-xl border bg-white shadow-sm flex items-center justify-between">
                                     <div className="flex items-center gap-3">
-                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center border ${activityStatus.bg} ${activityStatus.border}`}>
-                                            <Activity className={`w-5 h-5 ${activityStatus.color}`} />
+                                        <div className={`size-10 rounded-full flex items-center justify-center border ${activityStatus.bg} ${activityStatus.border}`}>
+                                            <Activity className={`size-5 ${activityStatus.color}`} />
                                         </div>
                                         <div>
                                             <p className={`font-bold ${activityStatus.color}`}>{activityStatus.status}</p>
@@ -321,12 +321,12 @@ export default function StartupProfile() {
 
                         {/* AI Intelligence Suite */}
                         <h3 className="text-lg font-bold text-slate-900 mb-4 border-b border-slate-200 pb-4 flex items-center gap-2">
-                            <BrainCircuit className="w-5 h-5 text-indigo-400" /> AI Intelligence Suite
+                            <BrainCircuit className="size-5 text-indigo-400" /> AI Intelligence Suite
                         </h3>
                         <div className="space-y-2">
                             <Link href={`/startups/${idValue}/due-diligence`}
                                 className="flex items-center gap-3 p-3 rounded-xl bg-white border border-slate-200 hover:border-emerald-400 transition-colors group">
-                                <BrainCircuit className="w-4 h-4 text-indigo-400 shrink-0 group-hover:text-emerald-600 transition-colors" />
+                                <BrainCircuit className="size-4 text-indigo-400 shrink-0 group-hover:text-emerald-600 transition-colors" />
                                 <div>
                                     <p className="text-sm font-semibold text-slate-600 group-hover:text-slate-800 transition-colors">AI Due Diligence</p>
                                     <p className="text-[10px] text-slate-400">Full financial + risk analysis</p>
@@ -334,7 +334,7 @@ export default function StartupProfile() {
                             </Link>
                             <Link href={`/startups/${idValue}/health`}
                                 className="flex items-center gap-3 p-3 rounded-xl bg-white border border-slate-200 hover:border-emerald-400 transition-colors group">
-                                <HeartPulse className="w-4 h-4 text-emerald-600 shrink-0 group-hover:text-emerald-600 transition-colors" />
+                                <HeartPulse className="size-4 text-emerald-600 shrink-0 group-hover:text-emerald-600 transition-colors" />
                                 <div>
                                     <p className="text-sm font-semibold text-slate-600 group-hover:text-slate-800 transition-colors">Health Monitor</p>
                                     <p className="text-[10px] text-slate-400">Live operational vitals</p>
@@ -342,7 +342,7 @@ export default function StartupProfile() {
                             </Link>
                             <Link href={`/startups/${idValue}/trust`}
                                 className="flex items-center gap-3 p-3 rounded-xl bg-white border border-slate-200 hover:border-emerald-400 transition-colors group">
-                                <ShieldCheck className="w-4 h-4 text-blue-400 shrink-0 group-hover:text-emerald-600 transition-colors" />
+                                <ShieldCheck className="size-4 text-blue-400 shrink-0 group-hover:text-emerald-600 transition-colors" />
                                 <div>
                                     <p className="text-sm font-semibold text-slate-600 group-hover:text-slate-800 transition-colors">Trust Score</p>
                                     <p className="text-[10px] text-slate-400">Verified reputation rating</p>
@@ -350,7 +350,7 @@ export default function StartupProfile() {
                             </Link>
                             <Link href={`/startups/${idValue}/compliance`}
                                 className="flex items-center gap-3 p-3 rounded-xl bg-white border border-slate-200 hover:border-emerald-400 transition-colors group">
-                                <Scale className="w-4 h-4 text-purple-400 shrink-0 group-hover:text-emerald-600 transition-colors" />
+                                <Scale className="size-4 text-purple-400 shrink-0 group-hover:text-emerald-600 transition-colors" />
                                 <div>
                                     <p className="text-sm font-semibold text-slate-600 group-hover:text-slate-800 transition-colors">Legal Compliance</p>
                                     <p className="text-[10px] text-slate-400">Regulatory status check</p>

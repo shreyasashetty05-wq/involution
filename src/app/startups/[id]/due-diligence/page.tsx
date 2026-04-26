@@ -28,10 +28,10 @@ const BG_COLOR_MAP: Record<string, string> = {
 };
 
 const SECTION_ICONS: Record<string, ReactElement> = {
-    financial: <DollarSign className="w-5 h-5" />,
-    growth: <TrendingUp className="w-5 h-5" />,
-    credibility: <Users className="w-5 h-5" />,
-    risk: <ShieldCheck className="w-5 h-5" />,
+    financial: <DollarSign className="size-5" />,
+    growth: <TrendingUp className="size-5" />,
+    credibility: <Users className="size-5" />,
+    risk: <ShieldCheck className="size-5" />,
 };
 
 export default function DueDiligencePage() {
@@ -43,7 +43,7 @@ export default function DueDiligencePage() {
 
     if (loading) return (
         <PageLoading>
-            <BrainCircuit className="w-16 h-16 text-indigo-400 animate-pulse mx-auto mb-4" />
+            <BrainCircuit className="size-16 text-indigo-400 animate-pulse mx-auto mb-4" />
             <p className="text-slate-900 text-lg font-bold">AI Due Diligence Engine Running...</p>
             <p className="text-slate-500 text-sm mt-1">Analysing financials, growth metrics, credibility &amp; risk</p>
         </PageLoading>
@@ -61,7 +61,7 @@ export default function DueDiligencePage() {
             <div className="mb-10">
                 <SubPageHeader
                     id={id}
-                    badgeIcon={<BrainCircuit className="w-6 h-6 text-indigo-400" />}
+                    badgeIcon={<BrainCircuit className="size-6 text-indigo-400" />}
                     badgeLabel="AI Due Diligence Report"
                     badgeColorClasses="text-indigo-400 bg-indigo-900/30 border-indigo-500/20"
                     startupName={startup?.name}
@@ -76,7 +76,7 @@ export default function DueDiligencePage() {
             {/* Overall Score */}
             <div className="bg-white border border-slate-200 shadow-sm rounded-2xl p-8 mb-8 flex flex-col md:flex-row items-center gap-8">
                 <ScoreRing score={report.totalScore} stroke="#6366f1" label={report.totalScore} />
-                <div className="flex-grow">
+                <div className="grow">
                     <h2 className="text-2xl font-bold text-slate-900 mb-2">Overall Due Diligence Score</h2>
                     <p className="text-slate-500 mb-4 text-sm">Based on financial health (30%), growth metrics (20%), team & credibility (25%), and risk & legal (25%).</p>
                     <div className="grid grid-cols-2 gap-3">
@@ -84,7 +84,7 @@ export default function DueDiligencePage() {
                             <div key={String(sec.id)} className="bg-white rounded-xl p-3 border border-slate-200">
                                 <p className="text-xs text-slate-500 mb-1">{String(sec.label)}</p>
                                 <div className="flex items-center gap-2">
-                                    <div className="flex-grow h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                                    <div className="grow h-1.5 bg-slate-200 rounded-full overflow-hidden">
                                         <div className="h-full bg-indigo-500 rounded-full" style={{ width: `${(Number(sec.score) / Number(sec.maxScore)) * 100}%` }} />
                                     </div>
                                     <span className="text-xs font-mono font-bold text-slate-600 shrink-0">{Number(sec.score)}/{Number(sec.maxScore)}</span>
@@ -117,7 +117,7 @@ export default function DueDiligencePage() {
             {/* Section Deep Dives */}
             <div className="space-y-4">
                 <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-                    <FileSearch className="w-5 h-5 text-indigo-400" /> Detailed Analysis
+                    <FileSearch className="size-5 text-indigo-400" /> Detailed Analysis
                 </h2>
                 {report.sections?.map((sec: Record<string, unknown>) => {
                     const id = String(sec.id);
@@ -133,8 +133,8 @@ export default function DueDiligencePage() {
                                 className="w-full px-6 py-4 flex items-center justify-between bg-slate-50/50 hover:bg-slate-50 transition-colors"
                             >
                                 <div className="flex items-center gap-4">
-                                    <div className="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-600 shadow-sm">
-                                        {SECTION_ICONS[id] ?? <FileSearch className="w-5 h-5" />}
+                                    <div className="size-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-600 shadow-sm">
+                                        {SECTION_ICONS[id] ?? <FileSearch className="size-5" />}
                                     </div>
                                     <div className="text-left">
                                         <p className="font-bold text-slate-900">{String(sec.label)}</p>
@@ -148,7 +148,7 @@ export default function DueDiligencePage() {
                                             <div className={`h-full ${barColor} rounded-full`} style={{ width: `${pct}%` }} />
                                         </div>
                                     </div>
-                                    {isExpanded ? <ChevronUp className="w-5 h-5 text-slate-400" /> : <ChevronDown className="w-5 h-5 text-slate-400" />}
+                                    {isExpanded ? <ChevronUp className="size-5 text-slate-400" /> : <ChevronDown className="size-5 text-slate-400" />}
                                 </div>
                             </button>
                             {/* Section Content */}
@@ -156,21 +156,21 @@ export default function DueDiligencePage() {
                                 <div className="px-6 pb-6 grid md:grid-cols-2 gap-4 border-t border-slate-200">
                                     <div>
                                         <p className="text-xs font-bold uppercase tracking-widest text-emerald-600 mb-3 flex items-center gap-1 mt-4">
-                                            <CheckCircle2 className="w-3 h-3" /> Strengths
+                                            <CheckCircle2 className="size-3" /> Strengths
                                         </p>
                                         {Array.isArray(sec.strengths) && sec.strengths.length > 0 ? sec.strengths.map((s: unknown, i: number) => (
                                             <p key={i} className="text-sm font-medium text-slate-600 flex items-start gap-2 mb-2">
-                                                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" /> {String(s)}
+                                                <CheckCircle2 className="size-4 text-emerald-600 shrink-0 mt-0.5" /> {String(s)}
                                             </p>
                                         )) : <p className="text-slate-400 italic text-sm">No strengths identified.</p>}
                                     </div>
                                     <div>
                                         <p className="text-xs font-bold uppercase tracking-widest text-red-400 mb-3 flex items-center gap-1 mt-4">
-                                            <AlertTriangle className="w-3 h-3" /> Flags
+                                            <AlertTriangle className="size-3" /> Flags
                                         </p>
                                         {Array.isArray(sec.flags) && sec.flags.length > 0 ? sec.flags.map((f: unknown, i: number) => (
                                             <p key={i} className="text-sm font-medium text-slate-600 flex items-start gap-2 mb-2">
-                                                <AlertTriangle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" /> {String(f)}
+                                                <AlertTriangle className="size-4 text-red-400 shrink-0 mt-0.5" /> {String(f)}
                                             </p>
                                         )) : <p className="text-slate-400 italic text-sm">No flags found. ✓</p>}
                                     </div>

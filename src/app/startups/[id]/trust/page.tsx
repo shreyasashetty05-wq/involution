@@ -7,10 +7,10 @@ import { useFetchReport } from "@/frontend/hooks/useFetchReport";
 import { PageLoading, PageError, SubPageHeader, ScoreRing } from "@/frontend/components/StartupSubPageShell";
 
 const TIER_META: Record<string, { icon: ReactElement; color: string; bg: string; border: string }> = {
-    Platinum: { icon: <Award className="w-8 h-8" />, color: "text-cyan-400", bg: "bg-cyan-950/40", border: "border-cyan-500/30" },
-    Gold: { icon: <Star className="w-8 h-8" />, color: "text-amber-700", bg: "bg-amber-100", border: "border-amber-300" },
-    Silver: { icon: <ShieldCheck className="w-8 h-8" />, color: "text-slate-500", bg: "bg-white", border: "border-slate-300/50" },
-    Bronze: { icon: <AlertOctagon className="w-8 h-8" />, color: "text-orange-400", bg: "bg-orange-950/40", border: "border-orange-500/30" },
+    Platinum: { icon: <Award className="size-8" />, color: "text-cyan-400", bg: "bg-cyan-950/40", border: "border-cyan-500/30" },
+    Gold: { icon: <Star className="size-8" />, color: "text-amber-700", bg: "bg-amber-100", border: "border-amber-300" },
+    Silver: { icon: <ShieldCheck className="size-8" />, color: "text-slate-500", bg: "bg-white", border: "border-slate-300/50" },
+    Bronze: { icon: <AlertOctagon className="size-8" />, color: "text-orange-400", bg: "bg-orange-950/40", border: "border-orange-500/30" },
 };
 
 const COLOR_STROKE: Record<string, string> = {
@@ -24,7 +24,7 @@ export default function TrustScorePage() {
 
     if (loading) return (
         <PageLoading>
-            <ShieldCheck className="w-14 h-14 text-blue-400 animate-pulse mx-auto mb-4" />
+            <ShieldCheck className="size-14 text-blue-400 animate-pulse mx-auto mb-4" />
             <p className="text-slate-900 font-bold">Computing Trust &amp; Reputation Score...</p>
         </PageLoading>
     );
@@ -39,7 +39,7 @@ export default function TrustScorePage() {
         <div className="container mx-auto px-6 py-12 max-w-4xl min-h-screen">
             <SubPageHeader
                 id={id}
-                badgeIcon={<ShieldCheck className="w-6 h-6 text-blue-400" />}
+                badgeIcon={<ShieldCheck className="size-6 text-blue-400" />}
                 badgeLabel="Trust & Reputation Score"
                 badgeColorClasses="text-blue-400 bg-blue-900/30 border-blue-500/20"
                 startupName={startup?.name}
@@ -63,7 +63,7 @@ export default function TrustScorePage() {
 
             <div className="space-y-4">
                 <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-                    <BadgeCheck className="w-5 h-5 text-blue-400" /> Trust Factor Breakdown
+                    <BadgeCheck className="size-5 text-blue-400" /> Trust Factor Breakdown
                 </h2>
                 {report.factors?.map((f: Record<string, unknown>) => {
                     const max = Number(f.max) || 0;
@@ -76,7 +76,7 @@ export default function TrustScorePage() {
                         <div key={label} className="bg-white border border-slate-200 shadow-sm rounded-2xl p-5">
                             <div className="flex items-center justify-between mb-2">
                                 <div className="flex items-center gap-2">
-                                    {f.verified ? <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" /> : <XCircle className="w-5 h-5 text-red-500 shrink-0" />}
+                                    {f.verified ? <CheckCircle2 className="size-5 text-emerald-600 shrink-0" /> : <XCircle className="size-5 text-red-500 shrink-0" />}
                                     <span className="font-bold text-slate-800">{label}</span>
                                 </div>
                                 <span className="text-sm font-mono font-bold text-slate-500">{earned} / {max} pts</span>

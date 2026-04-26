@@ -10,7 +10,7 @@ export default function StartupsPage() {
 
             <div className="relative z-10 flex flex-col items-center justify-center text-center px-6 py-28 max-w-3xl mx-auto">
                 <div className="section-label mx-auto mb-8">
-                    <Activity className="w-3.5 h-3.5" /> For Startup Founders
+                    <Activity className="size-3.5" /> For Startup Founders
                 </div>
                 <h1 className="text-4xl md:text-6xl font-outfit font-bold text-slate-900 mb-4 leading-tight">
                     Your Startup. <span className="text-gradient">Verified.</span><br />
@@ -23,7 +23,7 @@ export default function StartupsPage() {
 
                 <div className="flex flex-col sm:flex-row gap-3 justify-center mb-16">
                     <Link href="/startups/publish" className="btn-primary inline-flex items-center gap-2 text-sm">
-                        Publish Profile <ArrowRight className="w-4 h-4" />
+                        Publish Profile <ArrowRight className="size-4" />
                     </Link>
                     <Link href="/login" className="btn-secondary inline-block text-sm">
                         Log In
@@ -32,10 +32,10 @@ export default function StartupsPage() {
 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3 w-full">
                     {[
-                        { icon: <BarChart2 className="w-4 h-4 text-emerald-600" />, label: 'AI Diligence Score', value: '88/100' },
-                        { icon: <ShieldCheck className="w-4 h-4 text-emerald-600" />, label: 'Trust Tier', value: 'PLATINUM' },
-                        { icon: <Activity className="w-4 h-4 text-emerald-600" />, label: 'Health Score', value: '98/100' },
-                        { icon: <TrendingUp className="w-4 h-4 text-emerald-600" />, label: 'Growth Rate', value: '+12% MoM' },
+                        { icon: <BarChart2 className="size-4 text-emerald-600" />, label: 'AI Diligence Score', value: '88/100' },
+                        { icon: <ShieldCheck className="size-4 text-emerald-600" />, label: 'Trust Tier', value: 'PLATINUM' },
+                        { icon: <Activity className="size-4 text-emerald-600" />, label: 'Health Score', value: '98/100' },
+                        { icon: <TrendingUp className="size-4 text-emerald-600" />, label: 'Growth Rate', value: '+12% MoM' },
                     ].map((c, i) => (
                         <div key={i} className="dashboard-card p-4 text-left">
                             <div className="flex items-center gap-1.5 mb-2">{c.icon}<span className="text-[11px] text-slate-400 font-medium">{c.label}</span></div>

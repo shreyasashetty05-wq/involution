@@ -7,7 +7,7 @@ export default function RulesFAQPage() {
             <div className="container mx-auto px-6 py-24">
                 <div className="text-center max-w-3xl mx-auto mb-16 animate-fade-in-up">
                     <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 mb-6">
-                        <ShieldAlert className="w-4 h-4 text-emerald-600" />
+                        <ShieldAlert className="size-4 text-emerald-600" />
                         <span className="text-xs font-bold tracking-widest text-emerald-700 uppercase">Platform Policy</span>
                     </div>
                     <h1 className="text-4xl md:text-5xl font-outfit font-bold text-slate-900 mb-6">Platform Rules & Liability</h1>
@@ -21,8 +21,8 @@ export default function RulesFAQPage() {
 
                     {/* Column 1 */}
                     <div className="dashboard-card p-8 text-center flex flex-col items-center group h-full justify-center">
-                        <div className="w-16 h-16 rounded-full bg-rose-50 border border-rose-200 text-rose-500 flex items-center justify-center mb-6 group-hover:bg-rose-100 transition-colors">
-                            <FileWarning className="w-8 h-8" />
+                        <div className="size-16 rounded-full bg-rose-50 border border-rose-200 text-rose-500 flex items-center justify-center mb-6 group-hover:bg-rose-100 transition-colors">
+                            <FileWarning className="size-8" />
                         </div>
                         <h3 className="text-lg font-bold text-slate-900 mb-4 uppercase tracking-wide">On-Platform Agreements</h3>
                         <p className="text-slate-500 text-sm leading-relaxed">
@@ -31,9 +31,9 @@ export default function RulesFAQPage() {
                     </div>
 
                     {/* Column 2: Central Highlighted */}
-                    <div className="p-10 rounded-2xl bg-emerald-600 border border-emerald-500 text-center flex flex-col items-center transform scale-105 shadow-2xl shadow-emerald-500/20 relative z-10 h-full justify-center">
-                        <div className="w-20 h-20 rounded-full bg-white/20 text-white flex items-center justify-center mb-6">
-                            <ShieldAlert className="w-10 h-10" />
+                    <div className="p-10 rounded-2xl bg-emerald-600 border border-emerald-500 text-center flex flex-col items-center  scale-105 shadow-2xl shadow-emerald-500/20 relative z-10 h-full justify-center">
+                        <div className="size-20 rounded-full bg-white/20 text-white flex items-center justify-center mb-6">
+                            <ShieldAlert className="size-10" />
                         </div>
                         <h3 className="text-2xl font-bold text-white mb-4 uppercase tracking-wide">Zero Liability Policy</h3>
                         <p className="text-emerald-100 text-sm leading-relaxed mb-8">
@@ -46,8 +46,8 @@ export default function RulesFAQPage() {
 
                     {/* Column 3 */}
                     <div className="dashboard-card p-8 text-center flex flex-col items-center group h-full justify-center">
-                        <div className="w-16 h-16 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-500 flex items-center justify-center mb-6 group-hover:bg-indigo-100 transition-colors">
-                            <Scale className="w-8 h-8" />
+                        <div className="size-16 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-500 flex items-center justify-center mb-6 group-hover:bg-indigo-100 transition-colors">
+                            <Scale className="size-8" />
                         </div>
                         <h3 className="text-lg font-bold text-slate-900 mb-4 uppercase tracking-wide">Legal Compliance</h3>
                         <p className="text-slate-500 text-sm leading-relaxed">
