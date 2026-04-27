@@ -79,7 +79,7 @@ export default function PublishStartupPage() {
         setFormData(prev => ({
             ...prev,
             [section]: {
-                // @ts-expect-error
+                // @ts-expect-error -- dynamic string key cannot be statically narrowed to keyof formData
                 ...prev[section],
                 [field]: value
             }

@@ -128,10 +128,11 @@ export default function AISearchEngine() {
                         return a.requested - b.requested;
                     case 'equity_desc':
                         return b.equity - a.equity;
-                    case 'valuation_asc':
+                    case 'valuation_asc': {
                         const valA = a.requested / (a.equity / 100);
                         const valB = b.requested / (b.equity / 100);
                         return valA - valB;
+                    }
                     case 'ai_score':
                     default:
                         return b.score - a.score;

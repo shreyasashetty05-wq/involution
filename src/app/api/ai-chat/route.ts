@@ -121,15 +121,6 @@ export async function POST(req: Request) {
             ${question}
         `;
 
-        // If history is provided, we could use a chat session, but for simplicity and statelessness
-        // we can just append the recent context or rely strictly on the prompt.
-        // To keep it simple, we pass it as a single content request right now.
-
-        const contents: any[] = [];
-
-        // Map history to gemini format if needed, but simple prompt is usually enough for a one-off Q&A.
-        // We will just use the direct prompt for the immediate question to keep things focused.
-        contents.push({ role: 'user', parts: [{ text: prompt }] });
 
         const response = await ai.models.generateContent({
             model: 'gemini-2.5-flash',

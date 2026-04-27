@@ -161,7 +161,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
                 // E.g. "12 months remaining" -> 12
                 const match = runwayPillar.description.match(/(\d+)/);
                 if (match) {
-                    await AIPrediction.create({
+                    return AIPrediction.create({
                         startupId: id,
                         predictedMetric: 'runwayMonths',
                         predictedValue: parseInt(match[1], 10),
@@ -170,6 +170,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
                     });
                 }
             }
+            return undefined;
         }).catch(err => console.error("Failed to log AI prediction asynchronously", err));
 
         return NextResponse.json({

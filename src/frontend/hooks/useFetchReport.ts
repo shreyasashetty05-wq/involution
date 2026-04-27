@@ -28,7 +28,7 @@ export function useFetchReport<R = Record<string, any>, S = Record<string, any>>
 
     useEffect(() => {
         if (!id) return;
-        fetch(`/api/startups/${id}/${module}`)
+        void fetch(`/api/startups/${id}/${module}`)
             .then(r => r.json())
             .then((data: Record<string, unknown>) => {
                 if (data.success) {
@@ -37,6 +37,7 @@ export function useFetchReport<R = Record<string, any>, S = Record<string, any>>
                 } else {
                     setError(String(data.error) || "Failed to load");
                 }
+                return undefined;
             })
             .catch(() => setError("Network error"))
             .finally(() => setLoading(false));
