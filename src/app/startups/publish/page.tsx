@@ -92,6 +92,14 @@ export default function PublishStartupPage() {
     const [isAuditing, setIsAuditing] = useState(false);
     const [auditResult, setAuditResult] = useState<{ errors: string[], warnings: string[] } | null>(null);
 
+    /**
+    * Validates startup publishing form data and returns any blocking errors or advisory warnings.
+    * @example
+    * validatePublishForm(formData)
+    * { errors: [], warnings: [] }
+    * @param {object} formData - Form data containing financial metrics, funding requirements, and video URLs.
+    * @returns {{ errors: string[], warnings: string[] }} An object containing validation errors and warnings.
+    **/
     const runAIAudit = () => {
         const errors: string[] = [];
         const warnings: string[] = [];
@@ -135,6 +143,14 @@ export default function PublishStartupPage() {
         return { errors, warnings };
     };
 
+    /**
+     * Validates the startup publish form with an AI audit, then submits the startup data to the publish API.
+     * @example
+     * sync(e)
+     * undefined
+     * @param {React.FormEvent} e - The form submission event.
+     * @returns {Promise<void>} Resolves when the audit and publish flow completes.
+     **/
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError(null);

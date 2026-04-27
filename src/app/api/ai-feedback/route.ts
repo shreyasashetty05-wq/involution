@@ -5,6 +5,14 @@ import { GoogleGenAI } from '@google/genai';
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
+/**
+* Handles AI feedback submissions by validating the request body, optionally generating an embedding for upvoted responses, and saving the feedback to the database.
+* @example
+* POST(req)
+* { success: true, feedback: newFeedback }
+* @param {NextRequest} req - The incoming Next.js request containing feedback data in the JSON body.
+* @returns {Promise<NextResponse>} A JSON response indicating success or failure, with the created feedback on success.
+**/
 export async function POST(req: NextRequest) {
     try {
         await dbConnect();

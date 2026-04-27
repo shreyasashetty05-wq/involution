@@ -38,6 +38,15 @@ const complianceSchema: Schema = {
     required: ["complianceScore", "complianceLabel", "complianceColor", "compliantCount", "totalItems", "criticalIssuesCount", "highIssuesCount", "categories", "investorNote", "items"]
 };
 
+/**
+ * Generates a compliance report for a startup by fetching its data, analyzing legal, tax, KYC, and financial transparency using AI, and returning the computed compliance assessment.
+ * @example
+ * GET(req, { params: Promise.resolve({ id: 'startup_id' }) })
+ * { success: true, startup: { name: 'Startup Name', sector: 'Fintech' }, report: { ... } }
+ * @param {NextRequest} req - The incoming Next.js request object.
+ * @param {{ params: Promise<{ id: string }> }} context - Route context containing the startup ID parameter.
+ * @returns {NextResponse} A JSON response containing the compliance report or an error message.
+ **/
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     try {
         await dbConnect();

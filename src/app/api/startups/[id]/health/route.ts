@@ -45,6 +45,15 @@ const healthSchema: Schema = {
 };
 
 
+/**
+ * Analyzes a startup's financial and operational data to generate a health report and log AI predictions.
+ * @example
+ * GET(req, params)
+ * { success: true, startup: { name: "Acme Inc", sector: "SaaS" }, report: { ... } }
+ * @param {NextRequest} req - The incoming Next.js request object.
+ * @param {{ params: Promise<{ id: string }> }} params - Route parameters containing the startup ID.
+ * @returns {Promise<NextResponse>} A JSON response with the startup health report or an error response.
+ **/
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     try {
         await dbConnect();

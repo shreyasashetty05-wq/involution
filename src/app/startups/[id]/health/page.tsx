@@ -34,6 +34,14 @@ const ALERT_STYLES: Record<string, { bg: string; border: string; icon: ReactElem
     info: { bg: "bg-blue-950/40", border: "border-blue-500/30", icon: <Info className="size-4 text-blue-400 shrink-0" />, text: "text-blue-400" },
 };
 
+/**
+ * Renders the startup health monitor page, showing overall vitals, active alerts, pillar scores, and revenue-versus-expense trends for a selected startup report.
+ * @example
+ * HealthMonitorPage()
+ * <HealthMonitorPage />
+ * @param {undefined} None - This component does not accept any parameters; it reads the startup id from route params.
+ * @returns {JSX.Element} The health monitor page UI, or a loading/error state when report data is unavailable.
+ */
 export default function HealthMonitorPage() {
     const params = useParams();
     const id = params?.id as string;

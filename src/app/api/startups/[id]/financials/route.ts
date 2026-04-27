@@ -3,6 +3,15 @@ import { getToken } from 'next-auth/jwt';
 import dbConnect from "@/database/mongodb";
 import Startup from "@/database/models/Startup";
 
+/**
+ * Creates a new financial update for a startup owned by the authenticated user.
+ * @example
+ * POST(req, params)
+ * { success: true, data: financialUpdates }
+ * @param {Request} req - The incoming request containing the financial update payload.
+ * @param {Promise<{ id: string }>} params - Route parameters promise containing the startup id.
+ * @returns {Promise<Response>} A Next.js JSON response indicating success or an error status.
+ **/
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
         const token = await getToken({ req: req as any, secret: process.env.NEXTAUTH_SECRET || "inVolution_mock_secret_key_12345" });

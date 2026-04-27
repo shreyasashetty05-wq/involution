@@ -11,6 +11,14 @@ interface TypewriterTextProps {
   highlightClass?: string;
 }
 
+/**
+ * Renders a typewriter-style animated text component with optional word highlighting.
+ * @example
+ * TypewriterText({ text: "Hello world", highlightWords: ["world"] })
+ * <animated text component>
+ * @param {{ text: string; className?: string; delay?: number; highlightWords?: string[]; highlightClass?: string }} TypewriterTextProps - Configuration for the text content, animation timing, and highlight styling.
+ * @returns {JSX.Element} An animated span element that reveals text character by character with optional highlighted words.
+ **/
 export function TypewriterText({ 
   text, 
   className = "", 

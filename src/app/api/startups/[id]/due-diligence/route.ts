@@ -55,6 +55,15 @@ const dueDiligenceSchema: Schema = {
     required: ["totalScore", "verdict", "sections", "keyMetrics"]
 };
 
+/**
+ * Generates an AI-powered due diligence report for a startup by ID.
+ * @example
+ * GET(req, { params })
+ * { success: true, startup: { name, sector, stage }, report }
+ * @param {NextRequest} req - The incoming Next.js request object.
+ * @param {{ params: Promise<{ id: string }> }} { params } - Route parameters containing the startup ID.
+ * @returns {Promise<NextResponse>} A JSON response containing the startup summary and generated due diligence report, or an error response.
+ **/
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     try {
         await dbConnect();

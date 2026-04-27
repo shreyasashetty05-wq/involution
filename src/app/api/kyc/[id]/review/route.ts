@@ -2,6 +2,15 @@ import { NextResponse } from 'next/server';
 import dbConnect from "@/database/mongodb";
 import KYCDocument from "@/database/models/KYCDocument";
 
+/**
+ * Updates the verification status of a KYC document by ID.
+ * @example
+ * PUT(req, params)
+ * { success: true, data: doc }
+ * @param {Request} req - Incoming request containing the verification action in the JSON body.
+ * @param {{ params: Promise<{ id: string }> }} params - Route parameters promise containing the document ID.
+ * @returns {Promise<Response>} A JSON response indicating success, validation failure, not found, or server error.
+ **/
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
         await dbConnect();

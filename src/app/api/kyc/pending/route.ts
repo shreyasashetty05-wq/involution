@@ -2,6 +2,13 @@ import { NextResponse } from 'next/server';
 import dbConnect from "@/database/mongodb";
 import KYCDocument from "@/database/models/KYCDocument";
 
+/**
+* Fetches all pending KYC documents, serializes their IDs, and returns them as a JSON response.
+* @example
+* GET()
+* { success: true, data: [...] }
+* @returns {Promise<NextResponse>} A JSON response containing pending KYC documents or an error message.
+**/
 export async function GET() {
     try {
         await dbConnect();

@@ -5,6 +5,14 @@ import Startup from "@/database/models/Startup";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 
+/**
+ * Retrieves the authenticated startup owner's active negotiation chats and executed agreements.
+ * @example
+ * GET(req)
+ * { success: true, activeChats: [], executedAgreements: [] }
+ * @param {NextRequest} req - The incoming Next.js request object.
+ * @returns {Promise<NextResponse>} A JSON response containing the user's active chats and executed agreements, or an error response.
+ **/
 export async function GET(req: NextRequest) {
     try {
         await dbConnect();

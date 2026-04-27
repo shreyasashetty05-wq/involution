@@ -6,6 +6,13 @@ import dbConnect from "@/database/mongodb";
 import Startup from "@/database/models/Startup";
 import StartupDashboardClient from "./StartupDashboardClient";
 
+/**
+ * Fetches the current user's startups and renders the startup dashboard client component.
+ * @example
+ * StartupDashboard()
+ * <StartupDashboardClient myStartups={[] } />
+ * @returns {Promise<JSX.Element>} A React element containing the startup dashboard client with the user's startup data.
+ */
 export default async function StartupDashboard() {
     const session = await getServerSession(authOptions);
     await dbConnect();

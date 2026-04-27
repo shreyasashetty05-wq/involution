@@ -34,6 +34,13 @@ const SECTION_ICONS: Record<string, ReactElement> = {
     risk: <ShieldCheck className="size-5" />,
 };
 
+/**
+ * Renders the AI due diligence report page for a startup, including overall verdict, key metrics, and expandable section analysis.
+ * @example
+ * DueDiligencePage()
+ * JSX.Element
+ * @returns {JSX.Element} The due diligence report page UI.
+ */
 export default function DueDiligencePage() {
     const params = useParams();
     const id = params?.id as string;

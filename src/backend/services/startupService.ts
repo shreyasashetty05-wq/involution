@@ -1,6 +1,15 @@
 import Startup from "@/database/models/Startup";
 import { extractYoutubeId } from "@/backend/utils/youtube";
 
+/**
+ * Creates and persists a new startup record from the provided payload, calculating derived financial values and normalizing video links.
+ * @example
+ * sync(body, ownerEmail)
+ * createdStartup
+ * @param {any} body - Startup input payload containing company details, funding data, metrics, and media links.
+ * @param {string} ownerEmail - Email address of the startup owner to associate with the record.
+ * @returns {Promise<any>} A promise that resolves to the created startup record.
+ **/
 export const publishStartup = async (body: any, ownerEmail: string) => {
     const targetRev = Number(body.mrr);
     const profitMargin = Number(body.netProfitMargin) / 100;

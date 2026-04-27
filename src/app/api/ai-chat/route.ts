@@ -6,6 +6,14 @@ import AIFeedback from "@/database/models/AIFeedback";
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
+/**
+* Handles an AI chat request by validating input, retrieving startup data and relevant past feedback examples, then generating a contextual answer using the Gemini model.
+* @example
+* POST(req)
+* { success: true, answer: "Based on the available startup data..." }
+* @param {Request} req - Incoming request containing startupId, question, and optional history in the JSON body.
+* @returns {Promise<Response>} JSON response with the generated answer on success or an error message on failure.
+**/
 export async function POST(req: Request) {
     try {
         await dbConnect();

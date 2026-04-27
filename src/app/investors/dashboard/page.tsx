@@ -9,6 +9,13 @@ interface Agreement { id: string; startup: string; date: string; amount: string;
 interface ActiveChat { id: string; startupId: string; startup: string; lastMessage: string; time: string; unread: number; }
 interface PortfolioStats { totalCapital: string; activeStartups: number; }
 
+/**
+ * Displays the investor dashboard with executed agreements, portfolio stats, and active negotiations.
+ * @example
+ * InvestorDashboard()
+ * Returns a dashboard view while loading data, then renders portfolio and deal-room information.
+ * @returns {JSX.Element} The investor dashboard page component.
+ */
 export default function InvestorDashboard() {
     const [agreements, setAgreements] = useState<Agreement[]>([]);
     const [chats, setChats] = useState<ActiveChat[]>([]);
@@ -16,6 +23,13 @@ export default function InvestorDashboard() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        /**
+         * Fetches investor dashboard data and updates agreements, chats, stats, and loading state.
+         * @example
+         * sync()
+         * void
+         * @returns {void} Does not return a value.
+         */
         const fetchDashboardData = async () => {
             try {
                 const res = await fetch('/api/investors/dashboard');

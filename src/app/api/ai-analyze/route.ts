@@ -5,6 +5,14 @@ import Startup from "@/database/models/Startup";
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
+/**
+ * Analyzes a startup for investors using AI, saves the generated analysis, and returns it.
+ * @example
+ * POST(req)
+ * { success: true, analysis: "..." }
+ * @param {Request} req - The incoming request containing a JSON body with startupId.
+ * @returns {Promise<Response>} A JSON response with the analysis or an error message.
+ **/
 export async function POST(req: Request) {
     try {
         await dbConnect();

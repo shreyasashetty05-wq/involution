@@ -19,6 +19,13 @@ if (!cached) {
     cached = (global as any).mongoose = { conn: null, promise: null };
 }
 
+/**
+ * Establishes and caches a MongoDB connection using Mongoose.
+ * @example
+ * dbConnect()
+ * Promise<Mongoose>
+ * @returns {Promise<import("mongoose").Mongoose>} Resolves to the cached Mongoose connection instance.
+ **/
 async function dbConnect() {
     if (cached.conn) {
         return cached.conn;

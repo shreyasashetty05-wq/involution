@@ -11,6 +11,20 @@ interface TextRevealScrollProps {
   scrollOffset?: any;
 }
 
+/**
+ * Reveals text word-by-word based on scroll progress, optionally highlighting specified words.
+ * @example
+ * TextRevealScroll({
+ *   text: "Hello world",
+ *   className: "my ტექსტ",
+ *   highlightWords: ["world"],
+ *   highlightClass: "text-emerald-500",
+ *   scrollOffset: ["start 95%", "start 25%"]
+ * })
+ * <div>Animated text reveal on scroll</div>
+ * @param {TextRevealScrollProps} props - Component props including text content, styling, highlighted words, and scroll offset settings.
+ * @returns {JSX.Element} A React element that renders the scroll-animated text reveal component.
+ */
 export function TextRevealScroll({ 
   text, 
   className = "",

@@ -5,6 +5,13 @@ import { useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, ShieldCheck, Mail } from "lucide-react";
 
+/**
+ * Renders the login page with role selection and Google sign-in for investors or startup founders.
+ * @example
+ * LoginPage()
+ * React component element for the login page
+ * @returns {JSX.Element} The login page UI.
+ */
 export default function LoginPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [role, setRole] = useState("investor");

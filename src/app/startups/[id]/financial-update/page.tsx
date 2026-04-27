@@ -5,6 +5,14 @@ import { useRouter } from "next/navigation";
 import { Activity, LineChart, FileText, CheckCircle2, AlertCircle, Bot, Loader2, Link as LinkIcon, Save, CalendarDays, DollarSign, TrendingUp } from "lucide-react";
 import Link from "next/link";
 
+/**
+ * Renders a financial update form for a startup, calculates a live AI confidence score from the entered financial data and supporting document, and submits the update to the backend.
+ * @example
+ * FinancialUpdatePage({ params: Promise.resolve({ id: "startup_123" }) })
+ * <FinancialUpdatePage />
+ * @param {{ params: Promise<{ id: string }> }} params - Route parameters promise containing the startup id.
+ * @returns {JSX.Element} The financial update page UI.
+ **/
 export default function FinancialUpdatePage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
     const router = useRouter();
@@ -41,6 +49,14 @@ export default function FinancialUpdatePage({ params }: { params: Promise<{ id: 
         setAiScore(Math.min(100, score));
     }, [formData.monthYear, formData.revenue, formData.profit, formData.documentUrl]);
 
+    /**
+    * Handles financial update form submission, sends the data to the startup financials API, and manages success/error state.
+    * @example
+    * sync(event)
+    * undefined
+    * @param {React.FormEvent} e - Form submit event used to prevent default submission behavior.
+    * @returns {Promise<void>} A promise that resolves when the submission flow completes.
+    **/
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError(null);

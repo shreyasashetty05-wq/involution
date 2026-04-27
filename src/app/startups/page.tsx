@@ -1,6 +1,13 @@
 import Link from "next/link";
 import { ArrowRight, Activity, BarChart2, ShieldCheck, TrendingUp } from "lucide-react";
 
+/**
+ * Renders the startups landing page for founders, highlighting verification, fundraising acceleration, and key trust/growth metrics.
+ * @example
+ * StartupsPage()
+ * <StartupsPage />
+ * @returns {JSX.Element} The startups page UI.
+ **/
 export default function StartupsPage() {
     return (
         <div className="min-h-screen section-emerald relative overflow-hidden">

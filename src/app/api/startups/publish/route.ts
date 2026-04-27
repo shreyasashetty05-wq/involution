@@ -3,6 +3,14 @@ import { getToken } from 'next-auth/jwt';
 import dbConnect from "@/database/mongodb";
 import { publishStartup } from "@/backend/services/startupService";
 
+/**
+ * Publishes a startup submission after authenticating the requester, then triggers background AI analysis.
+ * @example
+ * POST(req)
+ * { success: true, data: newStartup }
+ * @param {Request} req - Incoming HTTP request containing the startup data in the request body.
+ * @returns {Promise<NextResponse>} JSON response indicating success with the created startup, or an error response.
+ **/
 export async function POST(req: Request) {
     try {
         const token = await getToken({ req: req as any, secret: process.env.NEXTAUTH_SECRET || "inVolution_mock_secret_key_12345" });

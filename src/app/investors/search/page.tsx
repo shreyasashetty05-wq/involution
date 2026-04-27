@@ -5,6 +5,13 @@ import Link from "next/link";
 import { Search, BrainCircuit, Activity, LineChart, ChevronRight, SlidersHorizontal, ArrowUpDown, ShieldCheck, Building2 } from "lucide-react";
 
 
+/**
+ * Renders an AI-powered startup search and filtering dashboard for investors, fetching verified startups and allowing advanced financial and risk-based filtering plus sorting.
+ * @example
+ * AISearchEngine()
+ * React element for the startup search page
+ * @returns {JSX.Element} The investor search page UI with filters, results, and startup deal cards.
+ */
 export default function AISearchEngine() {
     const [filters, setFilters] = useState({
         keyword: "",
@@ -35,6 +42,13 @@ export default function AISearchEngine() {
 
     // Fetch verified startups from MongoDB
     useEffect(() => {
+        /**
+         * Fetches startup data from the API, stores it in state, and sorts the results by score.
+         * @example
+         * sync()
+         * void
+         * @returns {void} Does not return a value.
+         */
         const fetchStartups = async () => {
             try {
                 const res = await fetch('/api/startups');
@@ -55,6 +69,14 @@ export default function AISearchEngine() {
         fetchStartups();
     }, []);
 
+    /**
+    * Filters, ranks, and updates startup search results based on the current investor filter settings.
+    * @example
+    * searchStartups()
+    * filtered startup results
+    * @param {void} -
+    * @returns {void} No value is returned; results are stored via state updates.
+    **/
     const handleSearch = () => {
         setIsSearching(true);
         setTimeout(() => {

@@ -5,6 +5,14 @@ import { Upload, CheckCircle2, AlertCircle, Loader2, ShieldCheck, FileText } fro
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
+/**
+ * Renders a KYC submission page that validates Aadhaar and PAN details, uploads supporting documents, submits them for simulated verification, and redirects the user after success.
+ * @example
+ * KYCSubmitPage()
+ * undefined
+ * @param {void} - This component does not accept any arguments.
+ * @returns {JSX.Element} The KYC submission form UI.
+ **/
 export default function KYCSubmitPage() {
     const { data: session, update } = useSession();
     const router = useRouter();
@@ -16,6 +24,14 @@ export default function KYCSubmitPage() {
     const [status, setStatus] = useState<"idle" | "verifying" | "success" | "error">("idle");
     const [errorMsg, setErrorMsg] = useState("");
 
+    /**
+    * Validates Aadhaar and PAN inputs, submits KYC documents to the server, and redirects the user on success.
+    * @example
+    * sync(e)
+    * undefined
+    * @param {React.FormEvent} e - The form submission event.
+    * @returns {void} No return value.
+    **/
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setStatus("verifying");
