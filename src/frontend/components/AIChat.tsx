@@ -131,7 +131,7 @@ export default function AIChat({ startupId }: AIChatProps) {
                                 <div className="flex items-center gap-2 mt-1 ml-1">
                                     <button
                                         onClick={() => handleFeedback(i, 'upvote')}
-                                        disabled={!!msg.feedback}
+                                        disabled={Boolean(msg.feedback)}
                                         className={`p-1 rounded hover:bg-gray-800 transition-colors ${msg.feedback === 'upvote' ? 'text-emerald-400' : 'text-gray-500'}`}
                                         title="Good response"
                                     >
@@ -139,7 +139,7 @@ export default function AIChat({ startupId }: AIChatProps) {
                                     </button>
                                     <button
                                         onClick={() => handleFeedback(i, 'downvote')}
-                                        disabled={!!msg.feedback}
+                                        disabled={Boolean(msg.feedback)}
                                         className={`p-1 rounded hover:bg-gray-800 transition-colors ${msg.feedback === 'downvote' ? 'text-red-400' : 'text-gray-500'}`}
                                         title="Bad response"
                                     >
