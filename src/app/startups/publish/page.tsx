@@ -157,7 +157,7 @@ export default function PublishStartupPage() {
         setAuditResult(null);
         setIsAuditing(true);
 
-        await new Promise(r => setTimeout(r, 1500));
+        await new Promise(r => {setTimeout(r, 1500)});
         const audit = runAIAudit();
         setIsAuditing(false);
 
