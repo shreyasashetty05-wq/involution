@@ -80,7 +80,7 @@ export default function AISearchEngine() {
     const handleSearch = () => {
         setIsSearching(true);
         setTimeout(() => {
-            let filtered = allStartups.filter(s => {
+            const filtered = allStartups.filter(s => {
                 // Basic Filters
                 const searchStr = filters.keyword.toLowerCase();
                 const keywordMatch = !searchStr ||
