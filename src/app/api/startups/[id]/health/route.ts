@@ -164,7 +164,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
                     await AIPrediction.create({
                         startupId: id,
                         predictedMetric: 'runwayMonths',
-                        predictedValue: parseInt(match[1]),
+                        predictedValue: parseInt(match[1], 10),
                         status: 'pending',
                         confidenceScore: runwayPillar.score
                     });
