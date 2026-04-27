@@ -109,7 +109,7 @@ export default function PublishStartupPage() {
         const fundingAsk = Number(formData.fundingRequired);
         const cac = Number(formData.cac);
         const ltv = Number(formData.ltv);
-        const runway = formData.financialsMonthly.runway;
+        const {runway} = formData.financialsMonthly;
 
         if (margin > 80 || margin < -200) {
             errors.push(`Unrealistic Net Margin (${margin}%). Verify your revenue and expenses.`);

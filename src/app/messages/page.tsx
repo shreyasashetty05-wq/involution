@@ -131,7 +131,7 @@ function DealWorkspace() {
                 const res = await fetch(url);
                 const data = await res.json();
                 if (data.success && data.deal) {
-                    const currentUser = data.currentUser;
+                    const {currentUser} = data;
 
                     // Map DB messages to UI format with correct sides
                     setMessages(data.deal.messages.map((m: any) => ({
