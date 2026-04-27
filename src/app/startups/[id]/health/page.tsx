@@ -100,7 +100,7 @@ export default function HealthMonitorPage() {
                             const s = ALERT_STYLES[level] ?? ALERT_STYLES.info;
                             return (
                                 <span key={i} className={`flex items-center gap-1 text-xs px-3 py-1 rounded-full border ${s.bg} ${s.border} ${s.text} font-medium`}>
-                                    {s.icon} {a.level}
+                                    {s.icon} {level}
                                 </span>
                             );
                         })}
@@ -120,7 +120,7 @@ export default function HealthMonitorPage() {
                         return (
                             <div key={i} className={`flex items-start gap-3 p-4 rounded-xl border ${s.bg} ${s.border}`}>
                                 {s.icon}
-                                <p className={`text-sm ${s.text} font-medium`}>{a.message}</p>
+                                <p className={`text-sm ${s.text} font-medium`}>{String(a.message)}</p>
                             </div>
                         );
                     })}

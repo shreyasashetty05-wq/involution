@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from "@/database/mongodb";
 import Startup from "@/database/models/Startup";
-import { GoogleGenAI, Type, Schema } from '@google/genai';
+import { Type, Schema } from '@google/genai';
+import { callGeminiReport } from '@/lib/geminiReportHelper';
 import mongoose from 'mongoose';
 
-// Initialize the Google Gen AI client
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+
 
 const healthSchema: Schema = {
     type: Type.OBJECT,
@@ -123,27 +123,19 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
             ${startupDataString}
         `;
 
-        const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
-            contents: prompt,
-            config: {
-                responseMimeType: 'application/json',
-                responseSchema: healthSchema,
-                temperature: 0.2, // Low temperature for more deterministic/factual analysis
-            }
-        });
-
-        if (!response.text) {
-            throw new Error("Failed to generate report from Gemini");
-        }
-
-        const reportData = JSON.parse(response.text);
-        reportData.generatedAt = new Date().toISOString();
+        // Fire-and-forget: log AI predictions for future ground-truth verification
+        const geminiResponse = await callGeminiReport(
+            prompt,
+            healthSchema,
+            (startup as any).name,
+            (startup as any).sector,
+        );
 
         // -----------------------------------------------------
         // STEP 3: TRACK GROUND TRUTH (AI Predictions)
         // Log the AI's prediction for future verification
         // -----------------------------------------------------
+        const reportData = (await geminiResponse.json()).report;
         import('@/database/models/AIPrediction').then(async (AIPredictionModule) => {
             const AIPrediction = AIPredictionModule.default;
 
@@ -173,14 +165,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
             return undefined;
         }).catch(err => console.error("Failed to log AI prediction asynchronously", err));
 
-        return NextResponse.json({
-            success: true,
-            startup: {
-                name: (startup as any).name,
-                sector: (startup as any).sector
-            },
-            report: reportData
-        });
+        return geminiResponse;
     } catch (err: any) {
         console.error("Gemini Error:", err);
         return NextResponse.json({ success: false, error: err.message }, { status: 500 });
