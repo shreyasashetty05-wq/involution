@@ -52,7 +52,7 @@ export function TextRevealScroll({
               if (word === "") return null;
               const start = wordCount / totalWords;
               const end = start + 1 / totalWords;
-              wordCount++;
+              wordCount+=1;
               
               const cleanWord = word.replace(/[.,!?]/g, "");
               const isHighlighted = highlightWords.some(w => w.toLowerCase() === cleanWord.toLowerCase());

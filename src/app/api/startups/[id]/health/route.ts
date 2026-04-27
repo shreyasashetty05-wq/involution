@@ -71,7 +71,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
         if (revArray && Array.isArray(revArray) && revArray.length > 1) {
             const anomalies: string[] = [];
-            for (let i = 1; i < revArray.length; i++) {
+            for (let i = 1; i < revArray.length; i+=1) {
                 const prev = revArray[i - 1];
                 const curr = revArray[i];
                 if (prev > 0) {
