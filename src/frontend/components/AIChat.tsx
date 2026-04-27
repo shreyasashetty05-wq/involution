@@ -41,7 +41,7 @@ export default function AIChat({ startupId }: AIChatProps) {
         const msg = messages[index];
         if (msg.role !== 'ai' || msg.feedback) return;
 
-        setMessages(prev => prev.map((m, i) => i === index ? { ...m, feedback: type } : m));
+        setMessages(prev => prev.map((m, i) => (i === index ? { ...m, feedback: type } : m)));
 
         try {
             await fetch('/api/ai-feedback', {
