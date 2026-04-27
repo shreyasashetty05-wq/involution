@@ -121,7 +121,7 @@ export default function FinancialUpdatePage({ params }: { params: Promise<{ id: 
             <div className="grid md:grid-cols-5 gap-8">
                 {/* Form Col */}
                 <div className="md:col-span-3">
-                    <form onSubmit={handleSubmit} className="bg-white border border-slate-200 shadow-sm rounded-2xl bg-white p-8 rounded-2xl space-y-6 border border-slate-200">
+                    <form onSubmit={handleSubmit} className="bg-white border border-slate-200 shadow-sm rounded-2xl bg-white p-8 space-y-6">
 
                         {error && (
                             <div className="bg-red-950/40 border border-red-500/30 rounded-xl p-4 flex items-start gap-3">
@@ -173,7 +173,7 @@ export default function FinancialUpdatePage({ params }: { params: Promise<{ id: 
                 </div>
 
                 <div className="md:col-span-2">
-                    <div className="bg-white border border-slate-200 shadow-sm rounded-2xl bg-white p-8 rounded-2xl sticky top-24 border border-slate-200 shadow-2xl relative overflow-hidden group">
+                    <div className="bg-white border border-slate-200 shadow-sm rounded-2xl bg-white p-8 sticky top-24 shadow-2xl relative overflow-hidden group">
                         <div className="absolute top-0 left-0 w-1 h-full bg-indigo-500/50"></div>
                         <div className="absolute top-0 right-0 p-4 opacity-[0.03] group-hover:opacity-10 transition-opacity">
                             <Bot className="size-32 text-indigo-400" />

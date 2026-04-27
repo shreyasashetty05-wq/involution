@@ -75,7 +75,7 @@ export default function InvestorDashboard() {
 
                 {/* Left Column: Signed Agreements (History) */}
                 <div className="lg:col-span-2 space-y-6">
-                    <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 rounded-2xl border border-slate-200">
+                    <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
                         <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2 border-b border-slate-200 pb-4">
                             <FileText className="size-5 text-emerald-600" /> Executed Agreements
                         </h2>
@@ -137,7 +137,7 @@ export default function InvestorDashboard() {
 
                     {/* Active Portfolio Stats */}
                     <div className="grid grid-cols-2 gap-6">
-                        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 rounded-2xl flex items-center gap-4 border border-slate-200">
+                        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 flex items-center gap-4">
                             <div className="size-12 bg-emerald-50 rounded-full flex items-center justify-center border border-emerald-300">
                                 <TrendingUp className="size-6 text-emerald-600" />
                             </div>
@@ -146,7 +146,7 @@ export default function InvestorDashboard() {
                                 <p className="text-2xl font-bold font-mono text-slate-800">{stats.totalCapital}</p>
                             </div>
                         </div>
-                        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 rounded-2xl flex items-center gap-4 border border-slate-200">
+                        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 flex items-center gap-4">
                             <div className="size-12 bg-emerald-900/30 rounded-full flex items-center justify-center border border-emerald-500/30">
                                 <ShieldCheck className="size-6 text-emerald-600" />
                             </div>
@@ -160,7 +160,7 @@ export default function InvestorDashboard() {
 
                 {/* Right Column: Active Deal Rooms */}
                 <div className="lg:col-span-1">
-                    <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 rounded-2xl h-full border border-slate-200">
+                    <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 h-full">
                         <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2 border-b border-slate-200 pb-4">
                             <MessageSquare className="size-5 text-emerald-600" /> Active Negotiations
                         </h2>

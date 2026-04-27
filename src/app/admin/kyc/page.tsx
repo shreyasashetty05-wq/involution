@@ -73,14 +73,14 @@ export default function AdminKYCDashboard() {
                 {loading ? (
                     <div className="bg-white border border-slate-200 shadow-sm rounded-2xl p-16 text-center text-slate-500">Loading pending requests from Database...</div>
                 ) : list.length === 0 ? (
-                    <div className="bg-white border border-slate-200 shadow-sm rounded-2xl rounded-2xl p-16 text-center">
+                    <div className="bg-white border border-slate-200 shadow-sm rounded-2xl p-16 text-center">
                         <CheckCircle className="size-16 text-slate-600 mx-auto mb-4" />
                         <h3 className="text-xl font-bold text-slate-600">All Caught Up!</h3>
                         <p className="text-slate-500">No pending KYC applications to review.</p>
                     </div>
                 ) : (
                     list.map((user) => (
-                        <div key={user._id} className="bg-white border border-slate-200 shadow-sm rounded-2xl p-6 rounded-2xl flex flex-col lg:flex-row items-center justify-between gap-6 transition-all hover:bg-white/[0.08]">
+                        <div key={user._id} className="bg-white border border-slate-200 shadow-sm rounded-2xl p-6 flex flex-col lg:flex-row items-center justify-between gap-6 transition-all hover:bg-white/[0.08]">
                             <div className="flex items-center gap-6 w-full lg:w-auto">
                                 <div className={`size-14 rounded-full flex items-center justify-center font-bold text-xl ${user.matchScore > 80 ? 'bg-indigo-50 text-indigo-600' : 'bg-orange-500/20 text-orange-400'}`}>
                                     {user.matchScore}%

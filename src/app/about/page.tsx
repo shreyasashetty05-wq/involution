@@ -61,7 +61,7 @@ export default function AboutPage() {
                 {/* Right Column - Mockups Inspired by Upstox Phone Layout */}
                 <div className="lg:w-1/2 relative h-[500px] lg:size-full flex items-center justify-center lg:justify-end">
                     {/* Decorative Background Blob */}
-                    <div className="absolute right-0 top-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-tr from-indigo-100 to-pink-50 rounded-full blur-3xl opacity-60 pointer-events-none"></div>
+                    <div className="absolute right-0 top-1/2 -translate-y-1/2 size-[600px] bg-gradient-to-tr from-indigo-100 to-pink-50 rounded-full blur-3xl opacity-60 pointer-events-none"></div>
 
                     {/* Front Phone / Card - Dashboard Mockup */}
                     <div className="absolute right-10 lg:right-24 top-20 lg:top-auto z-30 w-72 h-[550px] bg-slate-950 rounded-[40px] border-[12px] border-slate-900 shadow-2xl overflow-hidden  rotate-2 hover:rotate-0 transition-transform duration-500">

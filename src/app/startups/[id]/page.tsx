@@ -192,7 +192,7 @@ export default function StartupProfile() {
                                             </div>
                                             <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
                                                 <div className="size-12 rounded-full bg-white/20 group-hover:bg-emerald-600/80 backdrop-blur-md flex items-center justify-center transition-all group-hover:scale-110">
-                                                    <div className="size-0 border-t-[8px] border-t-transparent border-l-[14px] border-l-white group-hover:border-l-zinc-950 border-b-[8px] border-b-transparent ml-1"></div>
+                                                    <div className="size-0 border-y-[8px] border-y-transparent border-l-[14px] border-l-white group-hover:border-l-zinc-950 ml-1"></div>
                                                 </div>
                                             </div>
                                             <img src={vid.thumb} alt={vid.title} className="absolute inset-0 size-full object-cover opacity-60 mix-blend-overlay group-hover:opacity-80 transition-opacity duration-500 delay-75 pointer-events-none" />

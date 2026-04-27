@@ -159,7 +159,7 @@ export default function AISearchEngine() {
 
                 {/* Filters Sidebar */}
                 <div className="lg:col-span-1 space-y-6">
-                    <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 rounded-2xl sticky top-24 max-h-[85vh] overflow-y-auto custom-scrollbar border border-slate-200">
+                    <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 sticky top-24 max-h-[85vh] overflow-y-auto custom-scrollbar">
                         <div className="flex items-center justify-between mb-6">
                             <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2"><Search className="size-5 text-emerald-600" /> Search</h2>
                         </div>
@@ -360,7 +360,7 @@ export default function AISearchEngine() {
 
                                 return (
                                     <div key={startup._id || startup.id}
-                                        className="bg-white border border-slate-200 rounded-2xl shadow-sm border border-slate-200 p-6 rounded-2xl flex flex-col md:flex-row gap-6 group hover:border-emerald-400 transition-all duration-300 animate-in fade-in slide-in-from-bottom-4 bg-white"
+                                        className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 flex flex-col md:flex-row gap-6 group hover:border-emerald-400 transition-all duration-300 animate-in fade-in slide-in-from-bottom-4 bg-white"
                                         style={{ animationDelay: `${idx * 100}ms` }}
                                     >
                                         {/* Score Circular badge */}
