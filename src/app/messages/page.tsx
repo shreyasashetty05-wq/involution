@@ -118,6 +118,13 @@ function DealWorkspace() {
     // Fetch existing deal data
     useEffect(() => {
         if (!startupId) return;
+        /**
+        * Synchronizes deal messages and negotiation state from the API into the UI.
+        * @example
+        * sync()
+        * void
+        * @returns {void} No return value.
+        **/
         const fetchDeal = async () => {
             try {
                 const url = investorId ? `/api/deals?startupId=${startupId}&investorId=${investorId}` : `/api/deals?startupId=${startupId}`;
@@ -150,6 +157,14 @@ function DealWorkspace() {
         setTimeout(() => setCurrentPhase(p => Math.min(5, p + 1)), 200);
     };
 
+    /**
+    * Handles message form submission, adds the message optimistically to the UI, and saves it to the database.
+    * @example
+    * sync(event)
+    * void
+    * @param {React.FormEvent} e - Form submission event.
+    * @returns {Promise<void>} Resolves when the message has been processed and the save attempt completes.
+    **/
     const sendMessage = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!inputMessage.trim() || !startupId) return;

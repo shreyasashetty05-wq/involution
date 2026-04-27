@@ -2,6 +2,15 @@ import { NextResponse } from 'next/server';
 import dbConnect from "@/database/mongodb";
 import Startup from "@/database/models/Startup";
 
+/**
+ * Updates a startup's KPI and financial metrics for a given month.
+ * @example
+ * POST(req, { params })
+ * { success: true, data: startup }
+ * @param {Request} req - The incoming request containing KPI data in JSON format.
+ * @param {{ params: Promise<{ id: string }> }} context - Route context containing the startup ID.
+ * @returns {Promise<Response>} A JSON response indicating success with updated startup data, or an error response.
+ **/
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
         await dbConnect();

@@ -4,6 +4,14 @@ import AIPrediction from "@/database/models/AIPrediction";
 
 // This would typically be triggered by a Cron Job, Webhook, or Admin Interface
 // when actual financial data matches the time horizon predicted by the AI.
+/**
+* Verifies pending AI predictions for a startup and metric against an actual value, then updates their status.
+* @example
+* POST(req)
+* { success: true, message: 'Processed 3 predictions.', stats: { verified: 2, failed: 1 } }
+* @param {NextRequest} req - The incoming request containing startupId, metric, and actualValue in the JSON body.
+* @returns {Promise<NextResponse>} A JSON response indicating verification results or an error status.
+**/
 export async function POST(req: NextRequest) {
     try {
         await dbConnect();

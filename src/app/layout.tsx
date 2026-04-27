@@ -12,6 +12,14 @@ export const metadata: Metadata = {
   description: "The premium platform for startup investments and AI-powered match-making.",
 };
 
+/**
+ * Defines the root HTML layout for the application and wraps page content with global providers and navigation.
+ * @example
+ * RootLayout({ children: <Page /> })
+ * <html lang="en">...</html>
+ * @param {{ children: React.ReactNode }} children - The page content to render inside the main application layout.
+ * @returns {JSX.Element} The root layout element containing the HTML, body, providers, navbar, and main content area.
+ **/
 export default function RootLayout({
   children,
 }: Readonly<{

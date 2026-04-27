@@ -4,6 +4,14 @@ import { Deal } from "@/database/models/Deal";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 
+/**
+ * Fetches a deal for the authenticated user by startupId, optionally using a provided investorId.
+ * @example
+ * GET(req)
+ * { success: true, deal, currentUser }
+ * @param {NextRequest} req - The incoming Next.js request containing search parameters such as investorId and startupId.
+ * @returns {Promise<NextResponse>} A JSON response containing the deal data, current user ID, or an error response.
+ **/
 export async function GET(req: NextRequest) {
     try {
         await dbConnect();
@@ -33,6 +41,14 @@ export async function GET(req: NextRequest) {
     }
 }
 
+/**
+* Saves a deal message for an authenticated user and creates the deal if it does not already exist.
+* @example
+* POST(req)
+* { success: true, deal }
+* @param {NextRequest} req - The incoming Next.js request containing startupId, startupName, text, and optional investorId.
+* @returns {Promise<NextResponse>} A JSON response indicating success with the saved deal, or an error response if validation, authorization, or database operations fail.
+**/
 export async function POST(req: NextRequest) {
     try {
         await dbConnect();

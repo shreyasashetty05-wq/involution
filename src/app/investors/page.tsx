@@ -1,6 +1,13 @@
 import Link from "next/link";
 import { ArrowRight, ShieldCheck, Zap, BarChart2, TrendingUp } from "lucide-react";
 
+/**
+* Renders the investors landing page with a verified-startups marketing message, primary navigation actions, and key platform metrics.
+* @example
+* InvestorsPage()
+* <div>...</div>
+* @returns {JSX.Element} The investors page UI.
+**/
 export default function InvestorsPage() {
     return (
         <div className="relative min-h-screen flex flex-col items-center justify-center text-center px-6 py-24 bg-[#f8faf9] overflow-hidden">

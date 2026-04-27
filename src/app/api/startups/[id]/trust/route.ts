@@ -34,6 +34,15 @@ const trustSchema: Schema = {
     required: ["totalTrust", "trustLabel", "trustColor", "tier", "factors", "verifiedCount", "totalFactors"]
 };
 
+/**
+* Generates a trust analysis report for a startup by fetching its data, sending it to an AI model for evaluation, and returning the resulting trust score and breakdown.
+* @example
+* GET(req, { params })
+* { success: true, startup: { name: "Acme", sector: "SaaS" }, report: { totalTrust: 82 } }
+* @param {NextRequest} req - The incoming Next.js request object.
+* @param {{ params: Promise<{ id: string }> }} context - Route context containing the startup ID parameter.
+* @returns {Promise<NextResponse>} A JSON response with the trust report or an error message.
+**/
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     try {
         await dbConnect();

@@ -2,6 +2,13 @@ import { NextResponse } from 'next/server';
 import dbConnect from "@/database/mongodb";
 import Startup from "@/database/models/Startup";
 
+/**
+ * Retrieves all startups from the database, sorted by score in descending order, and returns them as JSON.
+ * @example
+ * GET()
+ * { success: true, data: startups }
+ * @returns {Promise<Response>} A JSON response containing the startups data on success, or an error response on failure.
+ */
 export async function GET() {
     try {
         await dbConnect();

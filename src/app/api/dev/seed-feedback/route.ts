@@ -8,6 +8,14 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
+/**
+ * Seeds the database with an initial AI feedback record for development use.
+ * @example
+ * GET(req)
+ * { success: true, message: "Successfully created initial aifeedbacks collection item!", feedback: newFeedback }
+ * @param {NextRequest} req - The incoming Next.js request object.
+ * @returns {NextResponse} A JSON response indicating success or failure.
+ **/
 export async function GET(req: NextRequest) {
     // Hard block in production
     if (process.env.NODE_ENV === 'production') {

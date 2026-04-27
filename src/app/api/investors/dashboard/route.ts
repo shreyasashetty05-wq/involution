@@ -4,6 +4,19 @@ import { Deal } from "@/database/models/Deal";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 
+/**
+ * Fetches the authenticated investor's dashboard data, including executed agreements, active negotiation chats, and portfolio statistics.
+ * @example
+ * GET(req)
+ * {
+ *   success: true,
+ *   executedAgreements: [],
+ *   activeChats: [],
+ *   portfolioStats: { totalCapital: '₹ 0', activeStartups: 0 }
+ * }
+ * @param {NextRequest} req - The incoming Next.js request object.
+ * @returns {Promise<NextResponse>} A JSON response containing dashboard data or an error response.
+ **/
 export async function GET(req: NextRequest) {
     try {
         await dbConnect();

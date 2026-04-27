@@ -5,6 +5,14 @@ import { CheckCircle, XCircle, FileSearch, ShieldAlert } from "lucide-react";
 
 // Remove mock arrays; fetching natively from MongoDB
 
+/**
+ * Renders the KYC admin dashboard for reviewing pending user submissions, viewing uploaded documents, and approving or rejecting applications.
+ * @example
+ * AdminKYCDashboard()
+ * <AdminKYCDashboard />
+ * @param {void} Argument - This component does not accept any arguments.
+ * @returns {JSX.Element} The KYC admin dashboard UI.
+ **/
 export default function AdminKYCDashboard() {
     const [list, setList] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -25,6 +33,15 @@ export default function AdminKYCDashboard() {
         fetchPending();
     }, []);
 
+    /**
+     * Sends a KYC review action to the server and removes the reviewed item from the list on success.
+     * @example
+     * sync("64f1c2a9b8e4d2a1c3f4e5b6", "Approved")
+     * void
+     * @param {string} id - The ID of the KYC record to review.
+     * @param {"Approved" | "Rejected"} action - The review status to submit for the KYC record.
+     * @returns {Promise<void>} Resolves when the review request completes; errors are logged to the console.
+     **/
     const handleAction = async (id: string, action: "Approved" | "Rejected") => {
         try {
             await fetch(`/api/kyc/${id}/review`, {

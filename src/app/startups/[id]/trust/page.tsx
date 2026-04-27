@@ -17,6 +17,14 @@ const COLOR_STROKE: Record<string, string> = {
     emerald: "#10b981", blue: "#3b82f6", yellow: "#eab308", orange: "#f97316", red: "#ef4444"
 };
 
+/**
+ * Renders the Trust & Reputation Score page for a startup, including overall trust score, tier, and factor breakdown.
+ * @example
+ * TrustScorePage()
+ * JSX page content for trust score display
+ * @param {void} Argument - This component does not accept any arguments.
+ * @returns {JSX.Element} The trust score page UI.
+ */
 export default function TrustScorePage() {
     const params = useParams();
     const id = params?.id as string;

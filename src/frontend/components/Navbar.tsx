@@ -4,6 +4,14 @@ import Link from "next/link";
 import Image from "next/image";
 import { useSession, signOut } from "next-auth/react";
 
+/**
+* Renders the top navigation bar with branding, role-based links, and authentication actions.
+* @example
+* Navbar()
+* <nav>...</nav>
+* @param {undefined} Argument - This component does not take any arguments.
+* @returns {JSX.Element} The rendered navigation bar component.
+**/
 export default function Navbar() {
     const { data: session, status } = useSession();
     return (

@@ -5,6 +5,14 @@ import { useState } from "react";
 import Link from "next/link";
 import { UserPlus, ArrowLeft } from "lucide-react";
 
+/**
+ * Renders the registration page where users choose to sign up as a startup founder or investor and continue with Google authentication.
+ * @example
+ * RegisterPage()
+ * JSX for the registration page
+ * @param {never} Argument - This component does not accept any arguments.
+ * @returns {JSX.Element} The registration page UI.
+ **/
 export default function RegisterPage() {
     const [isLoading, setIsLoading] = useState<"startup" | "investor" | null>(null);
 

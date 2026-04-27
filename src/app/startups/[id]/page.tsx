@@ -8,6 +8,13 @@ import AIChat from "@/frontend/components/AIChat";
 
 // Remove mock data. We will fetch dynamically now.
 
+/**
+ * Displays a startup profile page with pitch media, financial charts, activity status, and AI analysis tools.
+ * @example
+ * StartupProfile()
+ * <div>Startup profile UI</div>
+ * @returns {JSX.Element} The rendered startup profile page.
+ */
 export default function StartupProfile() {
     const params = useParams();
     const idValue = Array.isArray(params.id) ? params.id[0] : params.id;
@@ -16,6 +23,13 @@ export default function StartupProfile() {
     const [playingVideoIdx, setPlayingVideoIdx] = useState<number | null>(null);
 
     useEffect(() => {
+        /**
+        * Loads a startup by ID from the startups API and updates component state.
+        * @example
+        * sync()
+        * undefined
+        * @returns {Promise<void>} Resolves when the startup data has been fetched and state is updated.
+        **/
         const fetchStartup = async () => {
             try {
                 // We're reusing the /api/startups GET which currently returns all
@@ -60,6 +74,14 @@ export default function StartupProfile() {
     }
 
     // Multi-Graph Data Generation Helpers
+    /**
+     * Generates SVG path and area strings from a numeric dataset.
+     * @example
+     * generateChartPaths([1, 3, 2, 5])
+     * { path: "M 0.00 100.00 L 33.33 50.00 L 66.67 75.00 L 100.00 0.00", area: "M 0.00 100.00 L 33.33 50.00 L 66.67 75.00 L 100.00 0.00 L 100 100 L 0 100 Z", max: 5, min: 1 }
+     * @param {number[]} data - Array of numeric values used to build the chart path.
+     * @returns {{ path: string, area: string, max: number, min: number }} Object containing the SVG path, filled area path, and value bounds.
+     */
     const generatePath = (data: number[]) => {
         if (!data || data.length === 0) return { path: "", area: "", max: 0, min: 0 };
         const max = Math.max(...data);

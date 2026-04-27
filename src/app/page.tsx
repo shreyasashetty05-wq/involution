@@ -2,6 +2,13 @@ import Link from 'next/link';
 import { Activity, BarChart2, ShieldCheck, CheckCircle, Zap, ArrowRight } from 'lucide-react';
 import { TypewriterText } from '@/components/TypewriterText';
 
+/**
+ * Renders the InVolution landing page with hero messaging, product metrics, dashboard mockups, startup health monitoring, AI due diligence highlights, and call-to-action sections for investors and startups.
+ * @example
+ * Home()
+ * <div>...</div>
+ * @returns {JSX.Element} The homepage JSX element for the investment platform.
+ **/
 export default function Home() {
   return (
     <div className="text-slate-900">

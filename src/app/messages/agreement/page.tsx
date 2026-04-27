@@ -4,6 +4,14 @@ import { Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Printer, ArrowLeft } from 'lucide-react';
 
+/**
+ * Renders a printable investment contract agreement page populated from URL query parameters.
+ * @example
+ * AgreementContent()
+ * JSX.Element
+ * @param {void} - This component does not accept any parameters.
+ * @returns {JSX.Element} A React component that displays the investment agreement and supports printing.
+ **/
 function AgreementContent() {
     const searchParams = useSearchParams();
     const router = useRouter();

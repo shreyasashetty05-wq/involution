@@ -8,12 +8,27 @@ interface StartupDashboardClientProps {
     myStartups: any[];
 }
 
+/**
+ * Renders the startup founder dashboard with profile metrics, active investor deals, and secured funding agreements.
+ * @example
+ * StartupDashboardClient({ myStartups })
+ * <StartupDashboardClient myStartups={[]} />
+ * @param {{ myStartups: any[] }} myStartups - List of startup profiles belonging to the current user.
+ * @returns {JSX.Element} The startup dashboard UI.
+ **/
 export default function StartupDashboardClient({ myStartups }: StartupDashboardClientProps) {
     const [activeDeals, setActiveDeals] = useState<any[]>([]);
     const [agreements, setAgreements] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
+        /**
+        * Fetches startup deal data from the API and updates the active deals and agreements state.
+        * @example
+        * sync()
+        * undefined
+        * @returns {void} No return value.
+        **/
         const fetchDeals = async () => {
             try {
                 const res = await fetch('/api/startups/deals');
@@ -236,6 +251,14 @@ export default function StartupDashboardClient({ myStartups }: StartupDashboardC
     );
 }
 
+/**
+ * Renders an SVG icon component for a stylized building/dashboard graphic.
+ * @example
+ * StartupDashboardClient(props)
+ * <svg>...</svg>
+ * @param {React.SVGProps<SVGSVGElement>} props - Props to spread onto the SVG element.
+ * @returns {JSX.Element} The rendered SVG icon component.
+ */
 const BuildingIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg
         xmlns="http://www.w3.org/2000/svg"

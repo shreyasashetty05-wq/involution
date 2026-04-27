@@ -4,6 +4,13 @@ import { Deal } from "@/database/models/Deal";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 
+/**
+ * Seeds two sample deal records for the currently authenticated investor in non-production environments.
+ * @example
+ * GET()
+ * { success: true, message: "Successfully seeded 2 deals for Investor: investor123. Go refresh the Dashboard!" }
+ * @returns {Promise<NextResponse>} A JSON response indicating success, authorization failure, production blocking, or an internal error.
+ **/
 export async function GET() {
     // Hard block in production
     if (process.env.NODE_ENV === 'production') {

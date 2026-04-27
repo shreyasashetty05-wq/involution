@@ -2,6 +2,14 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { getToken } from "next-auth/jwt";
 
+/**
+ * Handles request routing and access control for authenticated users, including role-based redirects and KYC gating.
+ * @example
+ * proxy(request)
+ * NextResponse.redirect(new URL('/login', request.url))
+ * @param {NextRequest} request - The incoming Next.js request object.
+ * @returns {Promise<NextResponse>} A NextResponse that either allows the request to continue or redirects the user.
+ **/
 export async function proxy(request: NextRequest) {
     // Decode the NextAuth JWT to access custom fields like 'role'
     const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET || "inVolution_mock_secret_key_12345" });

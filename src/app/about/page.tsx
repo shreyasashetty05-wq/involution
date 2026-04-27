@@ -4,6 +4,13 @@ import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight, CheckCircle2, TrendingUp, ShieldCheck } from "lucide-react";
 
+/**
+ * Renders the About page hero section with venture capital messaging, email signup CTAs, and illustrative dashboard/startup mockups.
+ * @example
+ * AboutPage()
+ * <AboutPage />
+ * @returns {JSX.Element} The About page React component.
+ */
 export default function AboutPage() {
     return (
         <div className="bg-white min-h-screen text-slate-900 font-sans overflow-hidden">

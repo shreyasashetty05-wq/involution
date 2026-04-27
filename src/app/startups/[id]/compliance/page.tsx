@@ -47,6 +47,14 @@ const PRIORITY_META: Record<string, { label: string; color: string }> = {
     low: { label: "Low", color: "text-slate-400" },
 };
 
+/**
+ * Renders a legal compliance report page for a startup, including score summary, category filters, and a checklist of compliance items.
+ * @example
+ * CompliancePage()
+ * <CompliancePage />
+ * @param {void} None - This component does not accept any arguments.
+ * @returns {JSX.Element} The rendered compliance report page UI.
+ **/
 export default function CompliancePage() {
     const params = useParams();
     const id = params?.id as string;

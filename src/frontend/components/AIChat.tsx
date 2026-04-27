@@ -13,6 +13,14 @@ interface Message {
     feedback?: 'upvote' | 'downvote';
 }
 
+/**
+* Renders an interactive AI chat interface for asking questions about a startup and submitting feedback on AI responses.
+* @example
+* AIChat({ startupId })
+* <AI chat component with message history, input, loading state, and feedback controls>
+* @param {AIChatProps} { startupId } - Props containing the startup identifier used for chat requests and feedback submission.
+* @returns {JSX.Element} The AI chat UI component.
+**/
 export default function AIChat({ startupId }: AIChatProps) {
     const [messages, setMessages] = useState<Message[]>([
         { role: 'ai', content: "Hello! I'm the InVolution AI Analyst. I've analyzed this startup's profile. What would you like to know?" }
@@ -20,6 +28,15 @@ export default function AIChat({ startupId }: AIChatProps) {
     const [input, setInput] = useState("");
     const [isLoading, setIsLoading] = useState(false);
 
+    /**
+    * Submits upvote or downvote feedback for an AI chat message and records it on the server.
+    * @example
+    * sync(2, 'upvote')
+    * undefined
+    * @param {number} index - The index of the message to update with feedback.
+    * @param {'upvote' | 'downvote'} type - The feedback type to apply to the AI message.
+    * @returns {Promise<void>} A promise that resolves after the feedback update attempt completes.
+    **/
     const handleFeedback = async (index: number, type: 'upvote' | 'downvote') => {
         const msg = messages[index];
         if (msg.role !== 'ai' || msg.feedback) return;
@@ -43,6 +60,14 @@ export default function AIChat({ startupId }: AIChatProps) {
         }
     };
 
+    /**
+    * Handles chat form submission, sends the user's message to the AI chat API, and updates the conversation state with the response.
+    * @example
+    * sync(event)
+    * void
+    * @param {React.FormEvent} e - The form submission event.
+    * @returns {Promise<void>} A promise that resolves after the message is processed and the loading state is updated.
+    **/
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!input.trim() || isLoading) return;

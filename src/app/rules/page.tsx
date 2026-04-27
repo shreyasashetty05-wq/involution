@@ -1,6 +1,13 @@
 import Link from 'next/link';
 import { ShieldAlert, FileWarning, Scale } from 'lucide-react';
 
+/**
+ * Renders the platform rules and liability FAQ page, presenting compliance guidance, liability disclaimers, and common questions about using the InVolution Deal Room.
+ * @example
+ * RulesFAQPage()
+ * <RulesFAQPage />
+ * @returns {JSX.Element} The complete rules and FAQ page UI.
+ */
 export default function RulesFAQPage() {
     return (
         <div className="min-h-screen bg-[#f8faf9]">

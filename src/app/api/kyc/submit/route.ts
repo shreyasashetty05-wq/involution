@@ -3,6 +3,14 @@ import { getToken } from 'next-auth/jwt';
 import dbConnect from "@/database/mongodb";
 import KYCDocument from "@/database/models/KYCDocument";
 
+/**
+* Handles KYC document submission by validating the authenticated user, processing uploaded Aadhaar and PAN files, and storing the record in the database.
+* @example
+* POST(req)
+* { success: true, data: kycRecord }
+* @param {Request} req - Incoming request containing form data and uploaded identity documents.
+* @returns {Promise<Response>} JSON response indicating success with the saved KYC record or an error status.
+**/
 export async function POST(req: Request) {
     try {
         const token = await getToken({ req: req as any, secret: process.env.NEXTAUTH_SECRET || "inVolution_mock_secret_key_12345" });
