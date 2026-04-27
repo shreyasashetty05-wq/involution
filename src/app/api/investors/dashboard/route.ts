@@ -44,7 +44,7 @@ export async function GET(req: NextRequest) {
 
             // Stats aggregation for Executed deals
             if (deal.status === 'executed') {
-                activeStartups++;
+                activeStartups+=1;
 
                 // Parse amount string (e.g. "₹ 50,00,000") to number for aggregation
                 const amountMatches = deal.termAmount?.match(/[\d,]+/);
