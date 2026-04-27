@@ -125,7 +125,7 @@ export async function POST(req: Request) {
         // we can just append the recent context or rely strictly on the prompt.
         // To keep it simple, we pass it as a single content request right now.
 
-        let contents: any[] = [];
+        const contents: any[] = [];
 
         // Map history to gemini format if needed, but simple prompt is usually enough for a one-off Q&A.
         // We will just use the direct prompt for the immediate question to keep things focused.
