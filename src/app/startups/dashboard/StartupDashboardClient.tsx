@@ -62,28 +62,28 @@ export default function StartupDashboardClient({ myStartups }: StartupDashboardC
                                 </h2>
 
                                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                    <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 rounded-2xl border border-slate-200 bg-white">
+                                    <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 bg-white">
                                         <div className="size-10 bg-emerald-50 rounded-full flex items-center justify-center mb-3">
                                             <Eye className="size-5 text-emerald-600" />
                                         </div>
                                         <p className="text-xs text-slate-9000 uppercase tracking-wider mb-1">Profile Views</p>
                                         <p className="text-2xl font-bold font-mono text-slate-900">{1492 + idx * 83}</p>
                                     </div>
-                                    <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 rounded-2xl border border-slate-200 bg-white">
+                                    <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 bg-white">
                                         <div className="size-10 bg-emerald-900/30 rounded-full flex items-center justify-center mb-3">
                                             <Activity className="size-5 text-emerald-600" />
                                         </div>
                                         <p className="text-xs text-slate-9000 uppercase tracking-wider mb-1">Deal Room Saves</p>
                                         <p className="text-2xl font-bold font-mono text-slate-900">{38 + idx * 4}</p>
                                     </div>
-                                    <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 rounded-2xl border border-slate-200 bg-white">
+                                    <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 bg-white">
                                         <div className="size-10 bg-amber-900/30 rounded-full flex items-center justify-center mb-3">
                                             <Star className="size-5 text-amber-500" />
                                         </div>
                                         <p className="text-xs text-slate-9000 uppercase tracking-wider mb-1">AI Match Score</p>
                                         <p className="text-2xl font-bold font-mono text-slate-900">{myStartup.score || "75"}<span className="text-sm text-slate-9000">/100</span></p>
                                     </div>
-                                    <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 rounded-2xl border border-slate-200 bg-white">
+                                    <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 bg-white">
                                         <div className="size-10 bg-emerald-900/30 rounded-full flex items-center justify-center mb-3">
                                             <Users className="size-5 text-emerald-600" />
                                         </div>
@@ -107,7 +107,7 @@ export default function StartupDashboardClient({ myStartups }: StartupDashboardC
                             </div>
                         ))
                     ) : (
-                        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-8 rounded-2xl text-center border-dashed border-2 border-slate-200 bg-white">
+                        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-8 text-center border-dashed border-2 bg-white">
                             <ShieldCheck className="size-12 text-slate-400 mx-auto mb-4" />
                             <h3 className="text-xl font-bold text-slate-800 mb-2">No Profile Found</h3>
                             <p className="text-slate-9000 mb-6 max-w-sm mx-auto">You haven't published a startup profile under this email address yet. Investors cannot discover you until you do.</p>
@@ -120,7 +120,7 @@ export default function StartupDashboardClient({ myStartups }: StartupDashboardC
 
                     {/* Active Deals / Inbox */}
                     {myStartups.length > 0 && (
-                        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 rounded-2xl mt-12 border border-slate-200 bg-white">
+                        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 mt-12 bg-white">
                             <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2 border-b border-slate-200 pb-4">
                                 <MessageSquare className="size-5 text-emerald-600" /> Active Investor Workspaces
                             </h2>
@@ -190,7 +190,7 @@ export default function StartupDashboardClient({ myStartups }: StartupDashboardC
                         </div>
                     ))}
 
-                    <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 rounded-2xl h-full border border-slate-200 bg-white">
+                    <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 h-full bg-white">
                         <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2 border-b border-slate-200 pb-4">
                             <CheckCircle2 className="size-5 text-emerald-600" /> Secured Funding
                         </h2>

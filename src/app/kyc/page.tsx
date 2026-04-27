@@ -91,7 +91,7 @@ export default function KYCSubmitPage() {
                 </p>
             </div>
 
-            <div className="bg-white border border-slate-200 shadow-sm rounded-2xl rounded-2xl p-8 relative overflow-hidden">
+            <div className="bg-white border border-slate-200 shadow-sm rounded-2xl p-8 relative overflow-hidden">
                 {/* Decorative background glow */}
                 <div className="absolute -top-32 -left-32 size-64 bg-indigo-600/20 rounded-full blur-[100px]" />
 

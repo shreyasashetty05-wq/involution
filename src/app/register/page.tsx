@@ -18,8 +18,8 @@ export default function RegisterPage() {
     return (
         <div className="min-h-screen flex items-center justify-center p-6 relative bg-[#f8faf9] overflow-hidden">
             {/* Soft bg blobs */}
-            <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-emerald-50 rounded-full blur-[120px] opacity-60 pointer-events-none" />
-            <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-emerald-100/40 rounded-full blur-[100px] pointer-events-none" />
+            <div className="absolute top-0 left-0 size-[500px] bg-emerald-50 rounded-full blur-[120px] opacity-60 pointer-events-none" />
+            <div className="absolute bottom-0 right-0 size-[400px] bg-emerald-100/40 rounded-full blur-[100px] pointer-events-none" />
 
             <div className="w-full max-w-md relative z-10 animate-fade-in-up">
                 <Link href="/" className="inline-flex items-center gap-2 text-slate-400 hover:text-emerald-600 mb-8 transition-colors text-sm font-medium">
