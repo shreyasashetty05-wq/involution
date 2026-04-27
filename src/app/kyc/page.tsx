@@ -38,7 +38,7 @@ export default function KYCSubmitPage() {
         setErrorMsg("");
 
         // Strip spaces and dashes so formats like "1234 5678 9012" and "1234-5678-9012" both pass
-        const cleanedAadhaar = aadhaar.replace(/[\s\-]/g, '');
+        const cleanedAadhaar = aadhaar.replace(/[\s-]/g, '');
         const aadhaarValid = /^\d{12}$/.test(cleanedAadhaar);
         const panValid = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/i.test(pan.trim());
 
