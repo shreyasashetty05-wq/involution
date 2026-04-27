@@ -79,7 +79,7 @@ export default function PublishStartupPage() {
         setFormData(prev => ({
             ...prev,
             [section]: {
-                // @ts-ignore
+                // @ts-expect-error
                 ...prev[section],
                 [field]: value
             }
