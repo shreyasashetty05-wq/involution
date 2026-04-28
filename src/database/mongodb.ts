@@ -1,12 +1,6 @@
 import mongoose from 'mongoose';
 
-const {MONGODB_URI} = process.env;
-
-if (!MONGODB_URI) {
-    throw new Error(
-        'Please define the MONGODB_URI environment variable inside .env.local'
-    );
-}
+const { MONGODB_URI } = process.env;
 
 /**
  * Global is used here to maintain a cached connection across hot reloads
@@ -27,6 +21,10 @@ if (!cached) {
  * @returns {Promise<import("mongoose").Mongoose>} Resolves to the cached Mongoose connection instance.
  **/
 async function dbConnect() {
+    if (!MONGODB_URI) {
+        throw new Error('Missing MONGODB_URI environment variable.');
+    }
+
     if (cached.conn) {
         return cached.conn;
     }

@@ -29,7 +29,13 @@ export async function POST(req: Request) {
         const newStartup = await publishStartup(body, token.email);
 
         // Fire and forget AI Analysis trigger
-        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || `http://localhost:${process.env.PORT || 3000}`;
+        const host =
+            req.headers.get("x-forwarded-host") ??
+            req.headers.get("host") ??
+            new URL(req.url).host;
+        const proto =
+            req.headers.get("x-forwarded-proto") ?? new URL(req.url).protocol.replace(":", "");
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || `${proto}://${host}`;
         fetch(`${baseUrl}/api/ai-analyze`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
