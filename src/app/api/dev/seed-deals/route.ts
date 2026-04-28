@@ -27,7 +27,7 @@ export async function GET() {
             return NextResponse.json({ success: false, error: 'Please log in to the web app first to seed data for your account.' }, { status: 401 });
         }
 
-        const investorId = session.user.id || session.user.email;
+        const investorId = (session.user as any).id || session.user.email;
 
         // Create a dummy Executed Deal
         await Deal.create({

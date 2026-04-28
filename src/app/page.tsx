@@ -156,9 +156,9 @@ export default function Home() {
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {[
-              { label: 'Burn Rate', value: '$42k', sub: '/mo', delta: '↓ 5%', bar: 65, good: true },
+              { label: 'Burn Rate', value: '₹42k', sub: '/mo', delta: '↓ 5%', bar: 65, good: true },
               { label: 'Runway', value: '18 Mo', sub: '', delta: '+2mo', bar: 75, good: true },
-              { label: 'Revenue', value: '$125k', sub: 'ARR', delta: '+15%', bar: 85, good: true },
+              { label: 'Revenue', value: '₹125k', sub: 'ARR', delta: '+15%', bar: 85, good: true },
               { label: 'Churn', value: '2.4%', sub: '', delta: '↓ 0.1%', bar: 24, good: false },
               { label: 'Gross Margin', value: '68%', sub: '', delta: '+2%', bar: 68, good: true },
               { label: 'Growth', value: '12%', sub: 'MoM', delta: '+3%', bar: 72, good: true },

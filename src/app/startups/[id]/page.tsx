@@ -133,7 +133,7 @@ export default function StartupProfile() {
                                 <div className="flex items-center gap-3 mb-2">
                                     <h1 className="text-4xl font-bold font-outfit text-slate-900">{startup.name}</h1>
                                     <span className="px-3 py-1 bg-emerald-900/30 border border-emerald-500/30 rounded-full text-xs font-bold text-emerald-600 flex items-center gap-1">
-                                        <CheckCircle2 className="size-3" /> KYC Verified
+                                        <CheckCircle2 className="size-3" /> {startup.isStudent ? "Incubation Idea" : "KYC Verified"}
                                     </span>
                                 </div>
                                 <div className="flex items-center gap-4 text-sm text-slate-500 font-medium">
@@ -204,8 +204,9 @@ export default function StartupProfile() {
                     </div>
 
                     {/* Advanced Financial Chart */}
-                    <div className="bg-white border border-slate-200 shadow-xl rounded-2xl p-6 space-y-8">
-                        <div>
+                    {!startup.isStudent && (
+                        <div className="bg-white border border-slate-200 shadow-xl rounded-2xl p-6 space-y-8">
+                            <div>
                             <div className="flex justify-between items-center mb-4">
                                 <h3 className="text-slate-900 font-bold text-lg flex items-center gap-2"><LineChart className="size-4 text-emerald-600" /> Revenue Growth (12M)</h3>
                                 <div className="text-right">
@@ -270,6 +271,7 @@ export default function StartupProfile() {
                             </div>
                         </div>
                     </div>
+                    )}
 
                     {/* AI Analyst Chat Widget */}
                     <div className="mt-8 flex flex-col h-[600px]">
@@ -301,9 +303,11 @@ export default function StartupProfile() {
                             </div>
                         </div>
 
-                        <h3 className="text-lg font-bold text-slate-900 mb-4 border-b border-slate-200 pb-4 flex items-center gap-2">
-                            <Briefcase className="size-5 text-emerald-600" /> Current Metrics
-                        </h3>
+                        {!startup.isStudent && (
+                            <>
+                                <h3 className="text-lg font-bold text-slate-900 mb-4 border-b border-slate-200 pb-4 flex items-center gap-2">
+                                    <Briefcase className="size-5 text-emerald-600" /> Current Metrics
+                                </h3>
 
                         <div className="space-y-4 mb-8">
                             <div className="flex justify-between items-center">
@@ -319,6 +323,8 @@ export default function StartupProfile() {
                                 <span className="font-medium text-slate-600">~14 Months</span>
                             </div>
                         </div>
+                            </>
+                        )}
 
                         {activityStatus && (
                             <>

@@ -1,9 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import { Briefcase, TrendingUp, Presentation, AlertCircle, Save, Bot, Loader2, Building2, BarChart3, Settings2, ShieldCheck, ShieldAlert, LineChart } from "lucide-react";
 
 export default function PublishStartupPage() {
+    const { data: session } = useSession();
+    const isStudent = (session?.user as any)?.role === "student";
     const [formData, setFormData] = useState({
         name: "",
         sector: "FinTech",
@@ -17,11 +20,12 @@ export default function PublishStartupPage() {
         ltv: "",
         projectedROI: "",
         videos: [""],
+        founderAge: "",
 
         // 1. Basic Company Information
         basicInfo: { founderNames: "", incorporationYear: new Date().getFullYear(), companyType: "Private Ltd", location: "", teamSize: 1 },
         // 2. Business Model Details
-        businessInfo: { revenueModel: "Subscription", targetMarket: "", uvp: "", competitors: "" },
+        businessInfo: { revenueModel: "Subscription", targetMarket: "", uvp: "", competitors: "", marketingStrategy: "" },
         // 3. Financial Parameters
         financialsMonthly: { revenue: "", expenses: "", cogs: "", netProfit: 0, grossMargin: 0, netMargin: 0, burnRate: 0, runway: 0 },
         financialsYearly: { annualRevenue: "", annualExpenses: "", ebitda: "", assets: "", liabilities: "", cashInBank: "", debt: "" },
@@ -111,20 +115,27 @@ export default function PublishStartupPage() {
         const ltv = Number(formData.ltv);
         const {runway} = formData.financialsMonthly;
 
-        if (margin > 80 || margin < -200) {
-            errors.push(`Unrealistic Net Margin (${margin}%). Verify your revenue and expenses.`);
-        }
+        if (isStudent) {
+            const age = Number(formData.founderAge);
+            if (!age || age >= 24 || age < 13) {
+                errors.push("Incube student founders must be under the age of 24.");
+            }
+        } else {
+            if (margin > 80 || margin < -200) {
+                errors.push(`Unrealistic Net Margin (${margin}%). Verify your revenue and expenses.`);
+            }
 
-        if (cac > 0 && ltv > 0 && cac >= ltv) {
-            errors.push(`Unit Economics inversion detected. Customer Acquisition Cost (₹${cac}) cannot exceed Lifetime Value (₹${ltv}).`);
-        }
+            if (cac > 0 && ltv > 0 && cac >= ltv) {
+                errors.push(`Unit Economics inversion detected. Customer Acquisition Cost (₹${cac}) cannot exceed Lifetime Value (₹${ltv}).`);
+            }
 
-        if (rev < 1000 && fundingAsk > 10000000) {
-            warnings.push("High Valuation Risk: Asking for >₹1Cr funding on less than ₹1k MRR may trigger auto-rejection by the AI Matchmaking system.");
-        }
+            if (rev < 1000 && fundingAsk > 10000000) {
+                warnings.push("High Valuation Risk: Asking for >₹1Cr funding on less than ₹1k MRR may trigger auto-rejection by the AI Matchmaking system.");
+            }
 
-        if (runway > 0 && runway < 3 && fundingAsk === 0) {
-            warnings.push("Low Runway Warning: You have less than 3 months runway, consider requesting funding immediately.");
+            if (runway > 0 && runway < 3 && fundingAsk === 0) {
+                warnings.push("Low Runway Warning: You have less than 3 months runway, consider requesting funding immediately.");
+            }
         }
 
         const ytRegExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
@@ -278,6 +289,12 @@ export default function PublishStartupPage() {
                                     <label className="text-sm font-bold text-slate-700">Founder Name(s)</label>
                                     <input type="text" required className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-800 placeholder:text-zinc-600 focus:outline-none focus:border-lime-500/50 focus:ring-1 focus:ring-lime-500/20 transition-all font-medium" placeholder="Jane Doe, John Smith" value={formData.basicInfo.founderNames} onChange={(e) => handleNestedChange('basicInfo', 'founderNames', e.target.value)} />
                                 </div>
+                                {isStudent && (
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-bold text-slate-700">Founder Age</label>
+                                        <input type="number" required className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:border-lime-500/50 focus:ring-1 focus:ring-lime-500/20 transition-all font-medium" placeholder="e.g. 21" value={formData.founderAge} onChange={(e) => setFormData({ ...formData, founderAge: e.target.value })} />
+                                    </div>
+                                )}
                                 <div className="space-y-2">
                                     <label className="text-sm font-bold text-slate-700">Sector / Industry</label>
                                     <select className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:border-lime-500/50 focus:ring-1 focus:ring-lime-500/20 transition-all appearance-none font-medium" value={formData.sector} onChange={(e) => setFormData({ ...formData, sector: e.target.value })}>
@@ -289,27 +306,31 @@ export default function PublishStartupPage() {
                                         <option value="DeepTech">DeepTech</option>
                                     </select>
                                 </div>
-                                <div className="space-y-2">
-                                    <label className="text-sm font-bold text-slate-700">Company Type</label>
-                                    <select className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:border-lime-500/50 focus:ring-1 focus:ring-lime-500/20 transition-all appearance-none font-medium" value={formData.basicInfo.companyType} onChange={(e) => handleNestedChange('basicInfo', 'companyType', e.target.value)}>
-                                        <option value="Private Ltd">Private Ltd</option>
-                                        <option value="LLP">LLP</option>
-                                        <option value="Sole Proprietorship">Sole Proprietorship</option>
-                                        <option value="Inc">Inc / Corp</option>
-                                    </select>
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-sm font-bold text-slate-700">Year of Incorporation</label>
-                                    <input type="number" required className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:border-lime-500/50 focus:ring-1 focus:ring-lime-500/20 transition-all font-medium" value={formData.basicInfo.incorporationYear} onChange={(e) => handleNestedChange('basicInfo', 'incorporationYear', Number(e.target.value))} />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-sm font-bold text-slate-700">Registered Location</label>
-                                    <input type="text" className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-800 placeholder:text-zinc-600 focus:outline-none focus:border-lime-500/50 focus:ring-1 focus:ring-lime-500/20 transition-all font-medium" placeholder="Bangalore, India" value={formData.basicInfo.location} onChange={(e) => handleNestedChange('basicInfo', 'location', e.target.value)} />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-sm font-bold text-slate-700">Team Size</label>
-                                    <input type="number" className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:border-lime-500/50 focus:ring-1 focus:ring-lime-500/20 transition-all font-medium" value={formData.basicInfo.teamSize} onChange={(e) => handleNestedChange('basicInfo', 'teamSize', Number(e.target.value))} />
-                                </div>
+                                {!isStudent && (
+                                    <>
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-bold text-slate-700">Company Type</label>
+                                            <select className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:border-lime-500/50 focus:ring-1 focus:ring-lime-500/20 transition-all appearance-none font-medium" value={formData.basicInfo.companyType} onChange={(e) => handleNestedChange('basicInfo', 'companyType', e.target.value)}>
+                                                <option value="Private Ltd">Private Ltd</option>
+                                                <option value="LLP">LLP</option>
+                                                <option value="Sole Proprietorship">Sole Proprietorship</option>
+                                                <option value="Inc">Inc / Corp</option>
+                                            </select>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-bold text-slate-700">Year of Incorporation</label>
+                                            <input type="number" required={!isStudent} className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:border-lime-500/50 focus:ring-1 focus:ring-lime-500/20 transition-all font-medium" value={formData.basicInfo.incorporationYear} onChange={(e) => handleNestedChange('basicInfo', 'incorporationYear', Number(e.target.value))} />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-bold text-slate-700">Registered Location</label>
+                                            <input type="text" className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-800 placeholder:text-zinc-600 focus:outline-none focus:border-lime-500/50 focus:ring-1 focus:ring-lime-500/20 transition-all font-medium" placeholder="Bangalore, India" value={formData.basicInfo.location} onChange={(e) => handleNestedChange('basicInfo', 'location', e.target.value)} />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-bold text-slate-700">Team Size</label>
+                                            <input type="number" className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:border-lime-500/50 focus:ring-1 focus:ring-lime-500/20 transition-all font-medium" value={formData.basicInfo.teamSize} onChange={(e) => handleNestedChange('basicInfo', 'teamSize', Number(e.target.value))} />
+                                        </div>
+                                    </>
+                                )}
                             </div>
                         </div>
 
@@ -321,34 +342,44 @@ export default function PublishStartupPage() {
                                 Business Model Details
                             </h3>
                             <div className="grid md:grid-cols-2 gap-6">
-                                <div className="space-y-2">
-                                    <label className="text-sm font-bold text-slate-700">Business Model Type</label>
-                                    <select className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/20 transition-all appearance-none font-medium" value={formData.businessModel} onChange={(e) => setFormData({ ...formData, businessModel: e.target.value })}>
-                                        <option value="B2B">B2B</option>
-                                        <option value="B2C">B2C</option>
-                                        <option value="D2C">D2C</option>
-                                        <option value="SaaS">SaaS</option>
-                                        <option value="Marketplace">Marketplace</option>
-                                        <option value="Subscription">Subscription</option>
-                                        <option value="Commission-based">Commission-based</option>
-                                        <option value="Hybrid">Hybrid</option>
-                                    </select>
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-sm font-bold text-slate-700">Revenue Model</label>
-                                    <select className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/20 transition-all appearance-none font-medium" value={formData.businessInfo.revenueModel} onChange={(e) => handleNestedChange('businessInfo', 'revenueModel', e.target.value)}>
-                                        <option value="One-time sales">One-time sales</option>
-                                        <option value="Subscription">Subscription</option>
-                                        <option value="Licensing">Licensing</option>
-                                        <option value="Ads">Ads</option>
-                                        <option value="Commission">Commission</option>
-                                        <option value="Freemium">Freemium</option>
-                                    </select>
-                                </div>
+                                {!isStudent && (
+                                    <>
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-bold text-slate-700">Business Model Type</label>
+                                            <select className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/20 transition-all appearance-none font-medium" value={formData.businessModel} onChange={(e) => setFormData({ ...formData, businessModel: e.target.value })}>
+                                                <option value="B2B">B2B</option>
+                                                <option value="B2C">B2C</option>
+                                                <option value="D2C">D2C</option>
+                                                <option value="SaaS">SaaS</option>
+                                                <option value="Marketplace">Marketplace</option>
+                                                <option value="Subscription">Subscription</option>
+                                                <option value="Commission-based">Commission-based</option>
+                                                <option value="Hybrid">Hybrid</option>
+                                            </select>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-bold text-slate-700">Revenue Model</label>
+                                            <select className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/20 transition-all appearance-none font-medium" value={formData.businessInfo.revenueModel} onChange={(e) => handleNestedChange('businessInfo', 'revenueModel', e.target.value)}>
+                                                <option value="One-time sales">One-time sales</option>
+                                                <option value="Subscription">Subscription</option>
+                                                <option value="Licensing">Licensing</option>
+                                                <option value="Ads">Ads</option>
+                                                <option value="Commission">Commission</option>
+                                                <option value="Freemium">Freemium</option>
+                                            </select>
+                                        </div>
+                                    </>
+                                )}
                                 <div className="space-y-2 col-span-2">
                                     <label className="text-sm font-bold text-slate-700">Target Market</label>
                                     <input type="text" className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-800 placeholder:text-zinc-600 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/20 transition-all font-medium" placeholder="e.g. Mid-market healthcare providers in APAC" value={formData.businessInfo.targetMarket} onChange={(e) => handleNestedChange('businessInfo', 'targetMarket', e.target.value)} />
                                 </div>
+                                {isStudent && (
+                                    <div className="space-y-2 col-span-2">
+                                        <label className="text-sm font-bold text-slate-700">Marketing Strategies</label>
+                                        <textarea rows={2} required className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-800 placeholder:text-zinc-600 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/20 transition-all font-medium" placeholder="How do you plan to acquire users?" value={formData.businessInfo.marketingStrategy} onChange={(e) => handleNestedChange('businessInfo', 'marketingStrategy', e.target.value)} />
+                                    </div>
+                                )}
                                 <div className="space-y-2 col-span-2">
                                     <label className="text-sm font-bold text-slate-700">Unique Value Proposition (UVP)</label>
                                     <textarea rows={2} className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-800 placeholder:text-zinc-600 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/20 transition-all font-medium" placeholder="What sets you completely apart..." value={formData.businessInfo.uvp} onChange={(e) => handleNestedChange('businessInfo', 'uvp', e.target.value)} />
@@ -372,8 +403,10 @@ export default function PublishStartupPage() {
                                 </span>
                             </h3>
 
-                            <div className="space-y-4">
-                                <h4 className="text-sm font-bold text-slate-500 uppercase tracking-widest">Monthly Financial Entry (₹)</h4>
+                            {!isStudent && (
+                                <>
+                                    <div className="space-y-4">
+                                        <h4 className="text-sm font-bold text-slate-500 uppercase tracking-widest">Monthly Financial Entry (₹)</h4>
                                 <div className="grid md:grid-cols-3 gap-4">
                                     <div className="space-y-2">
                                         <label className="text-xs font-bold text-slate-700">Total Revenue / MRR</label>
@@ -435,6 +468,8 @@ export default function PublishStartupPage() {
                                     </div>
                                 </div>
                             </div>
+                        </>
+                    )}
 
                             <div className="space-y-4 pt-6 mt-6 border-t border-slate-200">
                                 <h4 className="text-sm font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2"><TrendingUp className="size-4" /> Deal Fundamentals</h4>
@@ -461,8 +496,10 @@ export default function PublishStartupPage() {
                             </div>
                         </div>
 
-                        {/* SECTION 4: GROWTH METRICS */}
-                        <div className="space-y-6 bg-slate-50 border border-slate-200 p-6 sm:p-8 rounded-2xl relative overflow-hidden group">
+                        {!isStudent && (
+                            <>
+                                {/* SECTION 4: GROWTH METRICS */}
+                                <div className="space-y-6 bg-slate-50 border border-slate-200 p-6 sm:p-8 rounded-2xl relative overflow-hidden group">
                             <div className="absolute top-0 left-0 w-2 h-full bg-pink-400"></div>
                             <h3 className="text-xl font-bold flex items-center gap-3 text-slate-900 border-b border-slate-200 pb-4">
                                 <span className="flex items-center justify-center size-8 rounded-full bg-pink-900/40 text-pink-400 text-sm border border-pink-500/20">4</span>
@@ -574,6 +611,8 @@ export default function PublishStartupPage() {
                                 </div>
                             </div>
                         </div>
+                            </>
+                        )}
 
                         {/* PITCH MEDIA GALLERY */}
                         <div className="space-y-6 bg-slate-50 border border-slate-200 p-6 sm:p-8 rounded-2xl relative overflow-hidden group">

@@ -36,12 +36,16 @@ export async function POST(req: Request) {
             Startup Name: ${startup.name}
             Sector: ${startup.sector}
             Stage: ${startup.stage}
-            Requested Funding: $${startup.requested}
+            Requested Funding: ₹${startup.requested}
             Equity Offered: ${startup.equity}%
-            Current Monthly Revenue: $${startup.revenue}
-            Current Monthly Burn: $${startup.burn}
+            Current Monthly Revenue: ₹${startup.revenue}
+            Current Monthly Burn: ₹${startup.burn}
             Business Model: ${startup.businessModel}
             Description: ${startup.desc}
+            Target Market: ${startup.businessInfo?.targetMarket || "Not provided"}
+            Marketing Strategies: ${startup.businessInfo?.marketingStrategy || "Not provided"}
+            Unique Value Proposition: ${startup.businessInfo?.uvp || "Not provided"}
+            ${startup.isStudent ? `Founder Age: ${startup.founderAge} (Student Incube Startup)` : ""}
 
             Provide a concise analysis including:
             1. Financial health

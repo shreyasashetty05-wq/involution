@@ -9,13 +9,21 @@ import Startup from "@/database/models/Startup";
  * { success: true, data: startups }
  * @returns {Promise<Response>} A JSON response containing the startups data on success, or an error response on failure.
  */
-export async function GET() {
+export async function GET(req: Request) {
     try {
+        const { searchParams } = new URL(req.url);
+        const type = searchParams.get('type');
+
         await dbConnect();
-        // Fetch all startups and sort by AI Score (highest first)
-        // lean() converts the heavy Mongoose documents into plain JS objects
-        // which makes Next.js transmission significantly faster.
-        const startups = await Startup.find({}).sort({ score: -1 }).lean();
+        
+        let query = {};
+        if (type === 'student') {
+            query = { isStudent: true };
+        } else if (type === 'regular') {
+            query = { isStudent: { $ne: true } };
+        }
+
+        const startups = await Startup.find(query).sort({ score: -1 }).lean();
 
         // Convert generic MongoDB ObjectIds to strings to prevent Server Component serialization errors
         const serializedStartups = startups.map((doc: any) => ({

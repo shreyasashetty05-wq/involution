@@ -29,7 +29,10 @@ export default function Navbar() {
 
                     {status === "authenticated" ? (
                         (session?.user as Record<string, unknown>)?.role === "investor" ? (
-                            <Link href="/investors/dashboard" className="hover:text-emerald-700 transition-colors">Portfolio</Link>
+                            <>
+                                <Link href="/investors/dashboard" className="hover:text-emerald-700 transition-colors">Portfolio</Link>
+                                <Link href="/investors/incube" className="hover:text-emerald-700 transition-colors">Incube</Link>
+                            </>
                         ) : (
                             <Link href="/startups/dashboard" className="hover:text-emerald-700 transition-colors">Dashboard</Link>
                         )
@@ -37,6 +40,7 @@ export default function Navbar() {
                         <>
                             <Link href="/startups" className="hover:text-emerald-700 transition-colors">Startups</Link>
                             <Link href="/investors" className="hover:text-emerald-700 transition-colors">Investors</Link>
+                            <Link href="/incube" className="hover:text-emerald-700 transition-colors">Incube</Link>
                         </>
                     )}
 

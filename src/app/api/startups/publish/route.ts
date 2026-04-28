@@ -22,6 +22,10 @@ export async function POST(req: Request) {
         
         const body = await req.json();
 
+        if (token.role === "student") {
+            body.isStudent = true;
+        }
+
         const newStartup = await publishStartup(body, token.email);
 
         // Fire and forget AI Analysis trigger

@@ -51,7 +51,7 @@ export default function AISearchEngine() {
          */
         const fetchStartups = async () => {
             try {
-                const res = await fetch('/api/startups');
+                const res = await fetch('/api/startups?type=regular');
                 const json = await res.json();
                 if (json.success) {
                     setAllStartups(json.data);

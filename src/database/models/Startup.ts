@@ -41,6 +41,8 @@ export interface IStartup extends Document {
     financials: IFinancials;
     financialUpdates: IFinancialUpdate[];
     analysis?: string;
+    isStudent?: boolean;
+    founderAge?: number;
 
     // New Professional Domains
     basicInfo?: {
@@ -55,6 +57,7 @@ export interface IStartup extends Document {
         targetMarket: string;
         uvp: string;
         competitors: string;
+        marketingStrategy?: string;
     };
     financialsMonthly?: {
         revenue: number;
@@ -152,13 +155,15 @@ const StartupSchema: Schema = new Schema({
     equity: { type: Number, required: true },
     risk: { type: String, enum: ['Low', 'Medium', 'High'], default: 'Medium' },
     score: { type: Number, default: 80 },
-    revenue: { type: Number, required: true },
-    burn: { type: Number, required: true },
+    revenue: { type: Number, required: function(this: any) { return !this.isStudent; } },
+    burn: { type: Number, required: function(this: any) { return !this.isStudent; } },
     desc: { type: String, required: true },
     videos: { type: [VideoSchema], default: [] },
     financials: { type: FinancialsSchema, default: {} },
     financialUpdates: { type: [FinancialUpdateSchema], default: [] },
     analysis: { type: String, default: "" },
+    isStudent: { type: Boolean, default: false },
+    founderAge: { type: Number },
 
     // New Domains
     basicInfo: {
@@ -172,7 +177,8 @@ const StartupSchema: Schema = new Schema({
         revenueModel: { type: String, default: "Subscription" },
         targetMarket: { type: String, default: "" },
         uvp: { type: String, default: "" },
-        competitors: { type: String, default: "" }
+        competitors: { type: String, default: "" },
+        marketingStrategy: { type: String, default: "" }
     },
     financialsMonthly: {
         revenue: { type: Number, default: 0 },

@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
             return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
         }
 
-        const investorId = session.user.id || session.user.email; // Fallback to email if ID not present
+        const investorId = (session.user as any).id || session.user.email; // Fallback to email if ID not present
 
         // Find all deals connected to this investor
         const allDeals = await Deal.find({ investorId }).lean();

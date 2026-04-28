@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
         if (!session || !session.user) {
             return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
         }
-        const sessionUserId = session.user.id || session.user.email;
+        const sessionUserId = (session.user as any).id || session.user.email;
         const requestedInvestorId = req.nextUrl.searchParams.get('investorId');
 
         // Use provided investorId (if sender is startup), otherwise assume sender is the investor
@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
         if (!session || !session.user) {
             return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
         }
-        const sessionUserId = session.user.id || session.user.email;
+        const sessionUserId = (session.user as any).id || session.user.email;
         const { startupId, startupName, text, investorId: requestedInvestorId } = await req.json();
 
         // If the frontend passed an investorId, the sender is likely the startup. 

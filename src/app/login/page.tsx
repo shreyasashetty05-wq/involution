@@ -51,15 +51,21 @@ export default function LoginPage() {
                     <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200 mb-8 mx-auto w-fit">
                         <button
                             onClick={() => setRole("investor")}
-                            className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${role === "investor" ? "bg-emerald-600 text-white shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
+                            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${role === "investor" ? "bg-emerald-600 text-white shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
                         >
                             Investor
                         </button>
                         <button
                             onClick={() => setRole("startup")}
-                            className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${role === "startup" ? "bg-emerald-600 text-white shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
+                            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${role === "startup" ? "bg-emerald-600 text-white shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
                         >
-                            Startup Founder
+                            Founder
+                        </button>
+                        <button
+                            onClick={() => setRole("student")}
+                            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${role === "student" ? "bg-emerald-600 text-white shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
+                        >
+                            Student
                         </button>
                     </div>
 

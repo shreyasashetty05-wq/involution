@@ -104,10 +104,15 @@ export async function POST(req: Request) {
             Startup Name: ${startup.name}
             Sector: ${startup.sector}
             Stage: ${startup.stage}
-            Requested Funding: $${startup.requested}
+            Requested Funding: ₹${startup.requested}
             Equity Offered: ${startup.equity}%
-            Current Monthly Revenue: $${startup.revenue}
-            Current Monthly Burn: $${startup.burn}
+            Current Monthly Revenue: ₹${startup.revenue}
+            Current Monthly Burn: ₹${startup.burn}
+            Business Description: ${startup.desc}
+            Target Market: ${startup.businessInfo?.targetMarket || "Not provided"}
+            Marketing Strategies: ${startup.businessInfo?.marketingStrategy || "Not provided"}
+            UVP: ${startup.businessInfo?.uvp || "Not provided"}
+            ${startup.isStudent ? `Founder Age: ${startup.founderAge} (Student Incube Startup)` : ""}
             
             Previous AI Analysis:
             ${startup.analysis || "No preliminary analysis was available."}

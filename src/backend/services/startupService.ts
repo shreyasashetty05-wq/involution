@@ -37,6 +37,8 @@ export const publishStartup = async (body: any, ownerEmail: string) => {
         burn: targetRev - targetProfit,
         risk: "Medium",
         score: 80,
+        isStudent: body.isStudent || false,
+        founderAge: body.founderAge,
         videos: body.videos.filter((v: string) => v.trim() !== "").map((url: string) => {
             const yId = extractYoutubeId(url);
             return {

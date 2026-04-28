@@ -14,9 +14,9 @@ import { UserPlus, ArrowLeft } from "lucide-react";
  * @returns {JSX.Element} The registration page UI.
  **/
 export default function RegisterPage() {
-    const [isLoading, setIsLoading] = useState<"startup" | "investor" | null>(null);
+    const [isLoading, setIsLoading] = useState<"startup" | "investor" | "student" | null>(null);
 
-    const handleRegister = async (role: "startup" | "investor") => {
+    const handleRegister = async (role: "startup" | "investor" | "student") => {
         setIsLoading(role);
         document.cookie = `involution_role=${role}; path=/; max-age=3600`;
         const dashboardRoute = role === "investor" ? "/investors/dashboard" : "/startups/dashboard";
@@ -47,7 +47,7 @@ export default function RegisterPage() {
                         Sign up with Google to create your account. KYC verification will follow after sign-up.
                     </p>
 
-                    <div className="grid grid-cols-2 gap-4 mb-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
                         <button
                             onClick={() => handleRegister("startup")}
                             disabled={isLoading !== null}
@@ -56,8 +56,8 @@ export default function RegisterPage() {
                             {isLoading === "startup" && (
                                 <div className="size-5 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin" />
                             )}
-                            <h3 className="text-base font-bold text-slate-800 group-hover:text-emerald-700">I am a Founder</h3>
-                            <p className="text-xs text-slate-400">Raise verified capital for your startup.</p>
+                            <h3 className="text-base font-bold text-slate-800 group-hover:text-emerald-700">Founder</h3>
+                            <p className="text-xs text-slate-400">Raise verified capital.</p>
                         </button>
 
                         <button
@@ -68,8 +68,20 @@ export default function RegisterPage() {
                             {isLoading === "investor" && (
                                 <div className="size-5 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin" />
                             )}
-                            <h3 className="text-base font-bold text-slate-800 group-hover:text-emerald-700">I am an Investor</h3>
-                            <p className="text-xs text-slate-400">Discover and fund top-tier unicorns.</p>
+                            <h3 className="text-base font-bold text-slate-800 group-hover:text-emerald-700">Investor</h3>
+                            <p className="text-xs text-slate-400">Discover and fund unicorns.</p>
+                        </button>
+
+                        <button
+                            onClick={() => handleRegister("student")}
+                            disabled={isLoading !== null}
+                            className="flex flex-col items-center gap-2 p-5 rounded-2xl border border-slate-200 bg-slate-50 hover:border-emerald-400 hover:bg-emerald-50 transition-all group disabled:opacity-50 disabled:pointer-events-none shadow-sm"
+                        >
+                            {isLoading === "student" && (
+                                <div className="size-5 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin" />
+                            )}
+                            <h3 className="text-base font-bold text-slate-800 group-hover:text-emerald-700">Student</h3>
+                            <p className="text-xs text-slate-400">Publish your ideas in Incube.</p>
                         </button>
                     </div>
 
