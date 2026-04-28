@@ -1,10 +1,36 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import React from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { ArrowLeft, MessageSquare, Briefcase, TrendingUp, Presentation, CheckCircle2, Factory, LineChart, AlertTriangle, Activity, BrainCircuit, ShieldCheck, Scale, HeartPulse, Clock, Calendar } from "lucide-react";
 import AIChat from "@/frontend/components/AIChat";
+import { motion } from "framer-motion";
+
+function ScrollReveal({
+    children,
+    className,
+    delay = 0,
+    y = 18,
+}: {
+    children: React.ReactNode;
+    className?: string;
+    delay?: number;
+    y?: number;
+}) {
+    return (
+        <motion.div
+            className={className}
+            initial={{ opacity: 0, y }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.25 }}
+            transition={{ duration: 0.55, ease: "easeOut", delay }}
+        >
+            {children}
+        </motion.div>
+    );
+}
 
 // Remove mock data. We will fetch dynamically now.
 
@@ -120,12 +146,14 @@ export default function StartupProfile() {
             {/* Hero Header */}
             <div className="bg-white border-b border-slate-200 pt-8 pb-16">
                 <div className="container mx-auto px-6 max-w-5xl">
-                    <Link href="/investors/search" className="inline-flex items-center gap-2 text-slate-400 hover:text-emerald-600 mb-8 transition-colors">
-                        <ArrowLeft className="size-4" /> Back to Search
-                    </Link>
+                    <ScrollReveal y={10}>
+                        <Link href="/investors/search" className="inline-flex items-center gap-2 text-slate-400 hover:text-emerald-600 mb-8 transition-colors">
+                            <ArrowLeft className="size-4" /> Back to Search
+                        </Link>
+                    </ScrollReveal>
 
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
-                        <div className="flex items-center gap-6">
+                        <ScrollReveal className="flex items-center gap-6" delay={0.05}>
                             <div className="size-24 rounded-2xl bg-slate-200 border border-slate-300 flex items-center justify-center shadow-xl">
                                 <span className="text-4xl font-bold font-outfit text-slate-600">{startup.name.charAt(0)}</span>
                             </div>
@@ -142,11 +170,13 @@ export default function StartupProfile() {
                                     <span className="flex items-center gap-1"><AlertTriangle className={`size-4 ${startup.risk === 'Low' ? 'text-emerald-600' : 'text-yellow-500'}`} /> {startup.risk} Risk Profile</span>
                                 </div>
                             </div>
-                        </div>
+                        </ScrollReveal>
 
-                        <Link href={`/messages?startupId=${startup._id?.toString() || idValue}&name=${encodeURIComponent(startup.name)}`} className="px-8 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition-colors shadow-[0_0_15px_-3px_rgba(163,230,53,0.3)] flex items-center gap-2 w-full md:w-auto justify-center">
-                            <MessageSquare className="size-5" /> Open Deal Room
-                        </Link>
+                        <ScrollReveal delay={0.1} y={12}>
+                            <Link href={`/messages?startupId=${startup._id?.toString() || idValue}&name=${encodeURIComponent(startup.name)}`} className="px-8 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition-colors shadow-[0_0_15px_-3px_rgba(163,230,53,0.3)] flex items-center gap-2 w-full md:w-auto justify-center">
+                                <MessageSquare className="size-5" /> Open Deal Room
+                            </Link>
+                        </ScrollReveal>
                     </div>
                 </div>
             </div>
@@ -156,6 +186,7 @@ export default function StartupProfile() {
                 {/* Main Content */}
                 <div className="md:col-span-2 space-y-8">
                     {/* Pitch Section */}
+                    <ScrollReveal>
                     <div className="bg-white border border-slate-200 shadow-sm rounded-2xl p-8">
                         <h2 className="text-xl font-bold text-slate-900 mb-4 border-b border-slate-200 pb-4 flex items-center gap-2">
                             <Presentation className="size-5 text-indigo-400" /> Executive Standard Pitch
@@ -202,9 +233,11 @@ export default function StartupProfile() {
                             )})}
                         </div>
                     </div>
+                    </ScrollReveal>
 
                     {/* Advanced Financial Chart */}
                     {!startup.isStudent && (
+                        <ScrollReveal delay={0.05}>
                         <div className="bg-white border border-slate-200 shadow-xl rounded-2xl p-6 space-y-8">
                             <div>
                             <div className="flex justify-between items-center mb-4">
@@ -271,16 +304,20 @@ export default function StartupProfile() {
                             </div>
                         </div>
                     </div>
+                    </ScrollReveal>
                     )}
 
                     {/* AI Analyst Chat Widget */}
-                    <div className="mt-8 flex flex-col h-[600px]">
-                        <AIChat startupId={(startup._id?.toString() || idValue) as string} />
-                    </div>
+                    <ScrollReveal delay={0.05}>
+                        <div className="mt-8 flex flex-col h-[600px]">
+                            <AIChat startupId={(startup._id?.toString() || idValue) as string} />
+                        </div>
+                    </ScrollReveal>
                 </div>
 
                 {/* Sidebar Data */}
                 <div className="space-y-6">
+                    <ScrollReveal y={12}>
                     <div className="bg-white border border-slate-200 shadow-sm rounded-2xl p-6 sticky top-24">
                         <h3 className="text-lg font-bold text-slate-900 mb-6 border-b border-slate-200 pb-4 flex items-center gap-2">
                             <TrendingUp className="size-5 text-emerald-600" /> Financial Ask
@@ -386,6 +423,7 @@ export default function StartupProfile() {
                             </Link>
                         </div>
                     </div>
+                    </ScrollReveal>
                 </div>
 
             </div>
