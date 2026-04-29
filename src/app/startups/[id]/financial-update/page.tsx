@@ -173,65 +173,68 @@ export default function FinancialUpdatePage({ params }: { params: Promise<{ id: 
                 </div>
 
                 <div className="md:col-span-2">
-                    <div className="bg-white border border-slate-200 rounded-2xl p-8 sticky top-24 shadow-2xl relative overflow-hidden group">
-                        <div className="absolute top-0 left-0 w-1 h-full bg-indigo-500/50"></div>
-                        <div className="absolute top-0 right-0 p-4 opacity-[0.03] group-hover:opacity-10 transition-opacity">
-                            <Bot className="size-32 text-indigo-400" />
-                        </div>
+                    {/* Outer div: sticky positioning only — overflow:hidden on sticky breaks scroll pinning */}
+                    <div className="sticky top-24">
+                        <div className="bg-white border border-slate-200 rounded-2xl p-8 shadow-2xl relative overflow-hidden group">
+                            <div className="absolute top-0 left-0 w-1 h-full bg-indigo-500/50"></div>
+                            <div className="absolute top-0 right-0 p-4 opacity-[0.03] group-hover:opacity-10 transition-opacity">
+                                <Bot className="size-32 text-indigo-400" />
+                            </div>
 
-                        <div className="relative z-10">
-                            <h3 className="text-sm font-bold text-indigo-400 uppercase tracking-widest flex items-center gap-2 mb-6">
-                                <Activity className="size-4" /> Live AI Analysis
-                            </h3>
+                            <div className="relative z-10">
+                                <h3 className="text-sm font-bold text-indigo-400 uppercase tracking-widest flex items-center gap-2 mb-6">
+                                    <Activity className="size-4" /> Live AI Analysis
+                                </h3>
 
-                            <div className="text-center py-6">
-                                {/* Circular Score Display */}
-                                <div className="relative size-32 mx-auto mb-4">
-                                    <svg className="size-full  -rotate-90">
-                                        <circle cx="64" cy="64" r="58" stroke="currentColor" strokeWidth="8" fill="transparent" className="text-zinc-800" />
-                                        <circle cx="64" cy="64" r="58" stroke="currentColor" strokeWidth="8" fill="transparent"
-                                            strokeDasharray="364"
-                                            strokeDashoffset={364 - (364 * aiScore) / 100}
-                                            className={`${aiScore >= 80 ? 'text-emerald-600' : aiScore >= 50 ? 'text-amber-700' : 'text-red-400'} transition-all duration-1000 ease-out`}
-                                            strokeLinecap="round"
-                                        />
-                                    </svg>
-                                    <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                        <span className={`text-4xl font-bold font-mono ${aiScore >= 80 ? 'text-emerald-600' : aiScore >= 50 ? 'text-amber-700' : 'text-red-400'} transition-colors duration-500`}>
-                                            {Math.round(aiScore)}
-                                        </span>
+                                <div className="text-center py-6">
+                                    {/* Circular Score Display */}
+                                    <div className="relative size-32 mx-auto mb-4">
+                                        <svg className="size-full  -rotate-90">
+                                            <circle cx="64" cy="64" r="58" stroke="currentColor" strokeWidth="8" fill="transparent" className="text-zinc-800" />
+                                            <circle cx="64" cy="64" r="58" stroke="currentColor" strokeWidth="8" fill="transparent"
+                                                strokeDasharray="364"
+                                                strokeDashoffset={364 - (364 * aiScore) / 100}
+                                                className={`${aiScore >= 80 ? 'text-emerald-600' : aiScore >= 50 ? 'text-amber-700' : 'text-red-400'} transition-all duration-1000 ease-out`}
+                                                strokeLinecap="round"
+                                            />
+                                        </svg>
+                                        <div className="absolute inset-0 flex flex-col items-center justify-center">
+                                            <span className={`text-4xl font-bold font-mono ${aiScore >= 80 ? 'text-emerald-600' : aiScore >= 50 ? 'text-amber-700' : 'text-red-400'} transition-colors duration-500`}>
+                                                {Math.round(aiScore)}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <h4 className="text-slate-900 font-bold text-lg">Confidence Score</h4>
+                                </div>
+
+                                <div className="space-y-4 mt-4 text-sm">
+                                    <div className="flex items-center gap-3 text-slate-600">
+                                        {formData.monthYear ? <CheckCircle2 className="size-4 text-emerald-600 shrink-0" /> : <div className="size-4 rounded-full border border-slate-300 shrink-0" />}
+                                        <span className="font-medium">Temporal Logic Verified</span>
+                                    </div>
+                                    <div className="flex items-center gap-3 text-slate-600">
+                                        {Number(formData.revenue) > 0 ? <CheckCircle2 className="size-4 text-emerald-600 shrink-0" /> : <div className="size-4 rounded-full border border-slate-300 shrink-0" />}
+                                        <span className="font-medium">Revenue Bounds Checked</span>
+                                    </div>
+                                    <div className="flex items-center gap-3 text-slate-600">
+                                        {formData.profit !== "" ? <CheckCircle2 className="size-4 text-emerald-600 shrink-0" /> : <div className="size-4 rounded-full border border-slate-300 shrink-0" />}
+                                        <span className="font-medium">Profit/Loss Ratio Intact</span>
+                                    </div>
+                                    <div className="flex items-center gap-3 text-slate-600">
+                                        {formData.documentUrl.length > 5 ? <CheckCircle2 className="size-4 text-emerald-600 shrink-0" /> : <div className="size-4 rounded-full border border-slate-300 shrink-0" />}
+                                        <span className="font-medium">External Audit Sourced</span>
                                     </div>
                                 </div>
-                                <h4 className="text-slate-900 font-bold text-lg">Confidence Score</h4>
-                            </div>
 
-                            <div className="space-y-4 mt-4 text-sm">
-                                <div className="flex items-center gap-3 text-slate-600">
-                                    {formData.monthYear ? <CheckCircle2 className="size-4 text-emerald-600 shrink-0" /> : <div className="size-4 rounded-full border border-slate-300 shrink-0" />}
-                                    <span className="font-medium">Temporal Logic Verified</span>
-                                </div>
-                                <div className="flex items-center gap-3 text-slate-600">
-                                    {Number(formData.revenue) > 0 ? <CheckCircle2 className="size-4 text-emerald-600 shrink-0" /> : <div className="size-4 rounded-full border border-slate-300 shrink-0" />}
-                                    <span className="font-medium">Revenue Bounds Checked</span>
-                                </div>
-                                <div className="flex items-center gap-3 text-slate-600">
-                                    {formData.profit !== "" ? <CheckCircle2 className="size-4 text-emerald-600 shrink-0" /> : <div className="size-4 rounded-full border border-slate-300 shrink-0" />}
-                                    <span className="font-medium">Profit/Loss Ratio Intact</span>
-                                </div>
-                                <div className="flex items-center gap-3 text-slate-600">
-                                    {formData.documentUrl.length > 5 ? <CheckCircle2 className="size-4 text-emerald-600 shrink-0" /> : <div className="size-4 rounded-full border border-slate-300 shrink-0" />}
-                                    <span className="font-medium">External Audit Sourced</span>
-                                </div>
+                                {aiScore < 80 && (
+                                    <div className="mt-8 p-4 bg-amber-950/30 border border-amber-300 rounded-xl">
+                                        <p className="text-xs text-amber-700 leading-relaxed font-medium">
+                                            <AlertCircle className="size-4 inline mr-1.5 -mt-0.5" />
+                                            Provide a verifiable document URL (GST/Bank) to drastically maximize your Confidence Score parameters for investors.
+                                        </p>
+                                    </div>
+                                )}
                             </div>
-
-                            {aiScore < 80 && (
-                                <div className="mt-8 p-4 bg-amber-950/30 border border-amber-300 rounded-xl">
-                                    <p className="text-xs text-amber-700 leading-relaxed font-medium">
-                                        <AlertCircle className="size-4 inline mr-1.5 -mt-0.5" />
-                                        Provide a verifiable document URL (GST/Bank) to drastically maximize your Confidence Score parameters for investors.
-                                    </p>
-                                </div>
-                            )}
                         </div>
                     </div>
                 </div>

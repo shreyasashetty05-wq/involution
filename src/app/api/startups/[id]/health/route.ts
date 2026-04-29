@@ -45,55 +45,37 @@ const healthSchema: Schema = {
 };
 
 
-/**
- * Analyzes a startup's financial and operational data to generate a health report and log AI predictions.
- * @example
- * GET(req, params)
- * { success: true, startup: { name: "Acme Inc", sector: "SaaS" }, report: { ... } }
- * @param {NextRequest} req - The incoming Next.js request object.
- * @param {{ params: Promise<{ id: string }> }} params - Route parameters containing the startup ID.
- * @returns {Promise<NextResponse>} A JSON response with the startup health report or an error response.
- **/
-export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-    try {
-        await dbConnect();
-        const { id } = await params;
-        const startup = await Startup.findById(id).lean();
-        if (!startup) {
-            return NextResponse.json({ success: false, error: 'Startup not found' }, { status: 404 });
-        }
+// --- Helpers ---
 
-        const startupDataString = JSON.stringify(startup, null, 2);
-
-        // --- FINANCIAL ANOMALY DETECTOR ---
-        let financialAnomaliesContext = "No significant financial anomalies detected in the last 6 months.";
-        const revArray = (startup as any).aiReady?.last6MonthsRev;
-
-        if (revArray && Array.isArray(revArray) && revArray.length > 1) {
-            const anomalies: string[] = [];
-            for (let i = 1; i < revArray.length; i+=1) {
-                const prev = revArray[i - 1];
-                const curr = revArray[i];
-                if (prev > 0) {
-                    const pctChange = ((curr - prev) / prev) * 100;
-                    if (pctChange <= -30) {
-                        anomalies.push(`CRITICAL DROP: Month ${i} to Month ${i + 1} saw a ${pctChange.toFixed(1)}% drop in revenue (from ${prev} to ${curr}).`);
-                    } else if (pctChange >= 30) {
-                        anomalies.push(`SUDDEN SPIKE: Month ${i} to Month ${i + 1} saw a ${pctChange.toFixed(1)}% spike in revenue (from ${prev} to ${curr}).`);
-                    }
-                }
-            }
-
-            if (anomalies.length > 0) {
-                financialAnomaliesContext = `DETECTED FINANCIAL ANOMALIES:\n${anomalies.join('\n')}\n` +
-                    `\nCRITICAL DIRECTIVE:\n` +
-                    `- You MUST acknowledge these anomalies.\n` +
-                    `- If there is a CRITICAL DROP in revenue, you MUST severely penalize the \`overallHealth\` score (pushing it towards Poor or Critical) and the 'growth' & 'revenue' pillars.\n` +
-                    `- You MUST generate a 'critical' or 'warning' alert explicitly mentioning the revenue drop or spike.\n`;
+function detectRevenueAnomalies(revArray: number[]): string {
+    if (!Array.isArray(revArray) || revArray.length <= 1) {
+        return "No significant financial anomalies detected in the last 6 months.";
+    }
+    const anomalies: string[] = [];
+    for (let i = 1; i < revArray.length; i += 1) {
+        const prev = revArray[i - 1];
+        const curr = revArray[i];
+        if (prev > 0) {
+            const pctChange = ((curr - prev) / prev) * 100;
+            if (pctChange <= -30) {
+                anomalies.push(`CRITICAL DROP: Month ${i} to Month ${i + 1} saw a ${pctChange.toFixed(1)}% drop in revenue (from ${prev} to ${curr}).`);
+            } else if (pctChange >= 30) {
+                anomalies.push(`SUDDEN SPIKE: Month ${i} to Month ${i + 1} saw a ${pctChange.toFixed(1)}% spike in revenue (from ${prev} to ${curr}).`);
             }
         }
+    }
+    if (anomalies.length === 0) return "No significant financial anomalies detected in the last 6 months.";
+    return (
+        `DETECTED FINANCIAL ANOMALIES:\n${anomalies.join('\n')}\n` +
+        `\nCRITICAL DIRECTIVE:\n` +
+        `- You MUST acknowledge these anomalies.\n` +
+        `- If there is a CRITICAL DROP in revenue, you MUST severely penalize the \`overallHealth\` score (pushing it towards Poor or Critical) and the 'growth' & 'revenue' pillars.\n` +
+        `- You MUST generate a 'critical' or 'warning' alert explicitly mentioning the revenue drop or spike.\n`
+    );
+}
 
-        const prompt = `
+function buildHealthPrompt(startupDataString: string, financialAnomaliesContext: string): string {
+    return `
             You are an expert startup financial analyst AI.
             Analyze the following startup data to assess the company's real-time operational health.
             
@@ -122,6 +104,29 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
             Startup Data:
             ${startupDataString}
         `;
+}
+
+/**
+ * Analyzes a startup's financial and operational data to generate a health report and log AI predictions.
+ * @example
+ * GET(req, params)
+ * { success: true, startup: { name: "Acme Inc", sector: "SaaS" }, report: { ... } }
+ * @param {NextRequest} req - The incoming Next.js request object.
+ * @param {{ params: Promise<{ id: string }> }} params - Route parameters containing the startup ID.
+ * @returns {Promise<NextResponse>} A JSON response with the startup health report or an error response.
+ **/
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+    try {
+        await dbConnect();
+        const { id } = await params;
+        const startup = await Startup.findById(id).lean();
+        if (!startup) {
+            return NextResponse.json({ success: false, error: 'Startup not found' }, { status: 404 });
+        }
+
+        const startupDataString = JSON.stringify(startup, null, 2);
+        const financialAnomaliesContext = detectRevenueAnomalies((startup as any).aiReady?.last6MonthsRev ?? []);
+        const prompt = buildHealthPrompt(startupDataString, financialAnomaliesContext);
 
         // Fire-and-forget: log AI predictions for future ground-truth verification
         const geminiResponse = await callGeminiReport(

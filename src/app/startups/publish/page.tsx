@@ -4,6 +4,49 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { Briefcase, TrendingUp, Presentation, AlertCircle, Save, Bot, Loader2, Building2, BarChart3, Settings2, ShieldCheck, ShieldAlert, LineChart } from "lucide-react";
 
+// --- Audit Validator Helpers (pure, outside component) ---
+
+const YT_REGEXP = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+const VIMEO_REGEXP = /(?:www\.|player\.)?vimeo.com\/(?:channels\/(?:\w+\/)?|groups\/(?:[^/]*)\/videos\/|album\/(?:\d+)\/video\/|video\/|)(\d+)(?:[a-zA-Z0-9_-]+)?/i;
+
+function validateStudentProfile(age: number, errors: string[]) {
+    if (!age || age >= 24 || age < 13) {
+        errors.push("Incube student founders must be under the age of 24.");
+    }
+}
+
+function validateFinancials(
+    { margin, runway }: { margin: number; runway: number },
+    { cac, ltv }: { cac: number; ltv: number },
+    { rev, fundingAsk }: { rev: number; fundingAsk: number },
+    errors: string[],
+    warnings: string[]
+) {
+    if (margin > 80 || margin < -200) {
+        errors.push(`Unrealistic Net Margin (${margin}%). Verify your revenue and expenses.`);
+    }
+    if (cac > 0 && ltv > 0 && cac >= ltv) {
+        errors.push(`Unit Economics inversion detected. Customer Acquisition Cost (₹${cac}) cannot exceed Lifetime Value (₹${ltv}).`);
+    }
+    if (rev < 1000 && fundingAsk > 10000000) {
+        warnings.push("High Valuation Risk: Asking for >₹1Cr funding on less than ₹1k MRR may trigger auto-rejection by the AI Matchmaking system.");
+    }
+    if (runway > 0 && runway < 3 && fundingAsk === 0) {
+        warnings.push("Low Runway Warning: You have less than 3 months runway, consider requesting funding immediately.");
+    }
+}
+
+function validateVideos(videos: string[], errors: string[]) {
+    videos.forEach((vid, idx) => {
+        if (vid.trim() === "") return;
+        const isYt = vid.match(YT_REGEXP) && vid.match(YT_REGEXP)![2].length === 11;
+        const isVimeo = vid.match(VIMEO_REGEXP);
+        if (!isYt && !isVimeo) {
+            errors.push(`Video link #${idx + 1} is not a valid embeddable public YouTube or Vimeo URL.`);
+        }
+    });
+}
+
 export default function PublishStartupPage() {
     const { data: session } = useSession();
     const isStudent = (session?.user as any)?.role === "student";
@@ -108,49 +151,19 @@ export default function PublishStartupPage() {
         const errors: string[] = [];
         const warnings: string[] = [];
 
-        const rev = Number(formData.financialsMonthly.revenue);
-        const margin = formData.financialsMonthly.netMargin;
-        const fundingAsk = Number(formData.fundingRequired);
-        const cac = Number(formData.cac);
-        const ltv = Number(formData.ltv);
-        const {runway} = formData.financialsMonthly;
-
         if (isStudent) {
-            const age = Number(formData.founderAge);
-            if (!age || age >= 24 || age < 13) {
-                errors.push("Incube student founders must be under the age of 24.");
-            }
+            validateStudentProfile(Number(formData.founderAge), errors);
         } else {
-            if (margin > 80 || margin < -200) {
-                errors.push(`Unrealistic Net Margin (${margin}%). Verify your revenue and expenses.`);
-            }
-
-            if (cac > 0 && ltv > 0 && cac >= ltv) {
-                errors.push(`Unit Economics inversion detected. Customer Acquisition Cost (₹${cac}) cannot exceed Lifetime Value (₹${ltv}).`);
-            }
-
-            if (rev < 1000 && fundingAsk > 10000000) {
-                warnings.push("High Valuation Risk: Asking for >₹1Cr funding on less than ₹1k MRR may trigger auto-rejection by the AI Matchmaking system.");
-            }
-
-            if (runway > 0 && runway < 3 && fundingAsk === 0) {
-                warnings.push("Low Runway Warning: You have less than 3 months runway, consider requesting funding immediately.");
-            }
+            validateFinancials(
+                { margin: formData.financialsMonthly.netMargin, runway: formData.financialsMonthly.runway },
+                { cac: Number(formData.cac), ltv: Number(formData.ltv) },
+                { rev: Number(formData.financialsMonthly.revenue), fundingAsk: Number(formData.fundingRequired) },
+                errors,
+                warnings
+            );
         }
 
-        const ytRegExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-        const vimeoRegExp = /(?:www\.|player\.)?vimeo.com\/(?:channels\/(?:\w+\/)?|groups\/(?:[^/]*)\/videos\/|album\/(?:\d+)\/video\/|video\/|)(\d+)(?:[a-zA-Z0-9_-]+)?/i;
-
-        formData.videos.forEach((vid, idx) => {
-            if (vid.trim() !== "") {
-                const isYt = vid.match(ytRegExp) && vid.match(ytRegExp)![2].length === 11;
-                const isVimeo = vid.match(vimeoRegExp);
-                if (!isYt && !isVimeo) {
-                    errors.push(`Video link #${idx + 1} is not a valid embeddable public YouTube or Vimeo URL.`);
-                }
-            }
-        });
-
+        validateVideos(formData.videos, errors);
         return { errors, warnings };
     };
 
@@ -168,7 +181,7 @@ export default function PublishStartupPage() {
         setAuditResult(null);
         setIsAuditing(true);
 
-        await new Promise(r => {setTimeout(r, 1500)});
+        await new Promise(resolve => { setTimeout(resolve, 1500); });
         const audit = runAIAudit();
         setIsAuditing(false);
 
