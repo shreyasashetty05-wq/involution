@@ -168,7 +168,7 @@ export default function CompliancePage() {
                                     </div>
                                     <p className="text-xs text-slate-400 font-medium">{String(item.category)}</p>
                                     <p className="text-sm text-slate-500 mt-2">{String(item.detail)}</p>
-                                    {!!item.resolution && (
+                                    {Boolean(item.resolution) && (
                                         <div className="mt-4 pt-3 border-t border-slate-100 flex items-start gap-2">
                                             <Info className="size-4 text-blue-500 shrink-0 mt-0.5" />
                                             <p className="text-xs text-slate-600 font-medium bg-blue-50/50 p-2 rounded-lg grow border border-blue-100/50">
