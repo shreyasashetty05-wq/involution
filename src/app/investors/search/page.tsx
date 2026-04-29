@@ -421,7 +421,7 @@ export default function AISearchEngine() {
                                             {/* Financial Micro-metrics row extended */}
                                             <div className="flex flex-wrap gap-4 pt-2 text-xs">
                                                 {startup.financialsMonthly?.netMargin !== undefined && <span className={startup.financialsMonthly.netMargin >= 0 ? "text-emerald-600" : "text-red-400"}>Net Margin: <span className="font-mono font-bold">{startup.financialsMonthly.netMargin}%</span></span>}
-                                                {startup.financialsMonthly?.runway !== undefined && <span className="text-slate-9000">Runway: <span className="font-mono text-slate-700 font-bold">{startup.financialsMonthly.runway === 999 ? "∞" : startup.financialsMonthly.runway + ' mo'}</span></span>}
+                                                {startup.financialsMonthly?.runway !== undefined && <span className="text-slate-9000">Runway: <span className="font-mono text-slate-700 font-bold">{startup.financialsMonthly.runway === 999 ? "∞" : `${startup.financialsMonthly.runway  } mo`}</span></span>}
                                                 {startup.burn > 0 && <span className="text-red-400">Burn: <span className="font-mono">₹{(startup.burn / 1000).toFixed(0)}K/mo</span></span>}
                                                 {startup.financials?.cac > 0 && <span className="text-slate-9000">CAC: <span className="font-mono text-slate-700">₹{startup.financials.cac.toLocaleString()}</span></span>}
                                                 {startup.financials?.ltv > 0 && <span className="text-slate-9000">LTV: <span className="font-mono text-slate-700">₹{startup.financials.ltv.toLocaleString()}</span></span>}
