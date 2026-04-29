@@ -8,6 +8,14 @@ const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 // --- Helpers ---
 
+/**
+* Generates an embedding vector for a question string using the configured AI embedding model.
+* @example
+* getQuestionEmbedding("What is the capital of France?")
+* [0.0123, -0.0456, 0.0789]
+* @param {string} question - The question or context text to convert into an embedding.
+* @returns {Promise<number[]>} A promise that resolves to an array of embedding values, or an empty array if embedding fails.
+**/
 async function getQuestionEmbedding(question: string): Promise<number[]> {
     try {
         const embedRes = await ai.models.embedContent({
@@ -21,6 +29,14 @@ async function getQuestionEmbedding(question: string): Promise<number[]> {
     return [];
 }
 
+/**
+* Fetches up to three few-shot example feedback entries using vector search when an embedding is provided, or falls back to the latest matching upvoted chat feedback.
+* @example
+* fetchFewShotExamples([0.12, 0.34, 0.56])
+* [{ context: '...', aiResponse: '...', score: 0.98 }]
+* @param {number[]} embedding - Numeric embedding vector used to retrieve semantically similar feedback examples.
+* @returns {Promise<any[]>} A promise that resolves to an array of few-shot example documents.
+**/
 async function fetchFewShotExamples(embedding: number[]): Promise<any[]> {
     if (embedding.length > 0) {
         return AIFeedback.aggregate([
@@ -44,6 +60,14 @@ async function fetchFewShotExamples(embedding: number[]): Promise<any[]> {
     }).sort({ createdAt: -1 }).limit(3).lean();
 }
 
+/**
+* Builds a formatted few-shot examples string from an array of example objects.
+* @example
+* buildFewShotString([{ context: "What is AI?", aiResponse: "AI is..." }])
+* "--- EXAMPLES OF HIGHLY RATED PAST ANSWERS (Learn from these) --- ..."
+* @param {any[]} examples - Array of example objects containing `context` and `aiResponse` fields.
+* @returns {string} A formatted string containing the provided examples, or an empty string if no examples are supplied.
+**/
 function buildFewShotString(examples: any[]): string {
     if (!examples?.length) return "";
     let str = `
@@ -58,6 +82,16 @@ function buildFewShotString(examples: any[]): string {
     return str;
 }
 
+/**
+ * Builds a chat prompt string for the investment analyst AI using startup details, prior analysis, few-shot examples, and an investor question.
+ * @example
+ * buildChatPrompt(startup, "What is the growth potential?", fewShotString)
+ * "You are the \"InVolution AI Analyst\"..."
+ * @param {any} startup - Startup data object containing company, financial, and analysis information.
+ * @param {string} question - The investor's question to be answered about the startup.
+ * @param {string} fewShotString - A string containing few-shot examples or additional prompt context.
+ * @returns {string} Formatted prompt string to be sent to the AI model.
+ **/
 function buildChatPrompt(startup: any, question: string, fewShotString: string): string {
     return `
             You are the "InVolution AI Analyst", an expert investment analyst AI assistant for an investor platform.
