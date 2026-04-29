@@ -19,7 +19,7 @@ export async function callGeminiReport(
     startupSector: string,
 ): Promise<NextResponse> {
     const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash-preview-04-17',
+        model: 'gemini-2.5-flash',
         contents: prompt,
         config: {
             responseMimeType: 'application/json',
