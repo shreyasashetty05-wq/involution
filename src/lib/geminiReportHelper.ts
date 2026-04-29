@@ -60,3 +60,32 @@ export async function callGeminiReport(
         report: reportData,
     });
 }
+
+/**
+ * Handles the complete lifecycle of a Gemini report request.
+ * It fetches the startup, generates the prompt, and handles errors.
+ */
+export async function handleGeminiReportRequest(
+    params: Promise<{ id: string }>,
+    schema: Schema,
+    promptBuilder: (startupDataString: string) => string
+): Promise<NextResponse> {
+    try {
+        const { id } = await params;
+        const result = await fetchStartupById(id);
+        if (result instanceof NextResponse) return result;
+        const { startup, startupDataString } = result;
+
+        const prompt = promptBuilder(startupDataString);
+
+        return await callGeminiReport(
+            prompt,
+            schema,
+            (startup as any).name,
+            (startup as any).sector,
+        );
+    } catch (err: any) {
+        console.error("Gemini Error:", err);
+        return NextResponse.json({ success: false, error: err.message }, { status: 500 });
+    }
+}

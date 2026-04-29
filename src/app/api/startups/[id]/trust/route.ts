@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Type, Schema } from '@google/genai';
-import { callGeminiReport, fetchStartupById } from '@/lib/geminiReportHelper';
+import { handleGeminiReportRequest } from '@/lib/geminiReportHelper';
 
 
 const trustSchema: Schema = {
@@ -41,47 +41,30 @@ const trustSchema: Schema = {
 * @returns {Promise<NextResponse>} A JSON response with the trust report or an error message.
 **/
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-    try {
-        const { id } = await params;
-        const result = await fetchStartupById(id);
-        if (result instanceof NextResponse) return result;
-        const { startup, startupDataString } = result;
+    return handleGeminiReportRequest(params, trustSchema, (startupDataString) => `
+        You are an expert AI trust and reputation analyst.
+        Evaluate the credibility, verification status, and disclosure integrity of the following startup to generate a trust score.
+        
+        Evaluate the startup across exactly 5 trust factors:
+        1. Identity & Tax Verification (max: 30 pts)
+        2. Financial Transparency (max: 25 pts)
+        3. External Backing & Funding (max: 20 pts)
+        4. Risk Disclosure Integrity (max: 15 pts) - Penalize for legal cases, criminal records, or undisclosed loans.
+        5. Profile Completeness (max: 10 pts)
 
-        const prompt = `
-            You are an expert AI trust and reputation analyst.
-            Evaluate the credibility, verification status, and disclosure integrity of the following startup to generate a trust score.
-            
-            Evaluate the startup across exactly 5 trust factors:
-            1. Identity & Tax Verification (max: 30 pts)
-            2. Financial Transparency (max: 25 pts)
-            3. External Backing & Funding (max: 20 pts)
-            4. Risk Disclosure Integrity (max: 15 pts) - Penalize for legal cases, criminal records, or undisclosed loans.
-            5. Profile Completeness (max: 10 pts)
+        For each factor, assess pts \`earned\`, the \`max\` possible, whether it meets the \`verified\` threshold (usually >= 60-70% of max), and provide a short \`detail\` string summarizing what was found.
 
-            For each factor, assess pts \`earned\`, the \`max\` possible, whether it meets the \`verified\` threshold (usually >= 60-70% of max), and provide a short \`detail\` string summarizing what was found.
+        Calculate \`totalTrust\` by summing the earned points (max 100).
+        Determine the \`trustLabel\`, \`trustColor\`, and \`tier\`:
+        - 'Highly Trusted' (emerald) / Platinum for 80+
+        - 'Trusted' (blue) / Gold for 65-79
+        - 'Partially Verified' (yellow) / Silver for 50-64
+        - 'Limited Trust' (orange) / Bronze for 35-49
+        - 'Unverified' (red) / Bronze for < 35
 
-            Calculate \`totalTrust\` by summing the earned points (max 100).
-            Determine the \`trustLabel\`, \`trustColor\`, and \`tier\`:
-            - 'Highly Trusted' (emerald) / Platinum for 80+
-            - 'Trusted' (blue) / Gold for 65-79
-            - 'Partially Verified' (yellow) / Silver for 50-64
-            - 'Limited Trust' (orange) / Bronze for 35-49
-            - 'Unverified' (red) / Bronze for < 35
+        Also calculate \`verifiedCount\` (number of fully verified factors) and \`totalFactors\` (5).
 
-            Also calculate \`verifiedCount\` (number of fully verified factors) and \`totalFactors\` (5).
-
-            Startup Data:
-            ${startupDataString}
-        `;
-
-        return callGeminiReport(
-            prompt,
-            trustSchema,
-            (startup as any).name,
-            (startup as any).sector,
-        );
-    } catch (err: any) {
-        console.error("Gemini Error:", err);
-        return NextResponse.json({ success: false, error: err.message }, { status: 500 });
-    }
+        Startup Data:
+        ${startupDataString}
+    `);
 }

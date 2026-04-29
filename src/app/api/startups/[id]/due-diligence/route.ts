@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Type, Schema } from '@google/genai';
-import { callGeminiReport, fetchStartupById } from '@/lib/geminiReportHelper';
+import { handleGeminiReportRequest } from '@/lib/geminiReportHelper';
 
 const dueDiligenceSchema: Schema = {
     type: Type.OBJECT,
@@ -61,44 +61,27 @@ const dueDiligenceSchema: Schema = {
  * @returns {Promise<NextResponse>} A JSON response containing the startup summary and generated due diligence report, or an error response.
  **/
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-    try {
-        const { id } = await params;
-        const result = await fetchStartupById(id);
-        if (result instanceof NextResponse) return result;
-        const { startup, startupDataString } = result;
+    return handleGeminiReportRequest(params, dueDiligenceSchema, (startupDataString) => `
+        You are an expert venture capital analyst and AI due diligence engine.
+        Analyze the following startup data and generate a comprehensive due diligence report.
+        
+        Evaluate the startup across 4 mandatory sections:
+        1. Financial Health (id: 'financial', maxScore: 30)
+        2. Growth Metrics (id: 'growth', maxScore: 20)
+        3. Team & Credibility (id: 'credibility', maxScore: 25)
+        4. Risk & Legal (id: 'risk', maxScore: 25)
 
-        const prompt = `
-            You are an expert venture capital analyst and AI due diligence engine.
-            Analyze the following startup data and generate a comprehensive due diligence report.
-            
-            Evaluate the startup across 4 mandatory sections:
-            1. Financial Health (id: 'financial', maxScore: 30)
-            2. Growth Metrics (id: 'growth', maxScore: 20)
-            3. Team & Credibility (id: 'credibility', maxScore: 25)
-            4. Risk & Legal (id: 'risk', maxScore: 25)
+        Assign points to each section based on the startup's data. Identify key strengths and flags for each section.
+        Calculate the \`totalScore\` by summing the section scores (max 100).
+        Determine the \`verdict\`:
+        - 'Strong Buy' (emerald) for 80+
+        - 'Accumulate' (blue) for 65-79
+        - 'Hold / Monitor' (yellow) for 50-64
+        - 'High Risk' (red) for < 50
 
-            Assign points to each section based on the startup's data. Identify key strengths and flags for each section.
-            Calculate the \`totalScore\` by summing the section scores (max 100).
-            Determine the \`verdict\`:
-            - 'Strong Buy' (emerald) for 80+
-            - 'Accumulate' (blue) for 65-79
-            - 'Hold / Monitor' (yellow) for 50-64
-            - 'High Risk' (red) for < 50
-
-            Extract the key metrics from the data to populate the \`keyMetrics\` object. If valuation isn't explicitly provided, calculate it as (requested_funding / (equity_offered / 100)).
-            
-            Startup Data:
-            ${startupDataString}
-        `;
-
-        return callGeminiReport(
-            prompt,
-            dueDiligenceSchema,
-            (startup as any).name,
-            (startup as any).sector,
-        );
-    } catch (err: any) {
-        console.error("Gemini Error:", err);
-        return NextResponse.json({ success: false, error: err.message }, { status: 500 });
-    }
+        Extract the key metrics from the data to populate the \`keyMetrics\` object. If valuation isn't explicitly provided, calculate it as (requested_funding / (equity_offered / 100)).
+        
+        Startup Data:
+        ${startupDataString}
+    `);
 }
