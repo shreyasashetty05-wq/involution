@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Search, BrainCircuit, Activity, LineChart, ChevronRight, SlidersHorizontal, ArrowUpDown, ShieldCheck, Building2 } from "lucide-react";
+import { Search, BrainCircuit, Activity, LineChart, ChevronRight, SlidersHorizontal, ArrowUpDown, ShieldCheck, Building2, Users } from "lucide-react";
 
 
 /**
@@ -392,6 +392,11 @@ export default function AISearchEngine() {
                                                 )}
                                                 {startup.credibility?.incubatorBacked && (
                                                     <span className="px-2.5 py-1 bg-emerald-900/30 border border-emerald-500/30 text-emerald-600 rounded-md text-xs font-medium flex items-center gap-1"><Building2 className="size-3" /> VC Backed</span>
+                                                )}
+                                                {(startup.investorCount > 0) && (
+                                                    <span className="px-2.5 py-1 bg-indigo-50 border border-indigo-200 text-indigo-700 rounded-md text-xs font-medium flex items-center gap-1">
+                                                        <Users className="size-3" /> {startup.investorCount} Investor{startup.investorCount !== 1 ? 's' : ''}
+                                                    </span>
                                                 )}
                                             </div>
 

@@ -105,3 +105,62 @@ export async function POST(req: NextRequest) {
     }
 }
 
+/**
+ * Updates a deal (advancing phase or executing the agreement).
+ * @example
+ * PUT(req)
+ * { success: true, deal }
+ * @param {NextRequest} req - The incoming Next.js request.
+ * @returns {Promise<NextResponse>} JSON response indicating success or failure.
+ */
+export async function PUT(req: NextRequest) {
+    try {
+        await dbConnect();
+
+        const session = await getServerSession(authOptions);
+        if (!session || !session.user) {
+            return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+        }
+        const sessionUserId = (session.user as any).id || session.user.email;
+        const body = await req.json();
+        const { startupId, investorId: requestedInvestorId, action } = body;
+
+        const investorId = requestedInvestorId || sessionUserId;
+
+        if (!startupId) {
+            return NextResponse.json({ success: false, error: 'startupId is required' }, { status: 400 });
+        }
+
+        let deal = await Deal.findOne({ investorId, startupId });
+        if (!deal) {
+            return NextResponse.json({ success: false, error: 'Deal not found' }, { status: 404 });
+        }
+
+        if (action === 'advancePhase') {
+            const { newPhase } = body;
+            if (newPhase && newPhase > deal.currentPhase) {
+                deal.currentPhase = newPhase;
+            }
+        } else if (action === 'execute') {
+            deal.status = 'executed';
+            deal.termAmount = body.termAmount;
+            deal.termEquity = body.termEquity;
+            deal.startupSignature = body.startupSignature;
+            deal.investorSignature = body.investorSignature;
+            deal.companyAddress = body.companyAddress;
+            deal.investorAddress = body.investorAddress;
+            deal.paymentMethod = body.paymentMethod;
+            deal.investmentPeriod = body.investmentPeriod;
+            deal.executives = body.executives;
+            deal.board = body.board;
+        }
+
+        await deal.save();
+
+        return NextResponse.json({ success: true, deal });
+
+    } catch (error: any) {
+        console.error("Update Deal Error:", error);
+        return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    }
+}

@@ -114,6 +114,7 @@ function DealWorkspace() {
     const [startupSignature, setStartupSignature] = useState("");
     const [investorSignature, setInvestorSignature] = useState("");
     const agreementSigned = negotiationPhase === "executed";
+    const [diligenceChecks, setDiligenceChecks] = useState([false, false, false]);
 
     // Fetch existing deal data
     useEffect(() => {
@@ -151,10 +152,41 @@ function DealWorkspace() {
         fetchDeal();
     }, [startupId, investorId]);
 
-    const advancePhase = () => {
+    const advancePhase = async () => {
         if (currentPhase >= 5) return;
+        
+        if (currentPhase === 1 && messages.length === 0) {
+            alert("Please send a message to initiate contact before advancing.");
+            return;
+        }
+        if (currentPhase === 3 && meetings.length === 0) {
+            alert("Please schedule at least one trust building meeting before advancing.");
+            return;
+        }
+        if (currentPhase === 4 && diligenceChecks.some(c => !c)) {
+            alert("Please complete all Due Diligence checks before proceeding to the Smart Agreement.");
+            return;
+        }
+
+        const nextPhase = Math.min(5, currentPhase + 1);
+
+        try {
+            await fetch('/api/deals', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    startupId,
+                    investorId,
+                    action: 'advancePhase',
+                    newPhase: nextPhase
+                })
+            });
+        } catch (err) {
+            console.error("Failed to advance phase", err);
+        }
+
         setBubbleTrigger(t => t + 1);
-        setTimeout(() => setCurrentPhase(p => Math.min(5, p + 1)), 200);
+        setTimeout(() => setCurrentPhase(nextPhase), 200);
     };
 
     /**
@@ -446,7 +478,14 @@ function DealWorkspace() {
                                         <h3 className="text-sm font-semibold text-slate-700 mb-4 pb-2 border-b border-slate-200">Financial Audit Check</h3>
                                         {['Revenue Statements Authenticated', 'Burn Rate Anomalies Cleared', 'Cap Table Verified'].map((l, i) => (
                                             <label key={i} className="flex items-center gap-3 p-2.5 bg-white rounded-lg cursor-pointer hover:bg-slate-50 border border-transparent hover:border-slate-200 transition-all mb-2">
-                                                <input type="checkbox" className="size-4 rounded text-emerald-600" />
+                                                <input type="checkbox" className="size-4 rounded text-emerald-600" 
+                                                    checked={diligenceChecks[i]}
+                                                    onChange={e => {
+                                                        const newChecks = [...diligenceChecks];
+                                                        newChecks[i] = e.target.checked;
+                                                        setDiligenceChecks(newChecks);
+                                                    }}
+                                                />
                                                 <span className="text-sm text-slate-700">{l}</span>
                                             </label>
                                         ))}
@@ -556,8 +595,31 @@ function DealWorkspace() {
                                             <input type="text" placeholder="Type full legal name…"
                                                 className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-800 focus:ring-2 focus:ring-pink-400 outline-none font-serif italic"
                                                 value={investorSignature} onChange={e => setInvestorSignature(e.target.value)} />
-                                            <button onClick={() => {
+                                            <button onClick={async () => {
                                                 if (investorSignature.length > 3) {
+                                                    try {
+                                                        await fetch('/api/deals', {
+                                                            method: 'PUT',
+                                                            headers: { 'Content-Type': 'application/json' },
+                                                            body: JSON.stringify({
+                                                                startupId,
+                                                                investorId,
+                                                                action: 'execute',
+                                                                termAmount,
+                                                                termEquity,
+                                                                startupSignature,
+                                                                investorSignature,
+                                                                companyAddress,
+                                                                investorAddress,
+                                                                paymentMethod,
+                                                                investmentPeriod,
+                                                                executives,
+                                                                board
+                                                            })
+                                                        });
+                                                    } catch (err) {
+                                                        console.error("Failed to execute deal", err);
+                                                    }
                                                     setNegotiationPhase('executed');
                                                     router.push(`/messages/agreement?success=true&startup=${encodeURIComponent(startupName)}&amount=${encodeURIComponent(termAmount)}&equity=${encodeURIComponent(termEquity)}&signature=${encodeURIComponent(investorSignature)}&startupSig=${encodeURIComponent(startupSignature)}&cAddress=${encodeURIComponent(companyAddress)}&iAddress=${encodeURIComponent(investorAddress)}&payment=${encodeURIComponent(paymentMethod)}&period=${encodeURIComponent(investmentPeriod)}&execs=${encodeURIComponent(executives)}&board=${encodeURIComponent(board)}`);
                                                 }
