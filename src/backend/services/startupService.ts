@@ -20,7 +20,7 @@ export const publishStartup = async (body: any, ownerEmail: string) => {
     const generatedRev = [];
     const generatedProfit = [];
     for (let i = 0; i < 12; i+=1) {
-        const growthFactor = Math.pow(1.05, i - 11);
+        const growthFactor = 1.05**(i - 11);
         generatedRev.push(targetRev * growthFactor);
         generatedProfit.push((targetRev * growthFactor) * profitMargin);
     }
