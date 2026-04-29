@@ -5,44 +5,13 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { ArrowLeft, MessageSquare, Briefcase, TrendingUp, Presentation, CheckCircle2, Factory, LineChart, AlertTriangle, Activity, BrainCircuit, ShieldCheck, Scale, HeartPulse, Clock, Calendar } from "lucide-react";
 import AIChat from "@/frontend/components/AIChat";
+import ScrollReveal from "@/frontend/components/ScrollReveal";
 import { motion } from "framer-motion";
 
-/**
- * Wraps content in a motion container that fades and slides into view when scrolled into the viewport.
- * @example
- * ScrollReveal({ children: <div>Content</div>, className: "my-class", delay: 0.2, y: 18 })
- * <motion.div>...</motion.div>
- * @param {React.ReactNode} children - The content to animate on scroll.
- * @param {string} [className] - Optional CSS class name applied to the wrapper element.
- * @param {number} [delay=0] - Delay in seconds before the reveal animation starts.
- * @param {number} [y=18] - Initial vertical offset in pixels before the element animates into place.
- * @returns {JSX.Element} A motion.div element that animates its children into view.
- **/
-function ScrollReveal({
-    children,
-    className,
-    delay = 0,
-    y = 18,
-}: {
-    children: React.ReactNode;
-    className?: string;
-    delay?: number;
-    y?: number;
-}) {
-    return (
-        <motion.div
-            className={className}
-            initial={{ opacity: 0, y }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.25 }}
-            transition={{ duration: 0.55, ease: "easeOut", delay }}
-        >
-            {children}
-        </motion.div>
-    );
-}
+
 
 // Remove mock data. We will fetch dynamically now.
+
 
 /**
  * Displays a startup profile page with pitch media, financial charts, activity status, and AI analysis tools.

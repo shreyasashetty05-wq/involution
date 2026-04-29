@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from "@/database/mongodb";
 import Startup from "@/database/models/Startup";
-import { GoogleGenAI, Type, Schema } from '@google/genai';
-
-// Initialize the Google Gen AI client
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+import { Type, Schema } from '@google/genai';
+import { callGeminiReport } from '@/lib/geminiReportHelper';
 
 const dueDiligenceSchema: Schema = {
     type: Type.OBJECT,
@@ -100,34 +98,12 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
             ${startupDataString}
         `;
 
-        const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
-            contents: prompt,
-            config: {
-                responseMimeType: 'application/json',
-                responseSchema: dueDiligenceSchema,
-                temperature: 0.2, // Low temperature for more deterministic/factual analysis
-            }
-        });
-
-        if (!response.text) {
-            throw new Error("Failed to generate report from Gemini");
-        }
-
-        const reportData = JSON.parse(response.text);
-
-        // Ensure generatedAt is attached
-        reportData.generatedAt = new Date().toISOString();
-
-        return NextResponse.json({
-            success: true,
-            startup: {
-                name: (startup as any).name,
-                sector: (startup as any).sector,
-                stage: (startup as any).stage
-            },
-            report: reportData
-        });
+        return callGeminiReport(
+            prompt,
+            dueDiligenceSchema,
+            (startup as any).name,
+            (startup as any).sector,
+        );
     } catch (err: any) {
         console.error("Gemini Error:", err);
         return NextResponse.json({ success: false, error: err.message }, { status: 500 });

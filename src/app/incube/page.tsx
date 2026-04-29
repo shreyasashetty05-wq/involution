@@ -4,41 +4,10 @@ import Link from "next/link";
 import { ArrowRight, GraduationCap, Lightbulb, Rocket, Target, ShieldCheck, Cpu, TrendingUp, Zap } from "lucide-react";
 import { motion } from "framer-motion";
 import React from "react";
+import ScrollReveal from "@/frontend/components/ScrollReveal";
 
-/**
- * Animates its children into view with a fade-up reveal effect when scrolled into the viewport.
- * @example
- * ScrollReveal({ children: <div>Content</div>, className: "my-class", delay: 0.2, y: 18 })
- * <motion.div>...</motion.div>
- * @param {React.ReactNode} children - The content to render and animate.
- * @param {string} [className] - Optional CSS class name applied to the wrapper element.
- * @param {number} [delay=0] - Delay in seconds before the reveal animation starts.
- * @param {number} [y=18] - The initial vertical offset for the reveal animation.
- * @returns {JSX.Element} A motion div that reveals its children on scroll.
- */
-function ScrollReveal({
-    children,
-    className,
-    delay = 0,
-    y = 18,
-}: {
-    children: React.ReactNode;
-    className?: string;
-    delay?: number;
-    y?: number;
-}) {
-    return (
-        <motion.div
-            className={className}
-            initial={{ opacity: 0, y }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.25 }}
-            transition={{ duration: 0.55, ease: "easeOut", delay }}
-        >
-            {children}
-        </motion.div>
-    );
-}
+
+
 
 /**
  * Renders the Incube landing page for student founders and angel investors.
