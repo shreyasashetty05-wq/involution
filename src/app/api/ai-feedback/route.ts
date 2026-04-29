@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        let embedding: number[] | undefined = undefined;
+        let embedding: number[] | undefined;
 
         // Generate embedding if it's an upvote (so we can use it for RAG later)
         if (feedbackType === 'upvote') {
