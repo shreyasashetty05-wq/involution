@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from "@/database/mongodb";
-import Startup from "@/database/models/Startup";
 import { Type, Schema } from '@google/genai';
-import { callGeminiReport } from '@/lib/geminiReportHelper';
-
+import { callGeminiReport, fetchStartupById } from '@/lib/geminiReportHelper';
 
 
 const complianceSchema: Schema = {
@@ -49,15 +46,10 @@ const complianceSchema: Schema = {
  **/
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     try {
-        await dbConnect();
         const { id } = await params;
-        const startup = await Startup.findById(id).lean();
-
-        if (!startup) {
-            return NextResponse.json({ success: false, error: 'Startup not found' }, { status: 404 });
-        }
-
-        const startupDataString = JSON.stringify(startup, null, 2);
+        const result = await fetchStartupById(id);
+        if (result instanceof NextResponse) return result;
+        const { startup, startupDataString } = result;
 
         const prompt = `
             You are an expert legal and corporate compliance AI agent.

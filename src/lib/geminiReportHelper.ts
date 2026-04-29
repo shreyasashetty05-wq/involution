@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { GoogleGenAI, Schema } from '@google/genai';
+import dbConnect from '@/database/mongodb';
+import Startup from '@/database/models/Startup';
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
@@ -12,6 +14,23 @@ const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
  * @param startupName   - Startup name forwarded in the response envelope.
  * @param startupSector - Startup sector forwarded in the response envelope.
  */
+/**
+ * Connects to DB, fetches a startup by ID, and returns its serialized data string.
+ * Returns a 404 NextResponse if the startup is not found.
+ */
+export async function fetchStartupById(
+    id: string,
+): Promise<{ startup: any; startupDataString: string } | NextResponse> {
+    await dbConnect();
+    const startup = await Startup.findById(id).lean();
+
+    if (!startup) {
+        return NextResponse.json({ success: false, error: 'Startup not found' }, { status: 404 });
+    }
+
+    return { startup, startupDataString: JSON.stringify(startup, null, 2) };
+}
+
 export async function callGeminiReport(
     prompt: string,
     schema: Schema,
