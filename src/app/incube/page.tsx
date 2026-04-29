@@ -32,8 +32,8 @@ function ScrollReveal({
 export default function IncubeInfoPage() {
     return (
         <div className="relative min-h-screen flex flex-col items-center py-24 bg-[#f8faf9] overflow-hidden">
-            <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-blue-50 rounded-full blur-[100px] opacity-70 pointer-events-none" />
-            <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-indigo-50/50 rounded-full blur-[80px] pointer-events-none" />
+            <div className="absolute top-0 right-0 size-[600px] bg-blue-50 rounded-full blur-[100px] opacity-70 pointer-events-none" />
+            <div className="absolute bottom-0 left-0 size-[500px] bg-indigo-50/50 rounded-full blur-[80px] pointer-events-none" />
 
             <div className="relative z-10 max-w-5xl px-6 mx-auto w-full">
                 <div className="text-center mb-16">
