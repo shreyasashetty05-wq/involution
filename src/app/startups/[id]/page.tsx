@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { ArrowLeft, MessageSquare, Briefcase, TrendingUp, Presentation, CheckCircle2, Factory, LineChart, AlertTriangle, Activity, BrainCircuit, ShieldCheck, Scale, HeartPulse, Clock, Calendar } from "lucide-react";
+import { ArrowLeft, MessageSquare, Briefcase, TrendingUp, Presentation, CheckCircle2, Factory, LineChart, AlertTriangle, Activity, BrainCircuit, ShieldCheck, Scale, HeartPulse, Clock, Calendar, Users } from "lucide-react";
 import AIChat from "@/frontend/components/AIChat";
 import ScrollReveal from "@/frontend/components/ScrollReveal";
 import { motion } from "framer-motion";
@@ -143,10 +143,12 @@ export default function StartupProfile() {
                                         <CheckCircle2 className="size-3" /> {startup.isStudent ? "Incubation Idea" : "KYC Verified"}
                                     </span>
                                 </div>
-                                <div className="flex items-center gap-4 text-sm text-slate-500 font-medium">
+                                <div className="flex items-center flex-wrap gap-4 text-sm text-slate-500 font-medium mt-3">
                                     <span className="flex items-center gap-1"><Factory className="size-4 text-slate-400" /> {startup.sector} • {startup.businessModel}</span>
-                                    <span className="flex items-center gap-1 text-zinc-700">|</span>
+                                    <span className="flex items-center gap-1 text-zinc-300">|</span>
                                     <span className="flex items-center gap-1"><AlertTriangle className={`size-4 ${startup.risk === 'Low' ? 'text-emerald-600' : 'text-yellow-500'}`} /> {startup.risk} Risk Profile</span>
+                                    <span className="flex items-center gap-1 text-zinc-300">|</span>
+                                    <span className="flex items-center gap-1 font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full"><Users className="size-4" /> No. of Investors: {startup.investorCount || 0}</span>
                                 </div>
                             </div>
                         </ScrollReveal>

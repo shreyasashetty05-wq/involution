@@ -43,19 +43,29 @@ function AgreementContent() {
     return (
         <div className="min-h-screen bg-slate-100 text-black font-serif pb-12">
             {/* Non-printable action bar */}
-            <div className="print:hidden bg-slate-50 text-slate-900 p-4 flex justify-between items-center shadow-lg sticky top-0 z-50">
-                <button
-                    onClick={() => router.back()}
-                    className="flex items-center gap-2 px-4 py-2 hover:bg-slate-100 rounded-lg transition-colors"
-                >
-                    <ArrowLeft className="size-5" /> Back to Deal Room
-                </button>
-                <button
-                    onClick={handlePrint}
-                    className="flex items-center gap-2 px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-slate-900 font-semibold rounded-lg transition-colors"
-                >
-                    <Printer className="size-4" /> Print / Save as PDF
-                </button>
+            <div className="print:hidden bg-slate-50 text-slate-900 p-4 flex flex-col gap-4 shadow-lg sticky top-0 z-50">
+                {searchParams.get('success') === 'true' && (
+                    <div className="bg-emerald-100 border border-emerald-300 text-emerald-800 px-4 py-3 rounded-xl flex items-center gap-3">
+                        <div className="bg-emerald-500 rounded-full p-1 text-white">
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                        </div>
+                        <p className="font-bold">Deal successfully completed!</p>
+                    </div>
+                )}
+                <div className="flex justify-between items-center">
+                    <button
+                        onClick={() => router.back()}
+                        className="flex items-center gap-2 px-4 py-2 hover:bg-slate-100 rounded-lg transition-colors"
+                    >
+                        <ArrowLeft className="size-5" /> Back to Deal Room
+                    </button>
+                    <button
+                        onClick={handlePrint}
+                        className="flex items-center gap-2 px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-slate-900 font-semibold rounded-lg transition-colors"
+                    >
+                        <Printer className="size-4" /> Print / Save as PDF
+                    </button>
+                </div>
             </div>
 
             {/* Printable Document Area */}

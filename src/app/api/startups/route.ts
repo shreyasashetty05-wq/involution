@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import dbConnect from "@/database/mongodb";
 import Startup from "@/database/models/Startup";
+import { Deal } from "@/database/models/Deal";
 
 /**
  * Retrieves all startups from the database, sorted by score in descending order, and returns them as JSON.
@@ -25,10 +26,23 @@ export async function GET(req: Request) {
 
         const startups = await Startup.find(query).sort({ score: -1 }).lean();
 
+        // Count executed deals (investors) per startup
+        const startupIds = startups.map((doc: any) => doc._id.toString());
+        const deals = await Deal.aggregate([
+            { $match: { startupId: { $in: startupIds }, status: 'executed' } },
+            { $group: { _id: "$startupId", count: { $sum: 1 } } }
+        ]);
+
+        const dealCountMap = deals.reduce((acc: any, curr: any) => {
+            acc[curr._id] = curr.count;
+            return acc;
+        }, {});
+
         // Convert generic MongoDB ObjectIds to strings to prevent Server Component serialization errors
         const serializedStartups = startups.map((doc: any) => ({
             ...doc,
-            _id: doc._id.toString()
+            _id: doc._id.toString(),
+            investorCount: dealCountMap[doc._id.toString()] || 0
         }));
 
         return NextResponse.json({ success: true, data: serializedStartups });

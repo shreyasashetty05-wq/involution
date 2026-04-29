@@ -556,7 +556,12 @@ function DealWorkspace() {
                                             <input type="text" placeholder="Type full legal name…"
                                                 className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-800 focus:ring-2 focus:ring-pink-400 outline-none font-serif italic"
                                                 value={investorSignature} onChange={e => setInvestorSignature(e.target.value)} />
-                                            <button onClick={() => investorSignature.length > 3 && setNegotiationPhase('executed')}
+                                            <button onClick={() => {
+                                                if (investorSignature.length > 3) {
+                                                    setNegotiationPhase('executed');
+                                                    router.push(`/messages/agreement?success=true&startup=${encodeURIComponent(startupName)}&amount=${encodeURIComponent(termAmount)}&equity=${encodeURIComponent(termEquity)}&signature=${encodeURIComponent(investorSignature)}&startupSig=${encodeURIComponent(startupSignature)}&cAddress=${encodeURIComponent(companyAddress)}&iAddress=${encodeURIComponent(investorAddress)}&payment=${encodeURIComponent(paymentMethod)}&period=${encodeURIComponent(investmentPeriod)}&execs=${encodeURIComponent(executives)}&board=${encodeURIComponent(board)}`);
+                                                }
+                                            }}
                                                 disabled={investorSignature.length <= 3}
                                                 className="w-full py-3 mt-2 bg-gradient-to-r from-pink-500 to-rose-600 text-white font-bold rounded-xl disabled:opacity-40 transition-all">
                                                 Counter-Sign & Execute Deal
