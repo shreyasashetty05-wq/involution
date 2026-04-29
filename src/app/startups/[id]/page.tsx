@@ -7,6 +7,17 @@ import { ArrowLeft, MessageSquare, Briefcase, TrendingUp, Presentation, CheckCir
 import AIChat from "@/frontend/components/AIChat";
 import { motion } from "framer-motion";
 
+/**
+ * Wraps content in a motion container that fades and slides into view when scrolled into the viewport.
+ * @example
+ * ScrollReveal({ children: <div>Content</div>, className: "my-class", delay: 0.2, y: 18 })
+ * <motion.div>...</motion.div>
+ * @param {React.ReactNode} children - The content to animate on scroll.
+ * @param {string} [className] - Optional CSS class name applied to the wrapper element.
+ * @param {number} [delay=0] - Delay in seconds before the reveal animation starts.
+ * @param {number} [y=18] - Initial vertical offset in pixels before the element animates into place.
+ * @returns {JSX.Element} A motion.div element that animates its children into view.
+ **/
 function ScrollReveal({
     children,
     className,

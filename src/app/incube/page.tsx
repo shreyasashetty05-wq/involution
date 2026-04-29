@@ -5,6 +5,17 @@ import { ArrowRight, GraduationCap, Lightbulb, Rocket, Target, ShieldCheck, Cpu,
 import { motion } from "framer-motion";
 import React from "react";
 
+/**
+ * Animates its children into view with a fade-up reveal effect when scrolled into the viewport.
+ * @example
+ * ScrollReveal({ children: <div>Content</div>, className: "my-class", delay: 0.2, y: 18 })
+ * <motion.div>...</motion.div>
+ * @param {React.ReactNode} children - The content to render and animate.
+ * @param {string} [className] - Optional CSS class name applied to the wrapper element.
+ * @param {number} [delay=0] - Delay in seconds before the reveal animation starts.
+ * @param {number} [y=18] - The initial vertical offset for the reveal animation.
+ * @returns {JSX.Element} A motion div that reveals its children on scroll.
+ */
 function ScrollReveal({
     children,
     className,
@@ -29,6 +40,13 @@ function ScrollReveal({
     );
 }
 
+/**
+ * Renders the Incube landing page for student founders and angel investors.
+ * @example
+ * IncubeInfoPage()
+ * <IncubeInfoPage />
+ * @returns {JSX.Element} The Incube informational page UI.
+ **/
 export default function IncubeInfoPage() {
     return (
         <div className="relative min-h-screen flex flex-col items-center py-24 bg-[#f8faf9] overflow-hidden">

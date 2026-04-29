@@ -5,6 +5,17 @@ import { ArrowRight, ShieldCheck, Zap, BarChart2, TrendingUp } from "lucide-reac
 import { motion } from "framer-motion";
 import React from "react";
 
+/**
+* Reveals its children with a subtle scroll-triggered fade and upward motion animation.
+* @example
+* ScrollReveal({ children: <div>Content</div>, className: "my-class", delay: 0.2, y: 18 })
+* <motion.div>...</motion.div>
+* @param {{React.ReactNode}} children - The content to render and animate into view.
+* @param {string} [className] - Optional CSS class name to apply to the wrapper element.
+* @param {number} [delay=0] - Delay in seconds before the entrance animation starts.
+* @param {number} [y=18] - Initial vertical offset in pixels before revealing.
+* @returns {JSX.Element} A motion-enabled div that animates its children into view.
+**/
 function ScrollReveal({
     children,
     className,

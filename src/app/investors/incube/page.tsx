@@ -4,6 +4,13 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Search, BrainCircuit, Activity, ChevronRight, ArrowUpDown, ShieldCheck, Building2, GraduationCap } from "lucide-react";
 
+/**
+ * Displays an investor-facing incubation search page for browsing, filtering, sorting, and viewing verified student startup opportunities.
+ * @example
+ * IncubeSearch()
+ * <IncubeSearch />
+ * @returns {JSX.Element} The rendered incubation center search and results page.
+ */
 export default function IncubeSearch() {
     const [filters, setFilters] = useState({
         keyword: "",
@@ -23,6 +30,13 @@ export default function IncubeSearch() {
 
     // Fetch verified student startups from MongoDB
     useEffect(() => {
+        /**
+        * Fetches student-type startup data from the API, stores it in state, and initializes the results sorted by score.
+        * @example
+        * sync()
+        * undefined
+        * @returns {Promise<void>} A promise that resolves after the startup data is loaded, sorted, and loading state is updated.
+        **/
         const fetchStartups = async () => {
             try {
                 const res = await fetch('/api/startups?type=student');
@@ -43,6 +57,13 @@ export default function IncubeSearch() {
         fetchStartups();
     }, []);
 
+    /**
+     * Filters and sorts startup investment results based on the current search criteria.
+     * @example
+     * handleSearch()
+     * [{ name: "Startup A" }, { name: "Startup B" }]
+     * @returns {void} No return value.
+     **/
     const handleSearch = () => {
         setIsSearching(true);
         setTimeout(() => {
