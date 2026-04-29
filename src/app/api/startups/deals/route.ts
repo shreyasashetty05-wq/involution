@@ -18,6 +18,23 @@ function buildExecutedAgreement(deal: any) {
     };
 }
 
+/**
+* Builds an active chat summary object from a deal record.
+* @example
+* buildActiveChat(deal)
+* {
+*   id: "64f1c2...",
+*   startupId: "startup_123",
+*   startupName: "Acme Inc.",
+*   investor: "investor_456",
+*   phase: 1,
+*   lastMessage: "Hello!",
+*   time: "10:30 AM",
+*   unread: 0
+* }
+* @param {{any}} deal - Deal object containing startup, investor, phase, and message details.
+* @returns {{object}} Active chat summary with id, startup information, latest message, and unread count.
+**/
 function buildActiveChat(deal: any) {
     const lastMsg = deal.messages?.at(-1);
     return {

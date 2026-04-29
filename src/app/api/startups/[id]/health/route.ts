@@ -47,6 +47,13 @@ const healthSchema: Schema = {
 
 // --- Helpers ---
 
+/**
+* Detects significant revenue anomalies by identifying large month-over-month spikes or drops in a revenue array.
+* @example
+* detectRevenueAnomalies([100, 140, 90])
+* "DETECTED FINANCIAL ANOMALIES:\nSUDDEN SPIKE: Month 1 to Month 2 saw a 40.0% spike in revenue (from 100 to 140).\nCRITICAL DROP: Month 2 to Month 3 saw a -35.7% drop in revenue (from 140 to 90).\n\nCRITICAL DIRECTIVE:\n- You MUST acknowledge these anomalies.\n- If there is a CRITICAL DROP in revenue, you MUST severely penalize the `overallHealth` score (pushing it towards Poor or Critical) and the 'growth' & 'revenue' pillars.\n- You MUST generate a 'critical' or 'warning' alert explicitly mentioning the revenue drop or spike.\n* @param {number[]} revArray - Array of monthly revenue values to analyze.
+* @returns {string} A message describing detected anomalies or indicating that none were found.
+**/
 function detectRevenueAnomalies(revArray: number[]): string {
     if (!Array.isArray(revArray) || revArray.length <= 1) {
         return "No significant financial anomalies detected in the last 6 months.";
@@ -74,6 +81,15 @@ function detectRevenueAnomalies(revArray: number[]): string {
     );
 }
 
+/**
+ * Builds a prompt for analyzing startup financial health across operational pillars.
+ * @example
+ * buildHealthPrompt(startupDataString, financialAnomaliesContext)
+ * "You are an expert startup financial analyst AI..."
+ * @param {string} startupDataString - JSON/stringified startup data to be analyzed.
+ * @param {string} financialAnomaliesContext - Additional context describing detected financial anomalies.
+ * @returns {string} A formatted prompt string for the health analysis model.
+ */
 function buildHealthPrompt(startupDataString: string, financialAnomaliesContext: string): string {
     return `
             You are an expert startup financial analyst AI.

@@ -15,6 +15,18 @@ function validateStudentProfile(age: number, errors: string[]) {
     }
 }
 
+/**
+* Validates startup financial metrics and records errors or warnings for unrealistic values and risk conditions.
+* @example
+* validateFinancials({ margin: 50, runway: 6 }, { cac: 100, ltv: 500 }, { rev: 5000, fundingAsk: 2000000 }, errors, warnings)
+* undefined
+* @param {{ margin: number; runway: number }} metrics - Margin and runway values to validate.
+* @param {{ cac: number; ltv: number }} unitEconomics - Customer acquisition cost and lifetime value values to validate.
+* @param {{ rev: number; fundingAsk: number }} funding - Revenue and funding ask values to validate.
+* @param {string[]} errors - Array that receives validation error messages.
+* @param {string[]} warnings - Array that receives validation warning messages.
+* @returns {void} Does not return a value; mutates the provided errors and warnings arrays.
+**/
 function validateFinancials(
     { margin, runway }: { margin: number; runway: number },
     { cac, ltv }: { cac: number; ltv: number },
