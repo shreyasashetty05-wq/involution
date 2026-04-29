@@ -35,9 +35,9 @@ export async function proxy(request: NextRequest) {
             // Only redirect to KYC if this is a brand-new sign-in with no KYC record
             if (isNewUser && !kycDone) {
                 return NextResponse.redirect(new URL('/kyc', request.url));
-            } else {
+            } 
                 return NextResponse.redirect(new URL(role === 'startup' ? '/startups/dashboard' : '/investors/dashboard', request.url));
-            }
+            
         }
 
         if (path === '/kyc') {
