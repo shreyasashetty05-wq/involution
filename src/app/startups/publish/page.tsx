@@ -218,7 +218,7 @@ export default function PublishStartupPage() {
                 <p className="text-slate-500 font-inter">Complete the 7-section verification standard. Our AI relies on accurate financial disclosures to match you with top-tier partners.</p>
             </div>
 
-            <div className="bg-white border border-slate-200 rounded-2xl shadow-sm bg-white rounded-3xl p-8 lg:p-10 relative overflow-hidden">
+            <div className="bg-white border border-slate-200 rounded-3xl shadow-sm p-8 lg:p-10 relative overflow-hidden">
                 {success ? (
                     <div className="py-20 text-center animate-in zoom-in duration-500">
                         <div className="size-24 bg-emerald-900/40 border border-emerald-500/30 rounded-full flex items-center justify-center mb-8 mx-auto shadow-[0_0_30px_-5px_rgba(16,185,129,0.4)]">

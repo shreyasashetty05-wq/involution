@@ -122,7 +122,7 @@ export default function StartupDashboardClient({ myStartups }: StartupDashboardC
                             </div>
                         ))
                     ) : (
-                        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-8 text-center border-dashed border-2 bg-white">
+                        <div className="bg-white border-2 border-slate-200 rounded-2xl shadow-sm p-8 text-center border-dashed">
                             <ShieldCheck className="size-12 text-slate-400 mx-auto mb-4" />
                             <h3 className="text-xl font-bold text-slate-800 mb-2">No Profile Found</h3>
                             <p className="text-slate-9000 mb-6 max-w-sm mx-auto">You haven't published a startup profile under this email address yet. Investors cannot discover you until you do.</p>
