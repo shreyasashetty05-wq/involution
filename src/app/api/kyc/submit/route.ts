@@ -41,16 +41,20 @@ export async function POST(req: Request) {
         // Randomly simulate an OCR matching score algorithm for realism (80-99%)
         const simulatedScore = Math.floor(Math.random() * 20) + 80;
 
-        const kycRecord = await KYCDocument.create({
-            email: token.email,
-            name: formData.get('name') || "Anonymous User",
-            type: formData.get('type') || "Startup Founder",
-            aadhaar: formData.get('aadhaar'),
-            pan: formData.get('pan'),
-            aadhaarFile: aadhaarBase64,
-            panFile: panBase64,
-            matchScore: simulatedScore
-        });
+        const kycRecord = await KYCDocument.findOneAndUpdate(
+            { email: token.email },
+            {
+                name: formData.get('name') || "Anonymous User",
+                type: formData.get('type') || "Startup Founder",
+                aadhaar: formData.get('aadhaar'),
+                pan: formData.get('pan'),
+                aadhaarFile: aadhaarBase64,
+                panFile: panBase64,
+                matchScore: simulatedScore,
+                status: 'Pending'
+            },
+            { new: true, upsert: true }
+        );
 
         return NextResponse.json({ success: true, data: kycRecord }, { status: 201 });
     } catch (error: any) {

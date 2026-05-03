@@ -21,24 +21,45 @@ export const authOptions: NextAuthOptions = {
 
                 try {
                     await dbConnect();
-                    const kycRecord = await KYCDocument.findOne({ email: user.email });
+                    const kycRecord = await KYCDocument.findOne({ email: user.email }).sort({ createdAt: -1 });
                     token.kycDone = Boolean(kycRecord);
                     token.isNewUser = !kycRecord;
+                    token.kycStatus = kycRecord?.status || 'None';
                 } catch (error) {
                     console.error("NextAuth KYC Check Error:", error);
                     token.kycDone = false;
                     token.isNewUser = true;
+                    token.kycStatus = 'None';
                 }
             } else {
                 // Subsequent token refreshes — carry existing values forward
                 token.kycDone = token.kycDone ?? false;
                 token.isNewUser = token.isNewUser ?? false;
+                token.kycStatus = token.kycStatus ?? 'None';
             }
 
-            // Hydrate the JWT immediately after KYC form submission
-            if (trigger === "update" && (session as Record<string, unknown>)?.kycDone) {
-                token.kycDone = true;
-                token.isNewUser = false;
+            // Handle session updates (either from form submission or manual refresh)
+            if (trigger === "update") {
+                if (session && (session as Record<string, unknown>).kycDone) {
+                    // Manual override from KYC submit form
+                    token.kycDone = true;
+                    token.isNewUser = false;
+                    token.kycStatus = (session as Record<string, unknown>).kycStatus || 'Pending';
+                } else {
+                    // Refetch from database (e.g. when checking pending status)
+                    try {
+                        await dbConnect();
+                        // Use token.email because user object is not present on updates
+                        const kycRecord = await KYCDocument.findOne({ email: token.email }).sort({ createdAt: -1 });
+                        if (kycRecord) {
+                            token.kycDone = true;
+                            token.isNewUser = false;
+                            token.kycStatus = kycRecord.status;
+                        }
+                    } catch (error) {
+                        console.error("NextAuth update fetch error:", error);
+                    }
+                }
             }
 
             return token;
@@ -48,6 +69,7 @@ export const authOptions: NextAuthOptions = {
                 (session.user as Record<string, unknown>).role = token.role;
                 (session.user as Record<string, unknown>).kycDone = token.kycDone;
                 (session.user as Record<string, unknown>).isNewUser = token.isNewUser;
+                (session.user as Record<string, unknown>).kycStatus = token.kycStatus;
                 (session.user as Record<string, unknown>).id = token.sub;
             }
             return session;

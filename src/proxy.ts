@@ -28,45 +28,82 @@ export async function proxy(request: NextRequest) {
         const role = token.role as string;
         const kycDone = token.kycDone as boolean;
         const isNewUser = token.isNewUser as boolean;
+        const kycStatus = token.kycStatus as string;
         const path = request.nextUrl.pathname;
 
-        // Never restrict access to auth endpoints, or the active kyc submission page
-        if (isAuthPage) {
-            // Only redirect to KYC if this is a brand-new sign-in with no KYC record
-            if (isNewUser && !kycDone) {
-                return NextResponse.redirect(new URL('/kyc', request.url));
-            } 
-                return NextResponse.redirect(new URL(role === 'startup' ? '/startups/dashboard' : '/investors/dashboard', request.url));
-            
-        }
-
-        if (path === '/kyc') {
-            if (kycDone) {
-                return NextResponse.redirect(new URL(role === 'startup' ? '/startups/dashboard' : '/investors/dashboard', request.url));
-            }
-            // It's not done, so allow access to '/kyc'
+        // Admin Bypass: Allow access to /admin routes without KYC checks for testing purposes
+        if (path.startsWith('/admin')) {
             return NextResponse.next();
         }
 
-        // Force KYC only for brand-new users who haven't completed it yet
-        if (isNewUser && !kycDone && isProtectedRoute) {
+        // Force KYC for pending
+        if (kycStatus === 'Pending' && path !== '/kyc/pending' && isProtectedRoute) {
+            return NextResponse.redirect(new URL('/kyc/pending', request.url));
+        }
+
+        // Force KYC for rejected
+        if (kycStatus === 'Rejected' && path !== '/kyc' && isProtectedRoute) {
             return NextResponse.redirect(new URL('/kyc', request.url));
         }
 
+        // Force KYC for new users
+        if ((isNewUser || (!kycDone && kycStatus !== 'Rejected')) && path !== '/kyc' && isProtectedRoute) {
+            return NextResponse.redirect(new URL('/kyc', request.url));
+        }
+
+        // Handle Auth Pages when already logged in
+        if (isAuthPage) {
+            if (kycStatus === 'Approved') {
+                return NextResponse.redirect(new URL(role === 'startup' ? '/startups/dashboard' : '/investors/dashboard', request.url));
+            } else if (kycStatus === 'Pending') {
+                return NextResponse.redirect(new URL('/kyc/pending', request.url));
+            } else {
+                return NextResponse.redirect(new URL('/kyc', request.url));
+            }
+        }
+
+        // Prevent accessing /kyc if already pending or approved
+        if (path === '/kyc') {
+            if (kycStatus === 'Approved') {
+                return NextResponse.redirect(new URL(role === 'startup' ? '/startups/dashboard' : '/investors/dashboard', request.url));
+            }
+            if (kycStatus === 'Pending') {
+                return NextResponse.redirect(new URL('/kyc/pending', request.url));
+            }
+            return NextResponse.next();
+        }
+
+        // Prevent accessing /kyc/pending if not actually pending
+        if (path === '/kyc/pending') {
+            if (kycStatus === 'Approved') {
+                return NextResponse.redirect(new URL(role === 'startup' ? '/startups/dashboard' : '/investors/dashboard', request.url));
+            }
+            if (kycStatus !== 'Pending') {
+                return NextResponse.redirect(new URL('/kyc', request.url));
+            }
+            return NextResponse.next();
+        }
+
         // --- Standard Auth Routing checks onwards ---
+        // (Only approved users reach this for protected routes)
 
-        // Prevent cross-access based on roles
-        if (role === 'startup' && path.startsWith('/investors')) {
-            return NextResponse.redirect(new URL('/startups/dashboard', request.url));
-        }
+        if (kycStatus === 'Approved' || (!isProtectedRoute)) {
+            // Prevent cross-access based on roles
+            if (role === 'startup' && path.startsWith('/investors')) {
+                return NextResponse.redirect(new URL('/startups/dashboard', request.url));
+            }
 
-        if (role === 'investor' && path.startsWith('/startups/dashboard')) {
-            return NextResponse.redirect(new URL('/investors/dashboard', request.url));
-        }
+            if (role === 'investor' && path.startsWith('/startups/dashboard')) {
+                return NextResponse.redirect(new URL('/investors/dashboard', request.url));
+            }
 
-        // Prevent investors from publishing pitches
-        if (role === 'investor' && path.startsWith('/startups/publish')) {
-            return NextResponse.redirect(new URL('/investors/dashboard', request.url));
+            // Prevent investors from publishing pitches
+            if (role === 'investor' && path.startsWith('/startups/publish')) {
+                return NextResponse.redirect(new URL('/investors/dashboard', request.url));
+            }
+        } else if (isProtectedRoute && kycStatus !== 'Approved') {
+            // Failsafe catch-all for any other weird state trying to hit protected routes
+            return NextResponse.redirect(new URL('/kyc', request.url));
         }
     }
 

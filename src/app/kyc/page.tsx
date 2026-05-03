@@ -77,12 +77,11 @@ export default function KYCSubmitPage() {
                 throw new Error(data.error || "Submission failed on server");
             }
 
-            await update({ kycDone: true });
+            await update({ kycDone: true, kycStatus: 'Pending' });
             setStatus("success");
 
             setTimeout(() => {
-                const role = (session?.user as any)?.role;
-                router.push(role === 'investor' ? '/investors/dashboard' : '/startups/dashboard');
+                router.push('/kyc/pending');
             }, 2000);
 
         } catch (error: any) {
@@ -105,6 +104,12 @@ export default function KYCSubmitPage() {
                 <p className="text-slate-500 font-inter max-w-xl mx-auto">
                     To ensure platform safety, please complete your simulated KYC by providing your PAN and Aadhaar details. Your documents are encrypted and securely validated.
                 </p>
+                {(session?.user as any)?.kycStatus === 'Rejected' && (
+                    <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 font-medium max-w-lg mx-auto flex items-start gap-3 text-left">
+                        <AlertCircle className="size-5 shrink-0 mt-0.5" />
+                        <p>Your previous KYC application was rejected. Please review your details and submit clear, accurate documents again.</p>
+                    </div>
+                )}
             </div>
 
             <div className="bg-white border border-slate-200 shadow-sm rounded-2xl p-8 relative overflow-hidden">
@@ -116,9 +121,9 @@ export default function KYCSubmitPage() {
                         <div className="size-20 bg-green-500/20 rounded-full flex items-center justify-center mb-6">
                             <CheckCircle2 className="size-10 text-green-400" />
                         </div>
-                        <h2 className="text-2xl font-bold text-slate-900 font-outfit mb-3">Verification Successful</h2>
-                        <p className="text-slate-500 max-w-md">Your Aadhaar <b>({aadharMasked})</b> and PAN have been verified via our OCR validation simulation. Your profile is now marked as secure.</p>
-                        <p className="mt-4 text-indigo-600 font-medium flex items-center gap-2"><Loader2 className="size-4 animate-spin" /> Redirecting to your dashboard...</p>
+                        <h2 className="text-2xl font-bold text-slate-900 font-outfit mb-3">Submission Successful</h2>
+                        <p className="text-slate-500 max-w-md">Your Aadhaar <b>({aadharMasked})</b> and PAN have been submitted. Our team will review them shortly.</p>
+                        <p className="mt-4 text-indigo-600 font-medium flex items-center gap-2"><Loader2 className="size-4 animate-spin" /> Redirecting...</p>
                     </div>
                 ) : (
                     <form onSubmit={handleSubmit} className="relative z-10 space-y-8">
