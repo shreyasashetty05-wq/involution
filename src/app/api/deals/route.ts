@@ -153,6 +153,16 @@ export async function PUT(req: NextRequest) {
             deal.investmentPeriod = body.investmentPeriod;
             deal.executives = body.executives;
             deal.board = body.board;
+        } else if (action === 'scheduleMeeting') {
+            const { meeting } = body;
+            deal.meetings.push({
+                title: meeting.title,
+                date: meeting.date,
+                time: meeting.time,
+                durationMinutes: meeting.durationMinutes || 10,
+                meetLink: meeting.meetLink,
+                status: meeting.status || 'scheduled'
+            });
         }
 
         await deal.save();

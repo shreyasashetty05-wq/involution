@@ -161,6 +161,29 @@ function DealWorkspace() {
                 if (data.deal.status === 'executed') {
                     setNegotiationPhase(prev => prev !== 'executed' ? 'executed' : prev);
                 }
+
+                if (data.deal.meetings) {
+                    const newMeetings = data.deal.meetings.map((m: any) => ({
+                        id: m._id || Math.random(),
+                        title: m.title,
+                        date: m.date,
+                        time: m.time,
+                        link: m.meetLink,
+                        status: m.status === 'scheduled' ? 'Scheduled' : m.status
+                    }));
+
+                    setMeetings(prevMeetings => {
+                        if (prevMeetings.length !== newMeetings.length) {
+                            return newMeetings;
+                        }
+                        const prevLast = prevMeetings[prevMeetings.length - 1];
+                        const newLast = newMeetings[newMeetings.length - 1];
+                        if (prevLast?.id !== newLast?.id || prevLast?.status !== newLast?.status) {
+                            return newMeetings;
+                        }
+                        return prevMeetings;
+                    });
+                }
             }
         } catch (err) {
             console.error("Failed to fetch deal", err);
@@ -260,12 +283,38 @@ function DealWorkspace() {
         }
     };
 
-    const scheduleMeeting = (e: React.FormEvent) => {
+    const scheduleMeeting = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!meetingDate || !meetingTime) return;
-        setMeetings(m => [...m, { id: Date.now(), title: meetingType, date: meetingDate, time: meetingTime, link: `https://meet.google.com/new?hs=122&authuser=0`, status: "Scheduled" }]);
+        if (!meetingDate || !meetingTime || !startupId) return;
+
+        const newMeeting = { id: Date.now(), title: meetingType, date: meetingDate, time: meetingTime, link: `https://meet.google.com/new?hs=122&authuser=0`, status: "Scheduled" };
+        
+        setMeetings(m => [...m, newMeeting]);
         setMeetingDate("");
         setMeetingTime("");
+
+        try {
+            await fetch('/api/deals', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    startupId,
+                    investorId,
+                    action: 'scheduleMeeting',
+                    meeting: {
+                        title: newMeeting.title,
+                        date: newMeeting.date,
+                        time: newMeeting.time,
+                        durationMinutes: 10,
+                        meetLink: newMeeting.link,
+                        status: 'scheduled'
+                    }
+                })
+            });
+            await fetchMessages();
+        } catch (err) {
+            console.error("Failed to schedule meeting", err);
+        }
     };
 
     const phases = [
