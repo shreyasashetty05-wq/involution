@@ -101,6 +101,8 @@ function DealWorkspace() {
     const [meetingDate, setMeetingDate] = useState("");
     const [meetingTime, setMeetingTime] = useState("");
     const [meetingType, setMeetingType] = useState("Intro Meeting");
+    const [meetingUrlInput, setMeetingUrlInput] = useState("");
+    const [meetingUrlError, setMeetingUrlError] = useState("");
 
     const [negotiationPhase, setNegotiationPhase] = useState<"startup_drafting" | "investor_review" | "executed">("startup_drafting");
     const [termAmount, setTermAmount] = useState("₹ 50,00,000");
@@ -285,27 +287,23 @@ function DealWorkspace() {
 
     const scheduleMeeting = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!meetingDate || !meetingTime || !startupId) return;
+        if (!meetingDate || !meetingTime || !startupId || !meetingUrlInput) return;
 
-        // Check if an active meeting link already exists for this deal to prevent duplicate rooms
-        const existingMeeting = meetings.find(m => m.link && !m.link.includes('meet.google.com/new'));
-        
-        let sharedMeetUrl;
-        if (existingMeeting) {
-            // Reuse existing meeting room
-            sharedMeetUrl = existingMeeting.link; 
-        } else {
-            // Generate a shared Google Meet style link ONCE
-            const chars = 'abcdefghijklmnopqrstuvwxyz';
-            const randomStr = (length: number) => Array.from({length}, () => chars[Math.floor(Math.random() * chars.length)]).join('');
-            sharedMeetUrl = `https://meet.google.com/${randomStr(3)}-${randomStr(4)}-${randomStr(3)}`;
+        setMeetingUrlError("");
+        const regex = /^https:\/\/meet\.google\.com\/[a-z]{3}-[a-z]{4}-[a-z]{3}$/;
+        if (!regex.test(meetingUrlInput)) {
+            setMeetingUrlError("Please enter a valid Google Meet URL (e.g. https://meet.google.com/abc-defg-hij)");
+            return;
         }
+
+        const sharedMeetUrl = meetingUrlInput;
 
         const newMeeting = { id: Date.now(), title: meetingType, date: meetingDate, time: meetingTime, link: sharedMeetUrl, status: "Scheduled" };
         
         setMeetings(m => [...m, newMeeting]);
         setMeetingDate("");
         setMeetingTime("");
+        setMeetingUrlInput("");
 
         try {
             await fetch('/api/deals', {
@@ -516,6 +514,13 @@ function DealWorkspace() {
                                                 <option>Deep-Dive Discussion</option>
                                             </select>
                                         </div>
+                                        <div>
+                                            <label className="text-[10px] text-slate-400 uppercase tracking-wider font-bold">Google Meet URL</label>
+                                            <input type="text" className={`w-full mt-1.5 bg-white border ${meetingUrlError ? 'border-red-400' : 'border-slate-200'} rounded-lg px-3 py-2 text-sm text-slate-800 focus:ring-2 focus:ring-indigo-400 outline-none placeholder:text-slate-300`}
+                                                placeholder="https://meet.google.com/abc-defg-hij"
+                                                value={meetingUrlInput} onChange={e => setMeetingUrlInput(e.target.value)} required />
+                                            {meetingUrlError && <p className="text-red-500 text-[10px] mt-1">{meetingUrlError}</p>}
+                                        </div>
                                         <div className="grid grid-cols-2 gap-3">
                                             <div>
                                                 <label className="text-[10px] text-slate-400 uppercase tracking-wider font-bold">Date</label>
@@ -530,10 +535,10 @@ function DealWorkspace() {
                                         </div>
                                         <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-3 flex gap-2">
                                             <Clock className="size-4 text-indigo-600 shrink-0 mt-0.5" />
-                                            <p className="text-xs text-indigo-700 leading-snug">A Google Meet link will be generated. Both parties must honor the 10-minute hard stop.</p>
+                                            <p className="text-xs text-indigo-700 leading-snug">Generate a real Google Meet link manually and paste it above. Both parties must honor the 10-minute hard stop.</p>
                                         </div>
                                         <button type="submit" className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg text-sm transition-colors">
-                                            Schedule & Generate Meet Link
+                                            Schedule Session
                                         </button>
                                     </form>
                                 </div>
