@@ -3,6 +3,7 @@ import dbConnect from "@/database/mongodb";
 import { Deal } from "@/database/models/Deal";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
+import { google } from "googleapis";
 
 /**
  * Fetches a deal for the authenticated user by startupId, optionally using a provided investorId.
@@ -155,12 +156,73 @@ export async function PUT(req: NextRequest) {
             deal.board = body.board;
         } else if (action === 'scheduleMeeting') {
             const { meeting } = body;
+            
+            let finalMeetLink = meeting.meetLink;
+
+            try {
+                const accessToken = (session.user as any).accessToken;
+                if (!accessToken) {
+                    return NextResponse.json({ success: false, error: 'User has no Google access token. Please re-login.' }, { status: 401 });
+                }
+
+                const oauth2Client = new google.auth.OAuth2();
+                oauth2Client.setCredentials({ access_token: accessToken });
+                
+                const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
+                
+                const startDateTime = new Date(`${meeting.date}T${meeting.time}:00`).toISOString();
+                const endDateTime = new Date(new Date(startDateTime).getTime() + (meeting.durationMinutes || 10) * 60000).toISOString();
+
+                const event = {
+                    summary: meeting.title,
+                    description: 'InVolution Trust Building Meeting',
+                    start: {
+                        dateTime: startDateTime,
+                        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+                    },
+                    end: {
+                        dateTime: endDateTime,
+                        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+                    },
+                    conferenceData: {
+                        createRequest: {
+                            requestId: `inv-${Date.now()}`,
+                            conferenceSolutionKey: {
+                                type: 'hangoutsMeet'
+                            }
+                        }
+                    }
+                };
+
+                const response = await calendar.events.insert({
+                    calendarId: 'primary',
+                    conferenceDataVersion: 1,
+                    requestBody: event,
+                });
+
+                if (response.data?.conferenceData?.entryPoints) {
+                    const meetEntryPoint = response.data.conferenceData.entryPoints.find(
+                        ep => ep.entryPointType === 'video'
+                    );
+                    if (meetEntryPoint && meetEntryPoint.uri) {
+                        finalMeetLink = meetEntryPoint.uri;
+                    }
+                }
+
+                if (!finalMeetLink) {
+                    throw new Error("Google API did not return a meet link");
+                }
+            } catch (err: any) {
+                console.error("Failed to generate Google Meet via Calendar API:", err.message);
+                return NextResponse.json({ success: false, error: 'Failed to generate Google Meet link: ' + err.message }, { status: 500 });
+            }
+
             deal.meetings.push({
                 title: meeting.title,
                 date: meeting.date,
                 time: meeting.time,
                 durationMinutes: meeting.durationMinutes || 10,
-                meetLink: meeting.meetLink,
+                meetLink: finalMeetLink,
                 status: meeting.status || 'scheduled'
             });
         }
