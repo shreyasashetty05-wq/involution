@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, Suspense, useEffect } from "react";
+import { useState, Suspense, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Send, FileSignature, CheckCircle2, ShieldCheck, User, FileText, ChevronRight, Video, Calendar, Clock, AlertTriangle, PlayCircle, CheckSquare, Search, Lock, Sparkles } from "lucide-react";
 
@@ -115,41 +115,69 @@ function DealWorkspace() {
     const [investorSignature, setInvestorSignature] = useState("");
     const agreementSigned = negotiationPhase === "executed";
     const [diligenceChecks, setDiligenceChecks] = useState([false, false, false]);
+    const messagesEndRef = useRef<HTMLDivElement>(null);
 
-    // Fetch existing deal data
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    };
+
+    useEffect(() => {
+        scrollToBottom();
+    }, [messages]);
+
+    const fetchMessages = async () => {
+        if (!startupId) return;
+        try {
+            const url = investorId ? `/api/deals?startupId=${startupId}&investorId=${investorId}` : `/api/deals?startupId=${startupId}`;
+            const res = await fetch(url);
+            const data = await res.json();
+            if (data.success && data.deal) {
+                const {currentUser} = data;
+
+                // Map DB messages to UI format with correct sides
+                const newMessages = data.deal.messages.map((m: any) => ({
+                    id: m._id || Math.random(),
+                    sender: m.senderId === currentUser ? 'me' : 'them',
+                    text: m.text,
+                    time: m.time
+                }));
+
+                setMessages(prevMessages => {
+                    // Compare to avoid unnecessary re-renders
+                    if (prevMessages.length !== newMessages.length) {
+                        return newMessages;
+                    }
+                    const prevLast = prevMessages[prevMessages.length - 1];
+                    const newLast = newMessages[newMessages.length - 1];
+                    if (prevLast?.id !== newLast?.id || prevLast?.text !== newLast?.text) {
+                        return newMessages;
+                    }
+                    return prevMessages;
+                });
+
+                if (data.deal.currentPhase) {
+                    setCurrentPhase(prev => data.deal.currentPhase !== prev ? data.deal.currentPhase : prev);
+                }
+                if (data.deal.status === 'executed') {
+                    setNegotiationPhase(prev => prev !== 'executed' ? 'executed' : prev);
+                }
+            }
+        } catch (err) {
+            console.error("Failed to fetch deal", err);
+        }
+    };
+
+    // Fetch existing deal data and poll
     useEffect(() => {
         if (!startupId) return;
-        /**
-        * Synchronizes deal messages and negotiation state from the API into the UI.
-        * @example
-        * sync()
-        * void
-        * @returns {void} No return value.
-        **/
-        const fetchDeal = async () => {
-            try {
-                const url = investorId ? `/api/deals?startupId=${startupId}&investorId=${investorId}` : `/api/deals?startupId=${startupId}`;
-                const res = await fetch(url);
-                const data = await res.json();
-                if (data.success && data.deal) {
-                    const {currentUser} = data;
 
-                    // Map DB messages to UI format with correct sides
-                    setMessages(data.deal.messages.map((m: any) => ({
-                        id: m._id || Math.random(),
-                        sender: m.senderId === currentUser ? 'me' : 'them',
-                        text: m.text,
-                        time: m.time
-                    })));
+        fetchMessages();
 
-                    if (data.deal.currentPhase) setCurrentPhase(data.deal.currentPhase);
-                    if (data.deal.status === 'executed') setNegotiationPhase('executed');
-                }
-            } catch (err) {
-                console.error("Failed to fetch deal", err);
-            }
-        };
-        fetchDeal();
+        const intervalId = setInterval(() => {
+            fetchMessages();
+        }, 1500);
+
+        return () => clearInterval(intervalId);
     }, [startupId, investorId]);
 
     const advancePhase = async () => {
@@ -201,18 +229,20 @@ function DealWorkspace() {
         e.preventDefault();
         if (!inputMessage.trim() || !startupId) return;
 
-        const newMsg = { id: Date.now(), sender: "me", text: inputMessage, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) };
+        const messageText = inputMessage;
+        setInputMessage("");
+
+        const newMsg = { id: Date.now(), sender: "me", text: messageText, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) };
 
         // Optimistic UI update
         setMessages(m => [...m, newMsg]);
-        setInputMessage("");
 
         // Save to DB
         try {
             const bodyPayload: any = {
                 startupId,
                 startupName,
-                text: newMsg.text
+                text: messageText
             };
             if (investorId) {
                 bodyPayload.investorId = investorId;
@@ -223,6 +253,8 @@ function DealWorkspace() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(bodyPayload)
             });
+            
+            await fetchMessages();
         } catch (err) {
             console.error("Failed to save message", err);
         }
@@ -383,6 +415,7 @@ function DealWorkspace() {
                                             <p className="text-sm text-slate-400">Secure channel open – send your first message</p>
                                         </div>
                                     )}
+                                    <div ref={messagesEndRef} />
                                 </div>
 
                                 {/* Input */}
