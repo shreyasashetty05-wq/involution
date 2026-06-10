@@ -287,7 +287,21 @@ function DealWorkspace() {
         e.preventDefault();
         if (!meetingDate || !meetingTime || !startupId) return;
 
-        const newMeeting = { id: Date.now(), title: meetingType, date: meetingDate, time: meetingTime, link: `https://meet.google.com/new?hs=122&authuser=0`, status: "Scheduled" };
+        // Check if an active meeting link already exists for this deal to prevent duplicate rooms
+        const existingMeeting = meetings.find(m => m.link && !m.link.includes('meet.google.com/new'));
+        
+        let sharedMeetUrl;
+        if (existingMeeting) {
+            // Reuse existing meeting room
+            sharedMeetUrl = existingMeeting.link; 
+        } else {
+            // Generate a shared Google Meet style link ONCE
+            const chars = 'abcdefghijklmnopqrstuvwxyz';
+            const randomStr = (length: number) => Array.from({length}, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+            sharedMeetUrl = `https://meet.google.com/${randomStr(3)}-${randomStr(4)}-${randomStr(3)}`;
+        }
+
+        const newMeeting = { id: Date.now(), title: meetingType, date: meetingDate, time: meetingTime, link: sharedMeetUrl, status: "Scheduled" };
         
         setMeetings(m => [...m, newMeeting]);
         setMeetingDate("");
