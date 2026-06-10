@@ -9,18 +9,10 @@ export const authOptions: NextAuthOptions = {
         GoogleProvider({
             clientId: process.env.GOOGLE_CLIENT_ID || "mock-client-id-needs-to-be-set",
             clientSecret: process.env.GOOGLE_CLIENT_SECRET || "mock-client-secret-needs-to-be-set",
-            authorization: {
-                params: {
-                    scope: "openid email profile https://www.googleapis.com/auth/calendar.events"
-                }
-            }
         })
     ],
     callbacks: {
         async jwt({ token, user, account, trigger, session }) {
-            if (account) {
-                token.accessToken = account.access_token;
-            }
             if (account && user) {
                 // Fresh OAuth sign-in — read role cookie and check KYC status
                 const cookieStore = await cookies();
@@ -79,7 +71,6 @@ export const authOptions: NextAuthOptions = {
                 (session.user as Record<string, unknown>).isNewUser = token.isNewUser;
                 (session.user as Record<string, unknown>).kycStatus = token.kycStatus;
                 (session.user as Record<string, unknown>).id = token.sub;
-                (session.user as Record<string, unknown>).accessToken = token.accessToken;
             }
             return session;
         }
