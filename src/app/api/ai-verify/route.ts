@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from "@/database/mongodb";
-import AIPrediction from "@/database/models/AIPrediction";
+import { createClient } from "@supabase/supabase-js";
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+const supabase = createClient(supabaseUrl!, supabaseKey!);
 
 // This would typically be triggered by a Cron Job, Webhook, or Admin Interface
 // when actual financial data matches the time horizon predicted by the AI.
@@ -14,8 +17,6 @@ import AIPrediction from "@/database/models/AIPrediction";
 **/
 export async function POST(req: NextRequest) {
     try {
-        await dbConnect();
-
         const body = await req.json();
         const { startupId, metric, actualValue } = body;
 
@@ -27,40 +28,52 @@ export async function POST(req: NextRequest) {
         }
 
         // Find pending predictions for this startup and metric
-        const predictions = await AIPrediction.find({
-            startupId,
-            predictedMetric: metric,
-            status: 'pending'
-        });
+        const { data: predictions, error: fetchError } = await supabase
+            .from("ai_predictions")
+            .select("*")
+            .eq("startup_id", startupId)
+            .eq("predicted_metric", metric)
+            .eq("status", "pending");
 
-        if (predictions.length === 0) {
+        if (fetchError) throw fetchError;
+
+        if (!predictions || predictions.length === 0) {
             return NextResponse.json({ success: true, message: 'No pending predictions found to verify.' }, { status: 200 });
         }
 
         const stats = { verified: 0, failed: 0 };
 
-        // Simple verification logic — runs all saves in parallel (no await-in-loop)
+        // Simple verification logic — runs all saves in parallel
         const results = await Promise.all(
-            predictions.map(async (pred) => {
-                pred.actualValue = actualValue;
-                pred.verificationDate = new Date();
-
+            predictions.map(async (pred: any) => {
+                const predictedValue = Number(pred.predicted_value);
                 let isAccurate = false;
-                if (pred.predictedMetric === 'healthScore') {
+                
+                if (pred.predicted_metric === 'healthScore') {
                     // If actual health is within 10 points of predicted
-                    isAccurate = Math.abs(pred.predictedValue - actualValue) <= 10;
-                } else if (pred.predictedMetric === 'runwayMonths') {
+                    isAccurate = Math.abs(predictedValue - actualValue) <= 10;
+                } else if (pred.predicted_metric === 'runwayMonths') {
                     // If actual runway was within 2 months of predicted
-                    isAccurate = Math.abs(pred.predictedValue - actualValue) <= 2;
-                } else if (pred.predictedMetric === 'burnRate') {
+                    isAccurate = Math.abs(predictedValue - actualValue) <= 2;
+                } else if (pred.predicted_metric === 'burnRate') {
                     // Within 15% margin of error
-                    isAccurate = Math.abs(pred.predictedValue - actualValue) <= (actualValue * 0.15);
+                    isAccurate = Math.abs(predictedValue - actualValue) <= (actualValue * 0.15);
                 } else {
-                    isAccurate = pred.predictedValue === actualValue; // Exact match fallback
+                    isAccurate = predictedValue === actualValue; // Exact match fallback
                 }
 
-                pred.status = isAccurate ? 'verified' : 'failed';
-                await pred.save();
+                const status = isAccurate ? 'verified' : 'failed';
+
+                const { error: updateError } = await supabase
+                    .from("ai_predictions")
+                    .update({
+                        actual_value: actualValue,
+                        verification_date: new Date().toISOString(),
+                        status
+                    })
+                    .eq("id", pred.id);
+
+                if (updateError) throw updateError;
                 return isAccurate;
             })
         );

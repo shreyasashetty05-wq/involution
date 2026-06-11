@@ -1,12 +1,30 @@
 import { NextResponse } from "next/server";
 import { GoogleGenAI } from "@google/genai";
-import dbConnect from "@/database/mongodb";
-import Startup from "@/database/models/Startup";
-import AIFeedback from "@/database/models/AIFeedback";
+import { createClient } from "@supabase/supabase-js";
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+const supabase = createClient(supabaseUrl!, supabaseKey!);
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 // --- Helpers ---
+
+function cosineSimilarity(a: number[], b: number[]) {
+    if (!a.length || !b.length || a.length !== b.length) return 0;
+    let dotProduct = 0;
+    let mA = 0;
+    let mB = 0;
+    for (let i = 0; i < a.length; i++) {
+        dotProduct += a[i] * b[i];
+        mA += a[i] * a[i];
+        mB += b[i] * b[i];
+    }
+    mA = Math.sqrt(mA);
+    mB = Math.sqrt(mB);
+    if (mA === 0 || mB === 0) return 0;
+    return dotProduct / (mA * mB);
+}
 
 /**
 * Generates an embedding vector for a question string using the configured AI embedding model.
@@ -38,26 +56,47 @@ async function getQuestionEmbedding(question: string): Promise<number[]> {
 * @returns {Promise<any[]>} A promise that resolves to an array of few-shot example documents.
 **/
 async function fetchFewShotExamples(embedding: number[]): Promise<any[]> {
-    if (embedding.length > 0) {
-        return AIFeedback.aggregate([
-            {
-                $vectorSearch: {
-                    index: 'vector_index',
-                    path: 'embedding',
-                    queryVector: embedding,
-                    numCandidates: 10,
-                    limit: 3,
-                    filter: { module: 'chat', feedbackType: 'upvote' }
+    const { data: feedbacks, error } = await supabase
+        .from("ai_feedbacks")
+        .select("*")
+        .eq("module", "chat")
+        .eq("feedback_type", "upvote")
+        .not("context", "is", null)
+        .neq("context", "");
+
+    if (error || !feedbacks || feedbacks.length === 0) return [];
+
+    if (embedding && embedding.length > 0) {
+        return feedbacks
+            .map((fb: any) => {
+                let fbEmbedding: number[] = [];
+                if (typeof fb.embedding === "string") {
+                    try {
+                        fbEmbedding = JSON.parse(fb.embedding);
+                    } catch {
+                        fbEmbedding = [];
+                    }
+                } else if (Array.isArray(fb.embedding)) {
+                    fbEmbedding = fb.embedding;
                 }
-            },
-            { $project: { context: 1, aiResponse: 1, score: { $meta: 'vectorSearchScore' } } }
-        ]);
+                const score = cosineSimilarity(embedding, fbEmbedding);
+                return {
+                    context: fb.context,
+                    aiResponse: fb.ai_response,
+                    score
+                };
+            })
+            .sort((a: any, b: any) => b.score - a.score)
+            .slice(0, 3);
     }
-    return AIFeedback.find({
-        module: 'chat',
-        feedbackType: 'upvote',
-        context: { $exists: true, $ne: '' }
-    }).sort({ createdAt: -1 }).limit(3).lean();
+
+    return feedbacks
+        .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+        .slice(0, 3)
+        .map((fb: any) => ({
+            context: fb.context,
+            aiResponse: fb.ai_response
+        }));
 }
 
 /**
@@ -106,16 +145,16 @@ function buildChatPrompt(startup: any, question: string, fewShotString: string):
             Current Monthly Revenue: ₹${startup.revenue}
             Current Monthly Burn: ₹${startup.burn}
             Business Description: ${startup.desc}
-            Target Market: ${startup.businessInfo?.targetMarket || "Not provided"}
-            Marketing Strategies: ${startup.businessInfo?.marketingStrategy || "Not provided"}
-            UVP: ${startup.businessInfo?.uvp || "Not provided"}
-            ${startup.isStudent ? `Founder Age: ${startup.founderAge} (Student Incube Startup)` : ""}
+            Target Market: ${startup.business_info?.targetMarket || "Not provided"}
+            Marketing Strategies: ${startup.business_info?.marketingStrategy || "Not provided"}
+            UVP: ${startup.business_info?.uvp || "Not provided"}
+            ${startup.is_student ? `Founder Age: ${startup.founder_age} (Student Incube Startup)` : ""}
             
             Previous AI Analysis:
             ${startup.analysis || "No preliminary analysis was available."}
             ---
             ${fewShotString}
-
+ 
             An investor is asking you a question about this startup.
             Answer clearly, professionally, and accurately based ONLY on the provided startup information. If the information is not available, state that you do not have sufficient data.
             
@@ -134,16 +173,19 @@ function buildChatPrompt(startup: any, question: string, fewShotString: string):
 **/
 export async function POST(req: Request) {
     try {
-        await dbConnect();
-
         const { startupId, question, history } = await req.json();
 
         if (!startupId || !question) {
             return NextResponse.json({ success: false, error: 'startupId and question are required' }, { status: 400 });
         }
 
-        const startup = await Startup.findById(startupId);
-        if (!startup) {
+        const { data: startup, error: startupError } = await supabase
+            .from("startups")
+            .select("*")
+            .eq("id", startupId)
+            .maybeSingle();
+
+        if (startupError || !startup) {
             return NextResponse.json({ success: false, error: 'Startup not found' }, { status: 404 });
         }
 

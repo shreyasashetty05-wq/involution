@@ -1,19 +1,13 @@
 import { NextResponse } from 'next/server';
 import { GoogleGenAI, Schema } from '@google/genai';
-import dbConnect from '@/database/mongodb';
-import Startup from '@/database/models/Startup';
+import { createClient } from "@supabase/supabase-js";
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+const supabase = createClient(supabaseUrl!, supabaseKey!);
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
-/**
- * Calls the Gemini 2.5-flash model with the given prompt + schema and wraps
- * the result in the standard `{ success, startup, report }` NextResponse shape.
- *
- * @param prompt        - The full prompt string to send to Gemini.
- * @param schema        - The structured-output schema for the response.
- * @param startupName   - Startup name forwarded in the response envelope.
- * @param startupSector - Startup sector forwarded in the response envelope.
- */
 /**
  * Connects to DB, fetches a startup by ID, and returns its serialized data string.
  * Returns a 404 NextResponse if the startup is not found.
@@ -21,10 +15,13 @@ const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 export async function fetchStartupById(
     id: string,
 ): Promise<{ startup: any; startupDataString: string } | NextResponse> {
-    await dbConnect();
-    const startup = await Startup.findById(id).lean();
+    const { data: startup, error } = await supabase
+        .from("startups")
+        .select("*")
+        .eq("id", id)
+        .maybeSingle();
 
-    if (!startup) {
+    if (error || !startup) {
         return NextResponse.json({ success: false, error: 'Startup not found' }, { status: 404 });
     }
 

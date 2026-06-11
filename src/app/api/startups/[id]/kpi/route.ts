@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
-import dbConnect from "@/database/mongodb";
-import Startup from "@/database/models/Startup";
+import { createClient } from "@supabase/supabase-js";
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+const supabase = createClient(supabaseUrl!, supabaseKey!);
 
 /**
  * Updates a startup's KPI and financial metrics for a given month.
@@ -13,38 +16,68 @@ import Startup from "@/database/models/Startup";
  **/
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
-        await dbConnect();
-
-        // In a real app, this route would be protected (e.g., NextAuth session check)
-        // to ensure only the owner of the startup can post KPI updates.
-
         const { id } = await params;
         const body = await req.json();
 
         // Find the startup first to ensure it exists
-        const startup = await Startup.findById(id);
-        if (!startup) {
+        const { data: startup, error: fetchError } = await supabase
+            .from("startups")
+            .select("*")
+            .eq("id", id)
+            .maybeSingle();
+
+        if (fetchError || !startup) {
             return NextResponse.json({ success: false, error: 'Startup not found' }, { status: 404 });
         }
 
+        const financials = startup.financials || {
+            months: [],
+            revenue: [],
+            netProfit: [],
+            roi: 0,
+            cac: 0,
+            ltv: 0
+        };
+
         // Push the new month's data into the arrays
-        startup.financials.months.push(body.month);
-        startup.financials.revenue.push(Number(body.revenue));
-        startup.financials.netProfit.push(Number(body.netProfit));
+        const months = [...(financials.months || []), body.month];
+        const revenueArr = [...(financials.revenue || []), Number(body.revenue)];
+        const netProfit = [...(financials.netProfit || []), Number(body.netProfit)];
+        
+        let cac = financials.cac || 0;
+        let ltv = financials.ltv || 0;
 
-        // Update the static current metrics based on the latest submission
-        startup.revenue = Number(body.revenue);
-        startup.burn = Number(body.revenue) - Number(body.netProfit); // Basic derivation
+        if (body.cac) cac = Number(body.cac);
+        if (body.ltv) ltv = Number(body.ltv);
 
-        // Optionally update CAC/LTV if provided in the form
-        if (body.cac) startup.financials.cac = Number(body.cac);
-        if (body.ltv) startup.financials.ltv = Number(body.ltv);
+        const updatedFinancials = {
+            ...financials,
+            months,
+            revenue: revenueArr,
+            netProfit,
+            cac,
+            ltv
+        };
 
-        await startup.save();
+        const revenueVal = Number(body.revenue);
+        const burnVal = Number(body.revenue) - Number(body.netProfit);
 
-        return NextResponse.json({ success: true, data: startup }, { status: 200 });
-    } catch (error) {
+        const { data: updatedStartup, error: updateError } = await supabase
+            .from("startups")
+            .update({
+                financials: updatedFinancials,
+                revenue: revenueVal,
+                burn: burnVal
+            })
+            .eq("id", id)
+            .select()
+            .single();
+
+        if (updateError) throw updateError;
+
+        return NextResponse.json({ success: true, data: updatedStartup }, { status: 200 });
+    } catch (error: any) {
         console.error("Failed to update KPI:", error);
-        return NextResponse.json({ success: false, error: 'Internal Server Error' }, { status: 500 });
+        return NextResponse.json({ success: false, error: error.message || 'Internal Server Error' }, { status: 500 });
     }
 }

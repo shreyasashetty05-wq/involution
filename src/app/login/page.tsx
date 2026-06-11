@@ -1,9 +1,9 @@
 "use client";
 
-import { signIn } from "next-auth/react";
 import { useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, ShieldCheck, Mail } from "lucide-react";
+import { createClient } from "@/utils/supabase/client";
 
 /**
  * Renders the login page with role selection and Google sign-in for investors or startup founders.
@@ -19,8 +19,17 @@ export default function LoginPage() {
     const handleGoogleLogin = async () => {
         setIsLoading(true);
         document.cookie = `involution_role=${role}; path=/; max-age=3600`;
-        const dashboardRoute = role === "investor" ? "/investors/dashboard" : "/startups/dashboard";
-        await signIn("google", { callbackUrl: dashboardRoute });
+        const supabase = createClient();
+        const { error } = await supabase.auth.signInWithOAuth({
+            provider: "google",
+            options: {
+                redirectTo: `${window.location.origin}/api/auth/callback`
+            }
+        });
+        if (error) {
+            console.error("Login Error:", error);
+            setIsLoading(false);
+        }
     };
 
     return (

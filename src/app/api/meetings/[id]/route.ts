@@ -1,31 +1,47 @@
 import { NextRequest, NextResponse } from "next/server";
-import dbConnect from "@/database/mongodb";
-import { Deal } from "@/database/models/Deal";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/authOptions";
+import { createClient } from "@/utils/supabase/server";
+import { cookies } from "next/headers";
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-    await dbConnect();
-    
     // In Next.js App Router, params must be awaited if it's dynamic
     const { id: meetingId } = await params;
 
-    const session = await getServerSession(authOptions);
-    if (!session || !session.user) {
+    const cookieStore = await cookies();
+    const supabase = createClient(cookieStore);
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
         return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
     try {
-        const deal = await Deal.findOne({ "meetings._id": meetingId });
-        if (!deal) {
+        const { data: deals, error: fetchError } = await supabase
+            .from("deals")
+            .select("*");
+
+        if (fetchError) throw fetchError;
+
+        const targetDeal = (deals || []).find((deal: any) => 
+            (deal.meetings || []).some((m: any) => m.id === meetingId || m._id === meetingId)
+        );
+
+        if (!targetDeal) {
             return NextResponse.json({ success: false, error: 'Meeting not found' }, { status: 404 });
         }
 
-        const meeting = deal.meetings.id(meetingId);
-        if (meeting) {
-            meeting.status = 'cancelled';
-            await deal.save();
-        }
+        const updatedMeetings = (targetDeal.meetings || []).map((m: any) => {
+            if (m.id === meetingId || m._id === meetingId) {
+                return { ...m, status: 'cancelled' };
+            }
+            return m;
+        });
+
+        const { error: updateError } = await supabase
+            .from("deals")
+            .update({ meetings: updatedMeetings })
+            .eq("id", targetDeal.id);
+
+        if (updateError) throw updateError;
 
         return NextResponse.json({ success: true });
     } catch (error: any) {

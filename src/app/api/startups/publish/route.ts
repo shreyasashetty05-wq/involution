@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { getToken } from 'next-auth/jwt';
-import dbConnect from "@/database/mongodb";
+import { createClient } from "@/utils/supabase/server";
+import { cookies } from "next/headers";
 import { publishStartup } from "@/backend/services/startupService";
 
 /**
@@ -13,20 +13,21 @@ import { publishStartup } from "@/backend/services/startupService";
  **/
 export async function POST(req: Request) {
     try {
-        const token = await getToken({ req: req as any, secret: process.env.NEXTAUTH_SECRET || "inVolution_mock_secret_key_12345" });
-        if (!token || !token.email) {
+        const cookieStore = await cookies();
+        const supabase = createClient(cookieStore);
+
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user || !user.email) {
             return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
         }
 
-        await dbConnect();
-        
         const body = await req.json();
 
-        if (token.role === "student") {
+        if (user.user_metadata?.role === "student") {
             body.isStudent = true;
         }
 
-        const newStartup = await publishStartup(body, token.email);
+        const newStartup = await publishStartup(supabase, body, user.email);
 
         // Fire and forget AI Analysis trigger
         const host =
@@ -39,7 +40,7 @@ export async function POST(req: Request) {
         fetch(`${baseUrl}/api/ai-analyze`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ startupId: newStartup._id }),
+            body: JSON.stringify({ startupId: newStartup.id }),
         }).catch(err => console.error("Failed to trigger initial AI Analysis:", err));
 
         return NextResponse.json({ success: true, data: newStartup }, { status: 201 });

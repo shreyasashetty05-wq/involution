@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from "@/database/mongodb";
-import AIFeedback from "@/database/models/AIFeedback";
+import { createClient } from "@supabase/supabase-js";
 import { GoogleGenAI } from '@google/genai';
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+const supabase = createClient(supabaseUrl!, supabaseKey!);
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
@@ -15,8 +18,6 @@ const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 **/
 export async function POST(req: NextRequest) {
     try {
-        await dbConnect();
-
         const body = await req.json();
         const { startupId, investorEmail, module, context, aiResponse, feedbackType, correction } = body;
 
@@ -47,16 +48,22 @@ export async function POST(req: NextRequest) {
             }
         }
 
-        const newFeedback = await AIFeedback.create({
-            startupId,
-            investorEmail,
-            module,
-            context,
-            aiResponse,
-            feedbackType,
-            correction,
-            embedding
-        });
+        const { data: newFeedback, error } = await supabase
+            .from("ai_feedbacks")
+            .insert({
+                startup_id: startupId,
+                investor_email: investorEmail,
+                module,
+                context,
+                ai_response: aiResponse,
+                feedback_type: feedbackType,
+                correction,
+                embedding: embedding
+            })
+            .select()
+            .single();
+
+        if (error) throw error;
 
         return NextResponse.json({ success: true, feedback: newFeedback }, { status: 201 });
     } catch (err: any) {

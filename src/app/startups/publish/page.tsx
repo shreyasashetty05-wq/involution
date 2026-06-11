@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSession } from "next-auth/react";
+import { createClient } from "@/utils/supabase/client";
 import { Briefcase, TrendingUp, Presentation, AlertCircle, Save, Bot, Loader2, Building2, BarChart3, Settings2, ShieldCheck, ShieldAlert, LineChart } from "lucide-react";
 
 // --- Audit Validator Helpers (pure, outside component) ---
@@ -60,8 +60,18 @@ function validateVideos(videos: string[], errors: string[]) {
 }
 
 export default function PublishStartupPage() {
-    const { data: session } = useSession();
-    const isStudent = (session?.user as any)?.role === "student";
+    const supabase = createClient();
+    const [user, setUser] = useState<any>(null);
+
+    useEffect(() => {
+        const fetchUser = async () => {
+            const { data: { user: currentUser } } = await supabase.auth.getUser();
+            setUser(currentUser);
+        };
+        fetchUser();
+    }, [supabase]);
+
+    const isStudent = user?.user_metadata?.role === "student";
     const [formData, setFormData] = useState({
         name: "",
         sector: "FinTech",

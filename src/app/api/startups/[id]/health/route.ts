@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from "@/database/mongodb";
-import Startup from "@/database/models/Startup";
 import { Type, Schema } from '@google/genai';
 import { callGeminiReport } from '@/lib/geminiReportHelper';
-import mongoose from 'mongoose';
+import { createClient } from "@supabase/supabase-js";
 
-
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+const supabase = createClient(supabaseUrl!, supabaseKey!);
 
 const healthSchema: Schema = {
     type: Type.OBJECT,
@@ -43,7 +43,6 @@ const healthSchema: Schema = {
     },
     required: ["overallHealth", "healthLabel", "healthColor", "pillars", "alerts", "revenueTrend", "expenseTrend"]
 };
-
 
 // --- Helpers ---
 
@@ -133,60 +132,66 @@ function buildHealthPrompt(startupDataString: string, financialAnomaliesContext:
  **/
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     try {
-        await dbConnect();
         const { id } = await params;
-        const startup = await Startup.findById(id).lean();
-        if (!startup) {
+        const { data: startup, error: startupError } = await supabase
+            .from("startups")
+            .select("*")
+            .eq("id", id)
+            .maybeSingle();
+
+        if (startupError || !startup) {
             return NextResponse.json({ success: false, error: 'Startup not found' }, { status: 404 });
         }
 
         const startupDataString = JSON.stringify(startup, null, 2);
-        const financialAnomaliesContext = detectRevenueAnomalies((startup as any).aiReady?.last6MonthsRev ?? []);
+        const last6MonthsRev = startup.ai_ready?.last6MonthsRev || startup.ai_ready?.last_6_months_rev || [];
+        const financialAnomaliesContext = detectRevenueAnomalies(last6MonthsRev);
         const prompt = buildHealthPrompt(startupDataString, financialAnomaliesContext);
 
-        // Fire-and-forget: log AI predictions for future ground-truth verification
         const geminiResponse = await callGeminiReport(
             prompt,
             healthSchema,
-            (startup as any).name,
-            (startup as any).sector,
+            startup.name,
+            startup.sector,
         );
 
-        // -----------------------------------------------------
-        // STEP 3: TRACK GROUND TRUTH (AI Predictions)
-        // Log the AI's prediction for future verification
-        // -----------------------------------------------------
         const reportData = (await geminiResponse.json()).report;
-        import('@/database/models/AIPrediction').then(async (AIPredictionModule) => {
-            const AIPrediction = AIPredictionModule.default;
 
-            // Log Overall Health Score
-            await AIPrediction.create({
-                startupId: id,
-                predictedMetric: 'healthScore',
-                predictedValue: reportData.overallHealth,
-                status: 'pending'
-            });
+        // Fire-and-forget prediction logger
+        (async () => {
+            try {
+                // Log Overall Health Score
+                await supabase.from("ai_predictions").insert({
+                    startup_id: id,
+                    predicted_metric: 'healthScore',
+                    predicted_value: reportData.overallHealth,
+                    status: 'pending'
+                });
 
-            // Try to extract runway months if available in pillars
-            const runwayPillar = reportData.pillars.find((p: any) => p.id === 'runway');
-            if (runwayPillar && runwayPillar.description) {
-                // E.g. "12 months remaining" -> 12
-                const match = runwayPillar.description.match(/(\d+)/);
-                if (match) {
-                    return AIPrediction.create({
-                        startupId: id,
-                        predictedMetric: 'runwayMonths',
-                        predictedValue: parseInt(match[1], 10),
-                        status: 'pending',
-                        confidenceScore: runwayPillar.score
-                    });
+                // Try to extract runway months if available in pillars
+                const runwayPillar = reportData.pillars.find((p: any) => p.id === 'runway');
+                if (runwayPillar && runwayPillar.description) {
+                    const match = runwayPillar.description.match(/(\d+)/);
+                    if (match) {
+                        await supabase.from("ai_predictions").insert({
+                            startup_id: id,
+                            predicted_metric: 'runwayMonths',
+                            predicted_value: parseInt(match[1], 10),
+                            status: 'pending',
+                            confidence_score: runwayPillar.score
+                        });
+                    }
                 }
+            } catch (err) {
+                console.error("Failed to log AI prediction asynchronously", err);
             }
-            return undefined;
-        }).catch(err => console.error("Failed to log AI prediction asynchronously", err));
+        })();
 
-        return geminiResponse;
+        return NextResponse.json({
+            success: true,
+            startup: { name: startup.name, sector: startup.sector },
+            report: reportData,
+        });
     } catch (err: any) {
         console.error("Gemini Error:", err);
         return NextResponse.json({ success: false, error: err.message }, { status: 500 });

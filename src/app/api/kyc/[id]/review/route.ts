@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
-import dbConnect from "@/database/mongodb";
-import KYCDocument from "@/database/models/KYCDocument";
+import { createClient } from "@supabase/supabase-js";
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+const supabase = createClient(supabaseUrl!, supabaseKey!);
 
 /**
  * Updates the verification status of a KYC document by ID.
@@ -13,8 +16,6 @@ import KYCDocument from "@/database/models/KYCDocument";
  **/
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
-        await dbConnect();
-
         const { id } = await params;
         const body = await req.json();
 
@@ -22,9 +23,14 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
             return NextResponse.json({ success: false, error: "Invalid Verification Action" }, { status: 400 });
         }
 
-        const doc = await KYCDocument.findByIdAndUpdate(id, { status: body.status }, { new: true });
+        const { data: doc, error } = await supabase
+            .from("kyc_documents")
+            .update({ status: body.status })
+            .eq("id", id)
+            .select()
+            .single();
 
-        if (!doc) {
+        if (error || !doc) {
             return NextResponse.json({ success: false, error: "Document not found" }, { status: 404 });
         }
 

@@ -1,8 +1,33 @@
 import { NextRequest, NextResponse } from "next/server";
-import dbConnect from "@/database/mongodb";
-import { Deal } from "@/database/models/Deal";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/authOptions";
+import { createClient } from "@/utils/supabase/server";
+import { cookies } from "next/headers";
+
+function mapDealToCamel(deal: any) {
+    if (!deal) return null;
+    return {
+        _id: deal.id,
+        id: deal.id,
+        startupId: deal.startup_id,
+        startupName: deal.startup_name,
+        investorId: deal.investor_id,
+        status: deal.status,
+        termAmount: deal.term_amount,
+        termEquity: deal.term_equity,
+        paymentMethod: deal.payment_method,
+        investmentPeriod: deal.investment_period,
+        companyAddress: deal.company_address,
+        investorAddress: deal.investor_address,
+        executives: deal.executives,
+        board: deal.board,
+        startupSignature: deal.startup_signature,
+        investorSignature: deal.investor_signature,
+        currentPhase: deal.current_phase,
+        meetings: deal.meetings,
+        messages: deal.messages,
+        createdAt: deal.created_at,
+        updatedAt: deal.updated_at
+    };
+}
 
 /**
  * Fetches a deal for the authenticated user by startupId, optionally using a provided investorId.
@@ -14,13 +39,14 @@ import { authOptions } from "@/lib/authOptions";
  **/
 export async function GET(req: NextRequest) {
     try {
-        await dbConnect();
+        const cookieStore = await cookies();
+        const supabase = createClient(cookieStore);
 
-        const session = await getServerSession(authOptions);
-        if (!session || !session.user) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
             return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
         }
-        const sessionUserId = (session.user as any).id || session.user.email;
+        const sessionUserId = user.email || user.id;
         const requestedInvestorId = req.nextUrl.searchParams.get('investorId');
 
         // Use provided investorId (if sender is startup), otherwise assume sender is the investor
@@ -31,9 +57,18 @@ export async function GET(req: NextRequest) {
             return NextResponse.json({ success: false, error: 'startupId is required' }, { status: 400 });
         }
 
-        const deal = await Deal.findOne({ investorId, startupId }).lean();
+        const { data: deal, error } = await supabase
+            .from("deals")
+            .select("*")
+            .eq("investor_id", investorId)
+            .eq("startup_id", startupId)
+            .maybeSingle();
 
-        return NextResponse.json({ success: true, deal, currentUser: sessionUserId });
+        if (error) {
+            throw error;
+        }
+
+        return NextResponse.json({ success: true, deal: mapDealToCamel(deal), currentUser: sessionUserId });
 
     } catch (error: any) {
         console.error("Fetch Deal Error:", error);
@@ -51,13 +86,14 @@ export async function GET(req: NextRequest) {
 **/
 export async function POST(req: NextRequest) {
     try {
-        await dbConnect();
+        const cookieStore = await cookies();
+        const supabase = createClient(cookieStore);
 
-        const session = await getServerSession(authOptions);
-        if (!session || !session.user) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
             return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
         }
-        const sessionUserId = (session.user as any).id || session.user.email;
+        const sessionUserId = user.email || user.id;
         const { startupId, startupName, text, investorId: requestedInvestorId } = await req.json();
 
         // If the frontend passed an investorId, the sender is likely the startup. 
@@ -71,33 +107,56 @@ export async function POST(req: NextRequest) {
         const timeString = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
         // Find existing deal or create a new one
-        let deal = await Deal.findOne({ investorId, startupId });
+        let { data: deal, error: fetchError } = await supabase
+            .from("deals")
+            .select("*")
+            .eq("investor_id", investorId)
+            .eq("startup_id", startupId)
+            .maybeSingle();
+
+        if (fetchError) throw fetchError;
 
         if (deal) {
             // Append message
-            deal.messages.push({
+            const updatedMessages = [...(deal.messages || []), {
                 senderId: sessionUserId, // Whoever is logged in is the sender
                 text,
                 time: timeString
-            });
-            await deal.save();
+            }];
+            
+            const { data: updatedDeal, error: updateError } = await supabase
+                .from("deals")
+                .update({ messages: updatedMessages })
+                .eq("id", deal.id)
+                .select()
+                .single();
+                
+            if (updateError) throw updateError;
+            deal = updatedDeal;
         } else {
             // Create new deal
-            deal = await Deal.create({
-                investorId,
-                startupId,
-                startupName,
-                status: 'negotiating',
-                currentPhase: 1, // Start at Phase 1 for new deals
-                messages: [{
-                    senderId: investorId,
-                    text,
-                    time: timeString
-                }]
-            });
+            const { data: newDeal, error: createError } = await supabase
+                .from("deals")
+                .insert({
+                    investor_id: investorId,
+                    startup_id: startupId,
+                    startup_name: startupName,
+                    status: 'negotiating',
+                    current_phase: 1, // Start at Phase 1 for new deals
+                    messages: [{
+                        senderId: investorId,
+                        text,
+                        time: timeString
+                    }]
+                })
+                .select()
+                .single();
+                
+            if (createError) throw createError;
+            deal = newDeal;
         }
 
-        return NextResponse.json({ success: true, deal });
+        return NextResponse.json({ success: true, deal: mapDealToCamel(deal) });
 
     } catch (error: any) {
         console.error("Save Deal Message Error:", error);
@@ -115,13 +174,14 @@ export async function POST(req: NextRequest) {
  */
 export async function PUT(req: NextRequest) {
     try {
-        await dbConnect();
+        const cookieStore = await cookies();
+        const supabase = createClient(cookieStore);
 
-        const session = await getServerSession(authOptions);
-        if (!session || !session.user) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
             return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
         }
-        const sessionUserId = (session.user as any).id || session.user.email;
+        const sessionUserId = user.email || user.id;
         const body = await req.json();
         const { startupId, investorId: requestedInvestorId, action } = body;
 
@@ -131,49 +191,69 @@ export async function PUT(req: NextRequest) {
             return NextResponse.json({ success: false, error: 'startupId is required' }, { status: 400 });
         }
 
-        let deal = await Deal.findOne({ investorId, startupId });
+        let { data: deal, error: fetchError } = await supabase
+            .from("deals")
+            .select("*")
+            .eq("investor_id", investorId)
+            .eq("startup_id", startupId)
+            .maybeSingle();
+
+        if (fetchError) throw fetchError;
         if (!deal) {
             return NextResponse.json({ success: false, error: 'Deal not found' }, { status: 404 });
         }
 
+        let updateData: any = {};
+
         if (action === 'advancePhase') {
             const { newPhase } = body;
-            if (newPhase && newPhase > deal.currentPhase) {
-                deal.currentPhase = newPhase;
+            if (newPhase && newPhase > deal.current_phase) {
+                updateData.current_phase = newPhase;
             }
         } else if (action === 'execute') {
-            deal.status = 'executed';
-            deal.termAmount = body.termAmount;
-            deal.termEquity = body.termEquity;
-            deal.startupSignature = body.startupSignature;
-            deal.investorSignature = body.investorSignature;
-            deal.companyAddress = body.companyAddress;
-            deal.investorAddress = body.investorAddress;
-            deal.paymentMethod = body.paymentMethod;
-            deal.investmentPeriod = body.investmentPeriod;
-            deal.executives = body.executives;
-            deal.board = body.board;
+            updateData.status = 'executed';
+            updateData.term_amount = body.termAmount;
+            updateData.term_equity = body.termEquity;
+            updateData.startup_signature = body.startupSignature;
+            updateData.investor_signature = body.investorSignature;
+            updateData.company_address = body.companyAddress;
+            updateData.investor_address = body.investorAddress;
+            updateData.payment_method = body.paymentMethod;
+            updateData.investment_period = body.investmentPeriod;
+            updateData.executives = body.executives;
+            updateData.board = body.board;
         } else if (action === 'scheduleMeeting') {
             const { meeting } = body;
             
-            // We use a highly secure Jitsi meeting URL to bypass the Google Cloud Verification blocker
-            // while still guaranteeing both users get a real, working, and fully shared meeting room.
-            const jitsiRoomId = `InVolution-Deal-${deal._id}-${Date.now()}`;
+            // Jitsi meeting room URL link logic
+            const jitsiRoomId = `InVolution-Deal-${deal.id}-${Date.now()}`;
             const finalMeetLink = `https://meet.jit.si/${jitsiRoomId}`;
+            const meetingId = crypto.randomUUID();
 
-            deal.meetings.push({
+            const updatedMeetings = [...(deal.meetings || []), {
+                id: meetingId,
+                _id: meetingId,
                 title: meeting.title,
                 date: meeting.date,
                 time: meeting.time,
                 durationMinutes: meeting.durationMinutes || 10,
                 meetLink: finalMeetLink,
                 status: meeting.status || 'scheduled'
-            });
+            }];
+            updateData.meetings = updatedMeetings;
         }
 
-        await deal.save();
+        const { data: updatedDeal, error: updateError } = await supabase
+            .from("deals")
+            .update(updateData)
+            .eq("id", deal.id)
+            .select()
+            .single();
 
-        return NextResponse.json({ success: true, deal });
+        if (updateError) throw updateError;
+        deal = updatedDeal;
+
+        return NextResponse.json({ success: true, deal: mapDealToCamel(deal) });
 
     } catch (error: any) {
         console.error("Update Deal Error:", error);

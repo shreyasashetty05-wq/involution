@@ -1,4 +1,9 @@
 import { NextResponse } from 'next/server';
+import { createClient } from "@supabase/supabase-js";
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+const supabase = createClient(supabaseUrl!, supabaseKey!);
 
 /**
  * Seed route: blocked in production. Only callable in development.
@@ -12,29 +17,27 @@ export async function GET() {
         );
     }
 
-    const { default: dbConnect } = await import("@/database/mongodb");
-    const { default: Startup } = await import("@/database/models/Startup");
-
     try {
-        await dbConnect();
-
         // Delete existing dummy incube startups to avoid duplicates
-        await Startup.deleteMany({ name: { $in: ["CampusCart", "EcoPod", "StudyBuddy AI", "EduVR"] } });
+        await supabase
+            .from("startups")
+            .delete()
+            .in("name", ["CampusCart", "EcoPod", "StudyBuddy AI", "EduVR"]);
 
         const studentStartups = [
             {
                 name: "EduVR",
-                ownerEmail: "student4@university.edu",
+                owner_email: "student4@university.edu",
                 sector: "EdTech",
                 stage: "Pre-Seed",
-                businessModel: "B2B SaaS",
+                business_model: "B2B SaaS",
                 desc: "An immersive VR platform for medical students to practice surgical procedures in a risk-free virtual environment with real-time AI feedback.",
                 requested: 1800000,
                 equity: 12,
                 revenue: 0,
                 burn: 0,
-                isStudent: true,
-                founderAge: 23,
+                is_student: true,
+                founder_age: 23,
                 risk: "Medium",
                 score: 87,
                 videos: [
@@ -44,12 +47,12 @@ export async function GET() {
                         url: "https://www.youtube.com/embed/dQw4w9WgXcQ"
                     }
                 ],
-                basicInfo: {
+                basic_info: {
                     founderNames: "Dr. Kabir Das",
                     location: "Hyderabad, India",
                     teamSize: 5
                 },
-                businessInfo: {
+                business_info: {
                     targetMarket: "Medical Universities and Teaching Hospitals",
                     uvp: "High-fidelity haptic feedback and real-time AI performance scoring",
                     marketingStrategy: "Pilots with top-tier medical colleges and medical conference showcases"
@@ -58,17 +61,17 @@ export async function GET() {
             },
             {
                 name: "CampusCart",
-                ownerEmail: "student1@university.edu",
+                owner_email: "student1@university.edu",
                 sector: "E-commerce",
                 stage: "Idea",
-                businessModel: "B2C Marketplace",
+                business_model: "B2C Marketplace",
                 desc: "A hyper-local marketplace for university students to buy, sell, and rent textbooks and dorm essentials safely within campus boundaries.",
                 requested: 500000,
                 equity: 5,
                 revenue: 0,
                 burn: 0,
-                isStudent: true,
-                founderAge: 21,
+                is_student: true,
+                founder_age: 21,
                 risk: "Low",
                 score: 78,
                 videos: [
@@ -78,12 +81,12 @@ export async function GET() {
                         url: "https://www.youtube.com/embed/dQw4w9WgXcQ"
                     }
                 ],
-                basicInfo: {
+                basic_info: {
                     founderNames: "Rohan Sharma",
                     location: "New Delhi, India",
                     teamSize: 3
                 },
-                businessInfo: {
+                business_info: {
                     targetMarket: "University Students (Ages 18-24)",
                     uvp: "Zero-shipping cost, instant campus delivery",
                     marketingStrategy: "Campus ambassador program and social media contests"
@@ -92,17 +95,17 @@ export async function GET() {
             },
             {
                 name: "EcoPod",
-                ownerEmail: "student2@university.edu",
+                owner_email: "student2@university.edu",
                 sector: "CleanTech",
                 stage: "Pre-Seed",
-                businessModel: "D2C Hardware",
+                business_model: "D2C Hardware",
                 desc: "Sustainable, biodegradable coffee pods compatible with major machines, made from upcycled agricultural waste.",
                 requested: 1200000,
                 equity: 10,
                 revenue: 0,
                 burn: 0,
-                isStudent: true,
-                founderAge: 22,
+                is_student: true,
+                founder_age: 22,
                 risk: "Medium",
                 score: 82,
                 videos: [
@@ -112,12 +115,12 @@ export async function GET() {
                         url: "https://www.youtube.com/embed/dQw4w9WgXcQ"
                     }
                 ],
-                basicInfo: {
+                basic_info: {
                     founderNames: "Ananya Iyer",
                     location: "Mumbai, India",
                     teamSize: 2
                 },
-                businessInfo: {
+                business_info: {
                     targetMarket: "Environmentally conscious coffee drinkers",
                     uvp: "Fully compostable in 30 days, zero microplastics",
                     marketingStrategy: "Influencer partnerships and sustainable living blog features"
@@ -126,17 +129,17 @@ export async function GET() {
             },
             {
                 name: "StudyBuddy AI",
-                ownerEmail: "student3@university.edu",
+                owner_email: "student3@university.edu",
                 sector: "EdTech",
                 stage: "Seed",
-                businessModel: "SaaS",
+                business_model: "SaaS",
                 desc: "AI-powered study assistant that generates personalized flashcards and quizzes from lecture recordings and PDFs.",
                 requested: 2500000,
                 equity: 8,
                 revenue: 0,
                 burn: 0,
-                isStudent: true,
-                founderAge: 20,
+                is_student: true,
+                founder_age: 20,
                 risk: "Low",
                 score: 91,
                 videos: [
@@ -146,12 +149,12 @@ export async function GET() {
                         url: "https://www.youtube.com/embed/dQw4w9WgXcQ"
                     }
                 ],
-                basicInfo: {
+                basic_info: {
                     founderNames: "Vikram Malhotra",
                     location: "Bangalore, India",
                     teamSize: 4
                 },
-                businessInfo: {
+                business_info: {
                     targetMarket: "High school and college students worldwide",
                     uvp: "Automated high-quality quiz generation in seconds",
                     marketingStrategy: "Freemium model with viral invite-a-friend features"
@@ -160,7 +163,11 @@ export async function GET() {
             }
         ];
 
-        await Startup.insertMany(studentStartups);
+        const { error } = await supabase
+            .from("startups")
+            .insert(studentStartups);
+
+        if (error) throw error;
 
         return NextResponse.json({
             success: true,

@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
-import { getToken } from 'next-auth/jwt';
-import dbConnect from "@/database/mongodb";
-import Startup from "@/database/models/Startup";
+import { createClient } from "@/utils/supabase/server";
+import { cookies } from "next/headers";
 
 /**
  * Creates a new financial update for a startup owned by the authenticated user.
@@ -14,18 +13,26 @@ import Startup from "@/database/models/Startup";
  **/
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
-        const token = await getToken({ req: req as any, secret: process.env.NEXTAUTH_SECRET || "inVolution_mock_secret_key_12345" });
-        if (!token || !token.email) {
+        const cookieStore = await cookies();
+        const supabase = createClient(cookieStore);
+
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user || !user.email) {
             return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
         }
-
-        await dbConnect();
 
         const { id } = await params;
         const body = await req.json();
 
         // 1. Locate the Startup. Ensure the user owns it.
-        const startup = await Startup.findOne({ _id: id, ownerEmail: token.email });
+        const { data: startup, error: fetchError } = await supabase
+            .from("startups")
+            .select("*")
+            .eq("id", id)
+            .eq("owner_email", user.email)
+            .maybeSingle();
+
+        if (fetchError) throw fetchError;
         if (!startup) {
             return NextResponse.json({ success: false, error: 'Startup not found or unauthorized' }, { status: 404 });
         }
@@ -41,25 +48,36 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
             return NextResponse.json({ success: false, error: 'Invalid financial data payload.' }, { status: 400 });
         }
 
-        // 3. Prevent duplicate month updates (optional, but good practice)
-        const updateExists = startup.financialUpdates.some((update: any) => update.monthYear === reqMonthYear);
+        const currentUpdates = startup.financial_updates || [];
+
+        // 3. Prevent duplicate month updates
+        const updateExists = currentUpdates.some((update: any) => update.monthYear === reqMonthYear || update.month_year === reqMonthYear);
         if (updateExists) {
             return NextResponse.json({ success: false, error: `An update for ${reqMonthYear} already exists.` }, { status: 400 });
         }
 
         // 4. Push the new update
-        startup.financialUpdates.push({
+        const newUpdate = {
+            id: crypto.randomUUID(),
+            _id: crypto.randomUUID(),
             monthYear: reqMonthYear,
             revenue: reqRevenue,
             profit: reqProfit,
             documentUrl: reqDocUrl,
             aiConfidenceScore: reqAiScore,
-            dateSubmitted: new Date()
-        });
+            dateSubmitted: new Date().toISOString()
+        };
 
-        await startup.save();
+        const updatedUpdates = [...currentUpdates, newUpdate];
 
-        return NextResponse.json({ success: true, data: startup.financialUpdates }, { status: 201 });
+        const { error: updateError } = await supabase
+            .from("startups")
+            .update({ financial_updates: updatedUpdates })
+            .eq("id", startup.id);
+
+        if (updateError) throw updateError;
+
+        return NextResponse.json({ success: true, data: updatedUpdates }, { status: 201 });
     } catch (error: any) {
         console.error("Failed to post financial update:", error);
         return NextResponse.json({ success: false, error: error.message || 'Internal Server Error' }, { status: 500 });

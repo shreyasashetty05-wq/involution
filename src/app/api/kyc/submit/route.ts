@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
-import { getToken } from 'next-auth/jwt';
-import dbConnect from "@/database/mongodb";
-import KYCDocument from "@/database/models/KYCDocument";
+import { createClient } from "@/utils/supabase/server";
+import { cookies } from "next/headers";
 
 /**
 * Handles KYC document submission by validating the authenticated user, processing uploaded Aadhaar and PAN files, and storing the record in the database.
@@ -13,14 +12,14 @@ import KYCDocument from "@/database/models/KYCDocument";
 **/
 export async function POST(req: Request) {
     try {
-        const token = await getToken({ req: req as any, secret: process.env.NEXTAUTH_SECRET || "inVolution_mock_secret_key_12345" });
-        if (!token || !token.email) {
+        const cookieStore = await cookies();
+        const supabase = createClient(cookieStore);
+
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user || !user.email) {
             return NextResponse.json({ success: false, error: 'Unauthorized. Please login.' }, { status: 401 });
         }
 
-        await dbConnect();
-
-        // We use req.formData() because we are expecting raw files to be sent
         const formData = await req.formData();
 
         const aadhaarFile = formData.get('aadhaarFile') as File;
@@ -30,31 +29,67 @@ export async function POST(req: Request) {
             return NextResponse.json({ success: false, error: "Missing identity documents." }, { status: 400 });
         }
 
-        // Convert raw File buffers to Base64 strings for storing in Atlas Document
         const aadhaarBuffer = Buffer.from(await aadhaarFile.arrayBuffer());
         const panBuffer = Buffer.from(await panFile.arrayBuffer());
 
-        // Prefix with Data URI format so frontend can easily render them directly into <img src="..." />
         const aadhaarBase64 = `data:${aadhaarFile.type};base64,${aadhaarBuffer.toString('base64')}`;
         const panBase64 = `data:${panFile.type};base64,${panBuffer.toString('base64')}`;
 
-        // Randomly simulate an OCR matching score algorithm for realism (80-99%)
         const simulatedScore = Math.floor(Math.random() * 20) + 80;
 
-        const kycRecord = await KYCDocument.findOneAndUpdate(
-            { email: token.email },
-            {
-                name: formData.get('name') || "Anonymous User",
-                type: formData.get('type') || "Startup Founder",
-                aadhaar: formData.get('aadhaar'),
-                pan: formData.get('pan'),
-                aadhaarFile: aadhaarBase64,
-                panFile: panBase64,
-                matchScore: simulatedScore,
-                status: 'Pending'
-            },
-            { new: true, upsert: true }
-        );
+        // Check if KYC record already exists for this email
+        const { data: existingKyc, error: fetchKycError } = await supabase
+            .from("kyc_documents")
+            .select("id")
+            .eq("email", user.email)
+            .maybeSingle();
+
+        if (fetchKycError) throw fetchKycError;
+
+        const kycPayload = {
+            email: user.email,
+            name: (formData.get('name') as string) || "Anonymous User",
+            type: (formData.get('type') as string) || "Startup Founder",
+            aadhaar: formData.get('aadhaar') as string,
+            pan: formData.get('pan') as string,
+            aadhaar_file: aadhaarBase64,
+            pan_file: panBase64,
+            match_score: simulatedScore,
+            status: 'Pending'
+        };
+
+        let kycRecord;
+        if (existingKyc) {
+            const { data, error: updateError } = await supabase
+                .from("kyc_documents")
+                .update(kycPayload)
+                .eq("id", existingKyc.id)
+                .select()
+                .single();
+            if (updateError) throw updateError;
+            kycRecord = data;
+        } else {
+            const { data, error: insertError } = await supabase
+                .from("kyc_documents")
+                .insert(kycPayload)
+                .select()
+                .single();
+            if (insertError) throw insertError;
+            kycRecord = data;
+        }
+
+        // Update the user metadata in Supabase Auth
+        const { error: metadataError } = await supabase.auth.updateUser({
+            data: {
+                kycDone: true,
+                isNewUser: false,
+                kycStatus: 'Pending'
+            }
+        });
+
+        if (metadataError) {
+            console.error("Failed to update user auth metadata:", metadataError);
+        }
 
         return NextResponse.json({ success: true, data: kycRecord }, { status: 201 });
     } catch (error: any) {

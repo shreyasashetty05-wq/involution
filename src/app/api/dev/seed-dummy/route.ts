@@ -1,4 +1,9 @@
 import { NextResponse } from 'next/server';
+import { createClient } from "@supabase/supabase-js";
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+const supabase = createClient(supabaseUrl!, supabaseKey!);
 
 /**
  * Seed route: blocked in production. Only callable in development.
@@ -13,20 +18,19 @@ export async function GET() {
         );
     }
 
-    const { default: dbConnect } = await import("@/database/mongodb");
-    const { default: Startup } = await import("@/database/models/Startup");
-
     try {
-        await dbConnect();
-
-        await Startup.deleteMany({ name: "Solaris AI" });
+        // Delete any existing Solaris AI startup to prevent duplicates
+        await supabase
+            .from("startups")
+            .delete()
+            .eq("name", "Solaris AI");
 
         const dummyStartup = {
             name: "Solaris AI",
-            ownerEmail: "founder@solaris.ai",
+            owner_email: "founder@solaris.ai",
             sector: "CleanTech",
             stage: "Series A",
-            businessModel: "SaaS + Hardware",
+            business_model: "SaaS + Hardware",
             desc: "Solaris AI uses proprietary neural networks to optimize grid energy distribution for renewable sources. We've scaled to 5 cities in 12 months with industry-leading efficiency gains.",
             requested: 50000000,
             equity: 12,
@@ -49,20 +53,20 @@ export async function GET() {
                 cac: 12500,
                 ltv: 75000
             },
-            basicInfo: {
+            basic_info: {
                 founderNames: "Arjun Mehta, Sarah Chen",
                 incorporationYear: 2022,
                 companyType: "Private Ltd",
                 location: "Bangalore, India",
                 teamSize: 24
             },
-            businessInfo: {
+            business_info: {
                 revenueModel: "Subscription + Hardware Lease",
                 targetMarket: "National Grid Operators",
                 uvp: "Proprietary AI grid balancing algorithm",
                 competitors: "GridLogic, PowerSync"
             },
-            financialsMonthly: {
+            financials_monthly: {
                 revenue: 4500000,
                 expenses: 6000000,
                 cogs: 1200000,
@@ -72,7 +76,7 @@ export async function GET() {
                 burnRate: 1500000,
                 runway: 32
             },
-            financialsYearly: {
+            financials_yearly: {
                 annualRevenue: 48000000,
                 annualExpenses: 65000000,
                 ebitda: -17000000,
@@ -81,7 +85,7 @@ export async function GET() {
                 cashInBank: 48000000,
                 debt: 0
             },
-            growthMetrics: {
+            growth_metrics: {
                 mau: 15400,
                 churnRate: 1.2,
                 conversionRate: 8.5,
@@ -99,25 +103,31 @@ export async function GET() {
                 bankStatementUrl: "https://example.com/bank.pdf",
                 caCertificateUrl: "https://example.com/ca.pdf"
             },
-            riskDisclosure: {
+            risk_disclosure: {
                 legalCases: true,
                 outstandingLoans: false,
                 criminalRecord: false,
                 revenueFluctuationExplanation: "Seasonal energy demand shifts."
             },
-            aiReady: {
+            ai_ready: {
                 last6MonthsRev: [3200000, 3500000, 3800000, 4000000, 4200000, 4500000],
                 last6MonthsExp: [4000000, 4200000, 4500000, 5500000, 5800000, 6000000],
                 growthRate: 15
             }
         };
 
-        const created = await Startup.create(dummyStartup);
+        const { data: created, error } = await supabase
+            .from("startups")
+            .insert(dummyStartup)
+            .select()
+            .single();
+
+        if (error) throw error;
 
         return NextResponse.json({
             success: true,
             message: "Dummy startup 'Solaris AI' seeded successfully",
-            id: created._id
+            id: created.id
         });
     } catch (error: any) {
         console.error("Seeding failed:", error);

@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Upload, CheckCircle2, AlertCircle, Loader2, ShieldCheck, FileText } from "lucide-react";
-import { useSession } from "next-auth/react";
+import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
 
 /**
@@ -14,8 +14,17 @@ import { useRouter } from "next/navigation";
  * @returns {JSX.Element} The KYC submission form UI.
  **/
 export default function KYCSubmitPage() {
-    const { data: session, update } = useSession();
+    const supabase = createClient();
+    const [user, setUser] = useState<any>(null);
     const router = useRouter();
+
+    useEffect(() => {
+        const fetchUser = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            setUser(user);
+        };
+        fetchUser();
+    }, [supabase]);
 
     const [aadhaar, setAadhaar] = useState("");
     const [pan, setPan] = useState("");
@@ -60,8 +69,8 @@ export default function KYCSubmitPage() {
 
         try {
             const formData = new FormData();
-            formData.append("name", "Active User");
-            formData.append("type", "Startup Founder");
+            formData.append("name", user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Active User");
+            formData.append("type", user?.user_metadata?.role === "investor" ? "Investor" : "Startup Founder");
             formData.append("aadhaar", cleanedAadhaar);
             formData.append("pan", pan.trim().toUpperCase());
             formData.append("aadhaarFile", fileA);
@@ -77,7 +86,7 @@ export default function KYCSubmitPage() {
                 throw new Error(data.error || "Submission failed on server");
             }
 
-            await update({ kycDone: true, kycStatus: 'Pending' });
+            await supabase.auth.refreshSession();
             setStatus("success");
 
             setTimeout(() => {
@@ -104,7 +113,7 @@ export default function KYCSubmitPage() {
                 <p className="text-slate-500 font-inter max-w-xl mx-auto">
                     To ensure platform safety, please complete your simulated KYC by providing your PAN and Aadhaar details. Your documents are encrypted and securely validated.
                 </p>
-                {(session?.user as any)?.kycStatus === 'Rejected' && (
+                {user?.user_metadata?.kycStatus === 'Rejected' && (
                     <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 font-medium max-w-lg mx-auto flex items-start gap-3 text-left">
                         <AlertCircle className="size-5 shrink-0 mt-0.5" />
                         <p>Your previous KYC application was rejected. Please review your details and submit clear, accurate documents again.</p>

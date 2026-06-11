@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import dbConnect from "@/database/mongodb";
-import { Deal } from "@/database/models/Deal";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/authOptions";
+import { createClient } from "@/utils/supabase/server";
+import { cookies } from "next/headers";
 
 // --- Helpers ---
 
@@ -21,11 +19,11 @@ function formatCapital(total: number): string {
 
 function buildExecutedAgreement(deal: any) {
     return {
-        id: deal._id.toString().slice(-6).toUpperCase(),
-        startup: deal.startupName,
-        date: deal.updatedAt ? new Date(deal.updatedAt).toLocaleDateString() : 'N/A',
-        amount: deal.termAmount,
-        equity: deal.termEquity,
+        id: deal.id.slice(-6).toUpperCase(),
+        startup: deal.startup_name,
+        date: deal.updated_at ? new Date(deal.updated_at).toLocaleDateString() : 'N/A',
+        amount: deal.term_amount,
+        equity: deal.term_equity,
         status: 'Executed'
     };
 }
@@ -33,9 +31,9 @@ function buildExecutedAgreement(deal: any) {
 function buildActiveChat(deal: any) {
     const lastMsg = deal.messages?.at(-1);
     return {
-        id: deal._id.toString(),
-        startupId: deal.startupId || '',
-        startup: deal.startupName,
+        id: deal.id,
+        startupId: deal.startup_id || '',
+        startup: deal.startup_name,
         lastMessage: lastMsg?.text ?? "No messages yet.",
         time: lastMsg?.time ?? 'Recently',
         unread: 0
@@ -57,21 +55,29 @@ function buildActiveChat(deal: any) {
  **/
 export async function GET(req: NextRequest) {
     try {
-        await dbConnect();
+        const cookieStore = await cookies();
+        const supabase = createClient(cookieStore);
 
-        const session = await getServerSession(authOptions);
-        if (!session?.user) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
             return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
         }
 
-        const investorId = (session.user as any).id || session.user.email;
-        const allDeals = await Deal.find({ investorId }).lean();
+        const investorId = user.email || user.id;
 
-        const executedDeals = allDeals.filter(d => d.status === 'executed');
+        const { data: allDeals, error } = await supabase
+            .from("deals")
+            .select("*")
+            .eq("investor_id", investorId);
+
+        if (error) throw error;
+
+        const dealsList = allDeals || [];
+        const executedDeals = dealsList.filter(d => d.status === 'executed');
         const executedAgreements = executedDeals.map(buildExecutedAgreement);
-        const activeChats = allDeals.filter(d => d.status === 'negotiating').map(buildActiveChat);
+        const activeChats = dealsList.filter(d => d.status === 'negotiating').map(buildActiveChat);
 
-        const totalCapitalStr = executedDeals.reduce((sum, d) => sum + parseCapitalAmount(d.termAmount), 0);
+        const totalCapitalStr = executedDeals.reduce((sum, d) => sum + parseCapitalAmount(d.term_amount), 0);
 
         return NextResponse.json({
             success: true,
@@ -88,4 +94,3 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
 }
-

@@ -1,8 +1,6 @@
 import { NextResponse } from 'next/server';
-import dbConnect from "@/database/mongodb";
-import { Deal } from "@/database/models/Deal";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/authOptions";
+import { createClient } from "@/utils/supabase/server";
+import { cookies } from "next/headers";
 
 /**
  * Seeds two sample deal records for the currently authenticated investor in non-production environments.
@@ -18,42 +16,46 @@ export async function GET() {
     }
 
     try {
-        await dbConnect();
+        const cookieStore = await cookies();
+        const supabase = createClient(cookieStore);
 
-        // Use getServerSession to get the securely logged-in user
-        const session = await getServerSession(authOptions);
+        const { data: { user } } = await supabase.auth.getUser();
 
-        if (!session || !session.user) {
+        if (!user) {
             return NextResponse.json({ success: false, error: 'Please log in to the web app first to seed data for your account.' }, { status: 401 });
         }
 
-        const investorId = (session.user as any).id || session.user.email;
+        const investorId = user.email || user.id;
 
         // Create a dummy Executed Deal
-        await Deal.create({
-            startupId: "dummy-startup-1",
-            startupName: "TechNova Solutions",
-            investorId: investorId,
+        const { error: seed1Error } = await supabase.from("deals").insert({
+            startup_id: "dummy-startup-1",
+            startup_name: "TechNova Solutions",
+            investor_id: investorId,
             status: "executed",
-            termAmount: "₹ 75,00,000",
-            termEquity: "12.5%",
-            currentPhase: 5
+            term_amount: "₹ 75,00,000",
+            term_equity: "12.5%",
+            current_phase: 5
         });
 
+        if (seed1Error) throw seed1Error;
+
         // Create a dummy Negotiating Deal with Chat History
-        await Deal.create({
-            startupId: "dummy-startup-2",
-            startupName: "GreenFuture Energy",
-            investorId: investorId,
+        const { error: seed2Error } = await supabase.from("deals").insert({
+            startup_id: "dummy-startup-2",
+            startup_name: "GreenFuture Energy",
+            investor_id: investorId,
             status: "negotiating",
-            termAmount: "₹ 1,50,00,000",
-            termEquity: "15.0%",
-            currentPhase: 3,
+            term_amount: "₹ 1,50,00,000",
+            term_equity: "15.0%",
+            current_phase: 3,
             messages: [
                 { senderId: "startup-founder", text: "We have finalized the term sheet.", time: "Yesterday" },
                 { senderId: investorId, text: "Looks good, I will have my lawyers review it and send the final version.", time: "1 hour ago" }
             ]
         });
+
+        if (seed2Error) throw seed2Error;
 
         return NextResponse.json({ success: true, message: `Successfully seeded 2 deals for Investor: ${investorId}. Go refresh the Dashboard!` });
 
@@ -62,4 +64,3 @@ export async function GET() {
         return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
 }
-

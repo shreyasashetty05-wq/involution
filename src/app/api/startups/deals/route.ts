@@ -1,48 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
-import dbConnect from "@/database/mongodb";
-import { Deal } from "@/database/models/Deal";
-import Startup from "@/database/models/Startup";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/authOptions";
+import { createClient } from "@/utils/supabase/server";
+import { cookies } from "next/headers";
 
 // --- Helpers ---
 
 function buildExecutedAgreement(deal: any) {
     return {
-        id: deal._id.toString().slice(-6).toUpperCase(),
-        investor: deal.investorId,
-        date: deal.updatedAt ? new Date(deal.updatedAt).toLocaleDateString() : 'N/A',
-        amount: deal.termAmount,
-        equity: deal.termEquity,
+        id: deal.id.slice(-6).toUpperCase(),
+        investor: deal.investor_id,
+        date: deal.updated_at ? new Date(deal.updated_at).toLocaleDateString() : 'N/A',
+        amount: deal.term_amount,
+        equity: deal.term_equity,
         status: 'Secured'
     };
 }
 
-/**
-* Builds an active chat summary object from a deal record.
-* @example
-* buildActiveChat(deal)
-* {
-*   id: "64f1c2...",
-*   startupId: "startup_123",
-*   startupName: "Acme Inc.",
-*   investor: "investor_456",
-*   phase: 1,
-*   lastMessage: "Hello!",
-*   time: "10:30 AM",
-*   unread: 0
-* }
-* @param {{any}} deal - Deal object containing startup, investor, phase, and message details.
-* @returns {{object}} Active chat summary with id, startup information, latest message, and unread count.
-**/
 function buildActiveChat(deal: any) {
     const lastMsg = deal.messages?.at(-1);
     return {
-        id: deal._id.toString(),
-        startupId: deal.startupId,
-        startupName: deal.startupName,
-        investor: deal.investorId,
-        phase: deal.currentPhase || 1,
+        id: deal.id,
+        startupId: deal.startup_id,
+        startupName: deal.startup_name,
+        investor: deal.investor_id,
+        phase: deal.current_phase || 1,
         lastMessage: lastMsg?.text ?? "No messages yet.",
         time: lastMsg?.time ?? 'Recently',
         unread: 0
@@ -59,26 +39,44 @@ function buildActiveChat(deal: any) {
  **/
 export async function GET(req: NextRequest) {
     try {
-        await dbConnect();
+        const cookieStore = await cookies();
+        const supabase = createClient(cookieStore);
 
-        const session = await getServerSession(authOptions);
-        if (!session?.user) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
             return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
         }
 
-        const myStartups = await Startup.find({ ownerEmail: session.user.email }).select('_id name').lean();
+        const sessionUserEmail = user.email;
+        if (!sessionUserEmail) {
+            return NextResponse.json({ success: false, error: 'Email is required' }, { status: 400 });
+        }
+
+        const { data: myStartups, error: startupsError } = await supabase
+            .from("startups")
+            .select("id, name")
+            .eq("owner_email", sessionUserEmail);
+
+        if (startupsError) throw startupsError;
+
         if (!myStartups || myStartups.length === 0) {
             return NextResponse.json({ success: true, activeChats: [], executedAgreements: [] });
         }
 
-        const startupIds = myStartups.map(s => s._id.toString());
-        const allDeals = await Deal.find({ startupId: { $in: startupIds } }).lean();
+        const startupIds = myStartups.map(s => s.id);
+        const { data: allDeals, error: dealsError } = await supabase
+            .from("deals")
+            .select("*")
+            .in("startup_id", startupIds);
 
-        const executedAgreements = allDeals
+        if (dealsError) throw dealsError;
+
+        const dealsList = allDeals || [];
+        const executedAgreements = dealsList
             .filter(d => d.status === 'executed')
             .map(buildExecutedAgreement);
 
-        const activeChats = allDeals
+        const activeChats = dealsList
             .filter(d => d.status === 'negotiating')
             .map(buildActiveChat);
 
@@ -89,4 +87,3 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
 }
-

@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
-import dbConnect from "@/database/mongodb";
-import KYCDocument from "@/database/models/KYCDocument";
+import { createClient } from "@supabase/supabase-js";
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+const supabase = createClient(supabaseUrl!, supabaseKey!);
 
 /**
 * Fetches all pending KYC documents, serializes their IDs, and returns them as a JSON response.
@@ -11,15 +14,20 @@ import KYCDocument from "@/database/models/KYCDocument";
 **/
 export async function GET() {
     try {
-        await dbConnect();
+        const { data: pending, error } = await supabase
+            .from("kyc_documents")
+            .select("*")
+            .eq("status", "Pending")
+            .order("created_at", { ascending: true });
 
-        // Fetch only documents awaiting review, ordered by oldest first
-        const pending = await KYCDocument.find({ status: 'Pending' }).sort({ createdAt: 1 }).lean();
+        if (error) throw error;
 
-        // Serialize MongoDB `_id` Obj into a pure String for Client-Side React Rendering 
-        const serialized = pending.map((doc: any) => ({
+        const serialized = (pending || []).map((doc: any) => ({
             ...doc,
-            _id: doc._id.toString()
+            _id: doc.id,
+            aadhaarFile: doc.aadhaar_file,
+            panFile: doc.pan_file,
+            matchScore: doc.match_score
         }));
 
         return NextResponse.json({ success: true, data: serialized }, { status: 200 });

@@ -1,19 +1,19 @@
 "use client";
 
 import { Clock, RefreshCcw } from "lucide-react";
-import { useSession } from "next-auth/react";
+import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 export default function KYCPendingPage() {
-    const { update } = useSession();
+    const supabase = createClient();
     const router = useRouter();
     const [isChecking, setIsChecking] = useState(false);
 
     const checkStatus = async () => {
         setIsChecking(true);
-        // Force session update to fetch latest JWT from authOptions
-        await update();
+        // Force session update to fetch latest JWT / user metadata
+        await supabase.auth.refreshSession();
         router.refresh();
         setTimeout(() => {
             setIsChecking(false);

@@ -1,9 +1,9 @@
 "use client";
 
-import { signIn } from "next-auth/react";
 import { useState } from "react";
 import Link from "next/link";
 import { UserPlus, ArrowLeft } from "lucide-react";
+import { createClient } from "@/utils/supabase/client";
 
 /**
  * Renders the registration page where users choose to sign up as a startup founder or investor and continue with Google authentication.
@@ -19,8 +19,17 @@ export default function RegisterPage() {
     const handleRegister = async (role: "startup" | "investor" | "student") => {
         setIsLoading(role);
         document.cookie = `involution_role=${role}; path=/; max-age=3600`;
-        const dashboardRoute = role === "investor" ? "/investors/dashboard" : "/startups/dashboard";
-        await signIn("google", { callbackUrl: dashboardRoute });
+        const supabase = createClient();
+        const { error } = await supabase.auth.signInWithOAuth({
+            provider: "google",
+            options: {
+                redirectTo: `${window.location.origin}/api/auth/callback`
+            }
+        });
+        if (error) {
+            console.error("Registration Error:", error);
+            setIsLoading(null);
+        }
     };
 
     return (

@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 import { GoogleGenAI } from "@google/genai";
-import dbConnect from "@/database/mongodb";
-import Startup from "@/database/models/Startup";
+import { createClient } from "@supabase/supabase-js";
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+const supabase = createClient(supabaseUrl!, supabaseKey!);
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
@@ -15,17 +18,19 @@ const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
  **/
 export async function POST(req: Request) {
     try {
-        await dbConnect();
-
         const { startupId } = await req.json();
 
         if (!startupId) {
             return NextResponse.json({ success: false, error: 'startupId is required' }, { status: 400 });
         }
 
-        const startup = await Startup.findById(startupId);
+        const { data: startup, error: fetchError } = await supabase
+            .from("startups")
+            .select("*")
+            .eq("id", startupId)
+            .maybeSingle();
 
-        if (!startup) {
+        if (fetchError || !startup) {
             return NextResponse.json({ success: false, error: 'Startup not found' }, { status: 404 });
         }
 
@@ -40,12 +45,12 @@ export async function POST(req: Request) {
             Equity Offered: ${startup.equity}%
             Current Monthly Revenue: ₹${startup.revenue}
             Current Monthly Burn: ₹${startup.burn}
-            Business Model: ${startup.businessModel}
+            Business Model: ${startup.business_model}
             Description: ${startup.desc}
-            Target Market: ${startup.businessInfo?.targetMarket || "Not provided"}
-            Marketing Strategies: ${startup.businessInfo?.marketingStrategy || "Not provided"}
-            Unique Value Proposition: ${startup.businessInfo?.uvp || "Not provided"}
-            ${startup.isStudent ? `Founder Age: ${startup.founderAge} (Student Incube Startup)` : ""}
+            Target Market: ${startup.business_info?.targetMarket || "Not provided"}
+            Marketing Strategies: ${startup.business_info?.marketingStrategy || "Not provided"}
+            Unique Value Proposition: ${startup.business_info?.uvp || "Not provided"}
+            ${startup.is_student ? `Founder Age: ${startup.founder_age} (Student Incube Startup)` : ""}
 
             Provide a concise analysis including:
             1. Financial health
@@ -66,8 +71,12 @@ export async function POST(req: Request) {
         const analysisText = response.text || "Analysis could not be generated.";
 
         // Save back to the startup
-        startup.analysis = analysisText;
-        await startup.save();
+        const { error: updateError } = await supabase
+            .from("startups")
+            .update({ analysis: analysisText })
+            .eq("id", startupId);
+
+        if (updateError) throw updateError;
 
         return NextResponse.json({
             success: true,
