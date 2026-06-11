@@ -92,7 +92,7 @@ export default function PublishStartupPage() {
         // 4. Growth Metrics
         growthMetrics: { mau: "", churnRate: "", conversionRate: "", ordersPerMonth: "", repeatCustomers: "", appDownloads: "" },
         // 5. Operational Metrics
-        operationalMetrics: { skus: "", productionCapacity: "", inventoryStatus: "", supplyChain: "", deliveryTime: "", vendorCount: "" },
+        operationalMetrics: { skus: "", deliveryTime: "" },
         // 6. Credibility & Trust Inputs
         credibility: { gstRegistered: false, panVerified: false, aadhaarVerified: false, bankVerified: false, incubatorBacked: false, gstSummaryUrl: "", bankStatementUrl: "", caCertificateUrl: "" },
         // 7. Risk Disclosure Section
@@ -562,7 +562,7 @@ export default function PublishStartupPage() {
                                 <span className="flex items-center justify-center size-8 rounded-full bg-teal-900/40 text-teal-400 text-sm border border-teal-500/20">5</span>
                                 Operational Metrics
                             </h3>
-                            <div className="grid md:grid-cols-3 gap-6">
+                            <div className="grid md:grid-cols-2 gap-6">
                                 <div className="space-y-2">
                                     <label className="text-sm font-bold text-slate-700">Number of SKUs (if applicable)</label>
                                     <input type="number" className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-teal-500/50 text-slate-800 transition-all font-medium" value={formData.operationalMetrics.skus} onChange={(e) => handleNestedChange('operationalMetrics', 'skus', e.target.value)} />
@@ -570,10 +570,6 @@ export default function PublishStartupPage() {
                                 <div className="space-y-2">
                                     <label className="text-sm font-bold text-slate-700">Avg Delivery / Fulfillment Time</label>
                                     <input type="text" className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-teal-500/50 text-slate-800 transition-all font-medium" placeholder="e.g. 2 Days" value={formData.operationalMetrics.deliveryTime} onChange={(e) => handleNestedChange('operationalMetrics', 'deliveryTime', e.target.value)} />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-sm font-bold text-slate-700">Supply Chain Partners (Count)</label>
-                                    <input type="text" className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-teal-500/50 text-slate-800 transition-all font-medium" value={formData.operationalMetrics.supplyChain} onChange={(e) => handleNestedChange('operationalMetrics', 'supplyChain', e.target.value)} />
                                 </div>
                             </div>
                         </div>
