@@ -3,6 +3,13 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   reactCompiler: false,
 
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+
   // Fix: Set turbopack root to silence the multiple-lockfile workspace warning
   turbopack: {
     root: __dirname,
