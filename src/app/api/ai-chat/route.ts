@@ -148,7 +148,6 @@ function buildChatPrompt(startup: any, question: string, fewShotString: string):
             Target Market: ${startup.business_info?.targetMarket || "Not provided"}
             Marketing Strategies: ${startup.business_info?.marketingStrategy || "Not provided"}
             UVP: ${startup.business_info?.uvp || "Not provided"}
-            ${startup.is_student ? `Founder Age: ${startup.founder_age} (Student Incube Startup)` : ""}
             
             Previous AI Analysis:
             ${startup.analysis || "No preliminary analysis was available."}

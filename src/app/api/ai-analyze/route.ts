@@ -50,7 +50,6 @@ export async function POST(req: Request) {
             Target Market: ${startup.business_info?.targetMarket || "Not provided"}
             Marketing Strategies: ${startup.business_info?.marketingStrategy || "Not provided"}
             Unique Value Proposition: ${startup.business_info?.uvp || "Not provided"}
-            ${startup.is_student ? `Founder Age: ${startup.founder_age} (Student Incube Startup)` : ""}
 
             Provide a concise analysis including:
             1. Financial health
