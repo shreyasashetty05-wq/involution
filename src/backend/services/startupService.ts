@@ -39,7 +39,7 @@ export const publishStartup = async (supabase: SupabaseClient, body: any, ownerE
         risk: "Medium",
         score: 80,
         is_student: body.isStudent || false,
-        founder_age: body.founderAge,
+        founder_age: (body.founderAge !== undefined && body.founderAge !== null && body.founderAge !== "") ? Number(body.founderAge) : null,
         videos: body.videos.filter((v: string) => v.trim() !== "").map((url: string) => {
             const yId = extractYoutubeId(url);
             return {
