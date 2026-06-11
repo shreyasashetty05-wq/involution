@@ -1,3 +1,2 @@
--- Migration: drop the now-obsolete founder_age column
-ALTER TABLE startups
-DROP COLUMN IF EXISTS founder_age;
+-- Migration: keep founder_age for backward compatibility with cached clients
+-- ALTER TABLE startups DROP COLUMN IF EXISTS founder_age;
