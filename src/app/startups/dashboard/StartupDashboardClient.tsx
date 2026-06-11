@@ -115,7 +115,7 @@ export default function StartupDashboardClient({ myStartups }: StartupDashboardC
                                             Keep your profile active and improve your AI Match Score by reporting your monthly revenue and burn.
                                         </p>
                                     </div>
-                                    <Link href={`/startups/${myStartup._id.toString()}/financial-update`} className="px-6 py-3 bg-emerald-500/10 border border-emerald-500/30 hover:bg-emerald-500/20 text-emerald-600 font-semibold rounded-xl transition-colors whitespace-nowrap shadow-[0_0_15px_-3px_rgba(16,185,129,0.2)] flex items-center gap-2">
+                                    <Link href={`/startups/${myStartup._id?.toString() || myStartup.id}/financial-update`} className="px-6 py-3 bg-emerald-500/10 border border-emerald-500/30 hover:bg-emerald-500/20 text-emerald-600 font-semibold rounded-xl transition-colors whitespace-nowrap shadow-[0_0_15px_-3px_rgba(16,185,129,0.2)] flex items-center gap-2">
                                         <LineChart className="size-4" /> Submit Financial Update
                                     </Link>
                                 </div>
@@ -199,7 +199,7 @@ export default function StartupDashboardClient({ myStartups }: StartupDashboardC
                             <h3 className="text-emerald-600 font-bold text-lg mb-2 relative z-10">Live on Network</h3>
                             <p className="text-sm text-slate-700 mb-2 relative z-10">Your startup <span className="font-bold text-slate-800">{myRes.name}</span> is currently visible in the investor search engine.</p>
                             <p className="text-xs text-slate-500 mb-6 font-mono bg-white/50 p-2 rounded border border-slate-200 relative z-10">/{myRes.name}</p>
-                            <Link href={`/startups/${myRes._id.toString()}`} className="w-full py-3 bg-slate-50 border border-slate-300 hover:border-emerald-400 hover:bg-slate-200 text-slate-800 hover:text-emerald-600 font-bold rounded-xl transition-all flex items-center justify-center gap-2 relative z-10">
+                            <Link href={`/startups/${myRes._id?.toString() || myRes.id}`} className="w-full py-3 bg-slate-50 border border-slate-300 hover:border-emerald-400 hover:bg-slate-200 text-slate-800 hover:text-emerald-600 font-bold rounded-xl transition-all flex items-center justify-center gap-2 relative z-10">
                                 <Eye className="size-4" /> View Public Profile
                             </Link>
                         </div>

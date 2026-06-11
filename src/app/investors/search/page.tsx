@@ -437,7 +437,7 @@ export default function AISearchEngine() {
                                         </div>
 
                                         <div className="shrink-0 flex items-center justify-center border-t md:border-t-0 md:border-l border-slate-200 pt-4 md:pt-0 md:pl-6 mt-2 md:mt-0">
-                                            <Link href={`/startups/${startup._id}`} className="flex items-center gap-2 px-6 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm w-full md:w-auto justify-center transition-colors shadow-sm">
+                                            <Link href={`/startups/${startup._id || startup.id}`} className="flex items-center gap-2 px-6 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm w-full md:w-auto justify-center transition-colors shadow-sm">
                                                 <ChevronRight className="size-4" /> View Deal
                                             </Link>
                                         </div>
