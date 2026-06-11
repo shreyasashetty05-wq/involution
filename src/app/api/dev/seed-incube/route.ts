@@ -37,7 +37,6 @@ export async function GET() {
                 revenue: 0,
                 burn: 0,
                 is_student: true,
-                founder_age: 23,
                 risk: "Medium",
                 score: 87,
                 videos: [
@@ -71,7 +70,6 @@ export async function GET() {
                 revenue: 0,
                 burn: 0,
                 is_student: true,
-                founder_age: 21,
                 risk: "Low",
                 score: 78,
                 videos: [
@@ -105,7 +103,6 @@ export async function GET() {
                 revenue: 0,
                 burn: 0,
                 is_student: true,
-                founder_age: 22,
                 risk: "Medium",
                 score: 82,
                 videos: [
@@ -139,7 +136,6 @@ export async function GET() {
                 revenue: 0,
                 burn: 0,
                 is_student: true,
-                founder_age: 20,
                 risk: "Low",
                 score: 91,
                 videos: [

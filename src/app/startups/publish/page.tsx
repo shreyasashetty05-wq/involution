@@ -9,11 +9,6 @@ import { Briefcase, TrendingUp, Presentation, AlertCircle, Save, Bot, Loader2, B
 const YT_REGEXP = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
 const VIMEO_REGEXP = /(?:www\.|player\.)?vimeo.com\/(?:channels\/(?:\w+\/)?|groups\/(?:[^/]*)\/videos\/|album\/(?:\d+)\/video\/|video\/|)(\d+)(?:[a-zA-Z0-9_-]+)?/i;
 
-function validateStudentProfile(age: number, errors: string[]) {
-    if (!age || age >= 24 || age < 13) {
-        errors.push("Incube student founders must be under the age of 24.");
-    }
-}
 
 /**
 * Validates startup financial metrics and records errors or warnings for unrealistic values and risk conditions.
@@ -85,7 +80,6 @@ export default function PublishStartupPage() {
         ltv: "",
         projectedROI: "",
         videos: [""],
-        founderAge: "",
 
         // 1. Basic Company Information
         basicInfo: { founderNames: "", incorporationYear: new Date().getFullYear(), companyType: "Private Ltd", location: "", teamSize: 1 },
@@ -173,9 +167,7 @@ export default function PublishStartupPage() {
         const errors: string[] = [];
         const warnings: string[] = [];
 
-        if (isStudent) {
-            validateStudentProfile(Number(formData.founderAge), errors);
-        } else {
+        if (!isStudent) {
             validateFinancials(
                 { margin: formData.financialsMonthly.netMargin, runway: formData.financialsMonthly.runway },
                 { cac: Number(formData.cac), ltv: Number(formData.ltv) },
@@ -324,12 +316,7 @@ export default function PublishStartupPage() {
                                     <label className="text-sm font-bold text-slate-700">Founder Name(s)</label>
                                     <input type="text" required className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-800 placeholder:text-zinc-600 focus:outline-none focus:border-lime-500/50 focus:ring-1 focus:ring-lime-500/20 transition-all font-medium" placeholder="Jane Doe, John Smith" value={formData.basicInfo.founderNames} onChange={(e) => handleNestedChange('basicInfo', 'founderNames', e.target.value)} />
                                 </div>
-                                {isStudent && (
-                                    <div className="space-y-2">
-                                        <label className="text-sm font-bold text-slate-700">Founder Age</label>
-                                        <input type="number" required className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:border-lime-500/50 focus:ring-1 focus:ring-lime-500/20 transition-all font-medium" placeholder="e.g. 21" value={formData.founderAge} onChange={(e) => setFormData({ ...formData, founderAge: e.target.value })} />
-                                    </div>
-                                )}
+
                                 <div className="space-y-2">
                                     <label className="text-sm font-bold text-slate-700">Sector / Industry</label>
                                     <select className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:border-lime-500/50 focus:ring-1 focus:ring-lime-500/20 transition-all appearance-none font-medium" value={formData.sector} onChange={(e) => setFormData({ ...formData, sector: e.target.value })}>

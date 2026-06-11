@@ -256,9 +256,6 @@ export default function IncubeSearch() {
                                                 <h3 className="text-2xl font-bold text-slate-800 font-outfit group-hover:text-blue-600 transition-colors">{startup.name}</h3>
                                                 <span className="px-2.5 py-1 bg-slate-200 border border-slate-300 rounded-md text-xs font-medium text-slate-700">{startup.sector}</span>
                                                 <span className="px-2.5 py-1 bg-blue-900/10 border border-blue-500/30 text-blue-600 rounded-md text-xs font-medium">{startup.stage || "Idea"}</span>
-                                                <span className="px-2.5 py-1 bg-purple-900/10 border border-purple-500/30 text-purple-600 rounded-md text-xs font-medium flex items-center gap-1">
-                                                    <GraduationCap className="size-3" /> Age: {startup.founderAge || "< 24"}
-                                                </span>
                                             </div>
 
                                             <p className="text-slate-500 text-sm line-clamp-2">{startup.desc}</p>

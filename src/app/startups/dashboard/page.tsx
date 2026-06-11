@@ -31,7 +31,6 @@ export default async function StartupDashboard() {
                 ownerEmail: doc.owner_email,
                 businessModel: doc.business_model,
                 isStudent: doc.is_student,
-                founderAge: doc.founder_age,
                 financialUpdates: doc.financial_updates,
                 basicInfo: doc.basic_info,
                 businessInfo: doc.business_info,
