@@ -319,6 +319,11 @@ export default function PublishStartupPage() {
                                 </div>
 
                                 <div className="space-y-2">
+                                    <label className="text-sm font-bold text-slate-700">Founder Age</label>
+                                    <input type="number" className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-800 placeholder:text-zinc-600 focus:outline-none focus:border-lime-500/50 focus:ring-1 focus:ring-lime-500/20 transition-all font-medium" placeholder="e.g. 30" value={formData.founderAge} onChange={(e) => setFormData({ ...formData, founderAge: e.target.value })} />
+                                </div>
+
+                                <div className="space-y-2">
                                     <label className="text-sm font-bold text-slate-700">Sector / Industry</label>
                                     <select className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:border-lime-500/50 focus:ring-1 focus:ring-lime-500/20 transition-all appearance-none font-medium" value={formData.sector} onChange={(e) => setFormData({ ...formData, sector: e.target.value })}>
                                         <option value="FinTech">FinTech</option>
@@ -328,11 +333,6 @@ export default function PublishStartupPage() {
                                         <option value="Cleantech">CleanTech</option>
                                         <option value="DeepTech">DeepTech</option>
                                     </select>
-                                </div>
-
-                                <div className="space-y-2">
-                                    <label className="text-sm font-bold text-slate-700">Founder Age</label>
-                                    <input type="number" className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-800 placeholder:text-zinc-600 focus:outline-none focus:border-lime-500/50 focus:ring-1 focus:ring-lime-500/20 transition-all font-medium" placeholder="e.g. 30" value={formData.founderAge} onChange={(e) => setFormData({ ...formData, founderAge: e.target.value })} />
                                 </div>
                                 {!isStudent && (
                                     <>
