@@ -94,8 +94,8 @@ export default function IncubeSearch() {
                     case 'equity_desc':
                         return b.equity - a.equity;
                     case 'valuation_asc': {
-                        const valA = a.requested / (a.equity / 100);
-                        const valB = b.requested / (b.equity / 100);
+                        const valA = a.equity > 0 ? a.requested / (a.equity / 100) : Infinity;
+                        const valB = b.equity > 0 ? b.requested / (b.equity / 100) : Infinity;
                         return valA - valB;
                     }
                     case 'ai_score':
@@ -233,7 +233,8 @@ export default function IncubeSearch() {
                     ) : (
                         <div className="grid gap-6">
                             {results.map((startup, idx) => {
-                                const impliedValuation = startup.requested / (startup.equity / 100);
+                                const equityVal = Number(startup.equity) || 0;
+                                const impliedValuation = equityVal > 0 ? startup.requested / (equityVal / 100) : 0;
 
                                 return (
                                     <div key={startup._id || startup.id}
@@ -271,7 +272,9 @@ export default function IncubeSearch() {
                                                 </div>
                                                 <div>
                                                     <p className="text-slate-9000 text-xs mb-1">Implied Valuation</p>
-                                                    <p className="text-slate-800 font-semibold text-sm font-mono">₹{(impliedValuation / 10000000).toFixed(2)}Cr</p>
+                                                    <p className="text-slate-800 font-semibold text-sm font-mono">
+                                                        {impliedValuation > 0 ? `₹ ${(impliedValuation / 10000000).toFixed(2)}Cr` : "N/A"}
+                                                    </p>
                                                 </div>
                                             </div>
                                         </div>

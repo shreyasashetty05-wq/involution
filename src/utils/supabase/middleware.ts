@@ -117,7 +117,13 @@ export async function updateSession(request: NextRequest) {
         url.pathname = "/startups/dashboard";
         return NextResponse.redirect(url);
     }
-    if (path.startsWith("/startups") && role === "investor") {
+    const isStartupMgmt = 
+        path === "/startups" || 
+        path === "/startups/" || 
+        path.startsWith("/startups/dashboard") || 
+        path.startsWith("/startups/publish");
+
+    if (isStartupMgmt && role === "investor") {
         const url = request.nextUrl.clone();
         url.pathname = "/investors/dashboard";
         return NextResponse.redirect(url);

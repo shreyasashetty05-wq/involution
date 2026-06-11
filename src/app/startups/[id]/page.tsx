@@ -315,10 +315,12 @@ export default function StartupProfile() {
                                 <p className="text-xl font-bold text-emerald-600">{startup.equity}% Common Stock</p>
                             </div>
                             <div className="w-full h-px bg-slate-200"></div>
-                            <div>
                                 <p className="text-xs text-slate-400 uppercase tracking-wider mb-1">Implied Valuation</p>
-                                <p className="text-lg font-mono text-slate-500">₹ {((startup.requested / startup.equity) * 100 / 10000000).toFixed(2)} Cr</p>
-                            </div>
+                                <p className="text-lg font-mono text-slate-500">
+                                    {Number(startup.equity) > 0 
+                                        ? `₹ ${((startup.requested / Number(startup.equity)) * 100 / 10000000).toFixed(2)} Cr` 
+                                        : "N/A"}
+                                </p>
                         </div>
 
                         {!startup.isStudent && (
