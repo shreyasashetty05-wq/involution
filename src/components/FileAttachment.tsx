@@ -5,22 +5,27 @@ import { createClient } from "@/utils/supabase/client";
 export default function FileAttachment({ file }: { file: any }) {
     const [url, setUrl] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
+    const [notFound, setNotFound] = useState(false);
     
     useEffect(() => {
-        console.log("FileAttachment mounted with file prop:", file);
+        let isMounted = true;
         
         const fetchUrl = async () => {
             const supabase = createClient();
-            console.log("Generating signed URL for path:", file.path);
             
             const { data, error } = await supabase.storage
                 .from('deal-room-files')
                 .createSignedUrl(file.path, 3600); // 1 hour expiry
             
+            if (!isMounted) return;
+
             if (error) {
-                console.error("createSignedUrl error:", error);
-            } else {
-                console.log("createSignedUrl success! URL:", data?.signedUrl);
+                // Ignore "not found" errors caused by intentional deletion
+                if (error.message?.toLowerCase().includes('not found') || error.name === 'StorageApiError') {
+                    setNotFound(true);
+                } else {
+                    console.error("createSignedUrl error:", error);
+                }
             }
 
             if (data?.signedUrl) {
@@ -29,6 +34,10 @@ export default function FileAttachment({ file }: { file: any }) {
             setLoading(false);
         };
         fetchUrl();
+
+        return () => {
+            isMounted = false;
+        };
     }, [file.path]);
 
     const formatBytes = (bytes: number) => {
@@ -40,6 +49,8 @@ export default function FileAttachment({ file }: { file: any }) {
     };
 
     const isImage = file.type.startsWith('image/');
+
+    if (notFound) return null;
 
     if (loading) {
         return <div className="flex items-center gap-2 text-xs text-slate-500 my-2"><Loader2 className="size-4 animate-spin" /> Loading attachment...</div>;

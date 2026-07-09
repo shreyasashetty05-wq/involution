@@ -106,6 +106,7 @@ function DealWorkspace() {
 
     const [selectedMessageIds, setSelectedMessageIds] = useState<any[]>([]);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const isSelectionMode = selectedMessageIds.length > 0;
     const pressTimer = useRef<NodeJS.Timeout | null>(null);
 
@@ -137,6 +138,16 @@ function DealWorkspace() {
     useEffect(() => {
         scrollToBottom();
     }, [messages]);
+
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape' && showDeleteConfirm && !isDeleting) {
+                setShowDeleteConfirm(false);
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [showDeleteConfirm, isDeleting]);
 
     useEffect(() => {
         const fetchUser = async () => {
@@ -323,8 +334,16 @@ function DealWorkspace() {
         setIsDeleting(true);
 
         const messagesToDelete = messages.filter(m => selectedMessageIds.includes(m.id));
+        const idsToDelete = [...selectedMessageIds];
 
-        // Delete files from storage if 'everyone'
+        // 1. Optimistically update UI FIRST so FileAttachment unmounts immediately
+        // and doesn't try to fetch a signed URL for a file that is being deleted.
+        setMessages(m => m.filter(msg => !idsToDelete.includes(msg.id)));
+        setSelectedMessageIds([]);
+
+        let storageError = false;
+
+        // 2. Delete files from storage if 'everyone'
         if (mode === 'everyone') {
             const filesToRemove = messagesToDelete.filter(m => m.file).map(m => m.file.path);
             if (filesToRemove.length > 0) {
@@ -332,32 +351,41 @@ function DealWorkspace() {
                 const { error } = await supabase.storage.from('deal-room-files').remove(filesToRemove);
                 if (error) {
                     console.error("Failed to remove files from storage:", error);
+                    storageError = true;
                 }
             }
         }
 
-        // Optimistically update UI
-        setMessages(m => m.filter(msg => !selectedMessageIds.includes(msg.id)));
-        setSelectedMessageIds([]);
-
-        // Call API
+        // 3. Call API to delete messages
         try {
-            await fetch('/api/deals', {
+            if (storageError) throw new Error("Storage deletion failed");
+            
+            const res = await fetch('/api/deals', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     startupId,
                     investorId,
                     action: 'deleteMessages',
-                    messageIds: selectedMessageIds,
+                    messageIds: idsToDelete,
                     mode
                 })
             });
+            
+            if (!res.ok) throw new Error("API deletion failed");
         } catch (err) {
             console.error("Failed to delete messages:", err);
+            // 5. Restore messages on failure
+            setMessages(m => {
+                // Merge and sort them back roughly by time
+                const restored = [...m, ...messagesToDelete];
+                // Try to sort by time string (HH:MM AM/PM) or just append
+                return restored; 
+            });
+            alert("Failed to delete messages. They have been restored.");
         } finally {
             setIsDeleting(false);
-            await fetchMessages();
+            await fetchMessages(); // Fetch true state from server
         }
     };
 
@@ -682,11 +710,7 @@ function DealWorkspace() {
                                             {/* Only allow Delete for Everyone if current user sent all selected messages */}
                                             {selectedMessageIds.length > 0 && messages.filter(m => selectedMessageIds.includes(m.id)).every(m => m.sender === 'me') && (
                                                 <button 
-                                                    onClick={() => {
-                                                        if (confirm("Delete these messages for everyone? This cannot be undone.")) {
-                                                            handleDeleteMessages('everyone');
-                                                        }
-                                                    }}
+                                                    onClick={() => setShowDeleteConfirm(true)}
                                                     disabled={isDeleting}
                                                     className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-red-50 hover:bg-red-100 text-red-600 border border-red-100 rounded-lg shadow-sm transition-all"
                                                 >
@@ -1038,6 +1062,48 @@ function DealWorkspace() {
                     </div>
                 </div>
             </div>
+
+            {/* Custom Delete Confirmation Modal */}
+            {showDeleteConfirm && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                    {/* Backdrop */}
+                    <div 
+                        className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity"
+                        onClick={() => !isDeleting && setShowDeleteConfirm(false)}
+                    />
+                    {/* Modal Content */}
+                    <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                        <div className="flex flex-col items-center text-center">
+                            <div className="size-12 rounded-full bg-red-100 flex items-center justify-center mb-4">
+                                <AlertTriangle className="size-6 text-red-600" />
+                            </div>
+                            <h3 className="text-lg font-bold text-slate-900 mb-2 font-outfit">Delete for Everyone?</h3>
+                            <p className="text-sm text-slate-500 mb-6 leading-relaxed">
+                                This action will permanently delete this message and its attachment for both participants. This action cannot be undone.
+                            </p>
+                            <div className="flex w-full gap-3">
+                                <button
+                                    onClick={() => setShowDeleteConfirm(false)}
+                                    disabled={isDeleting}
+                                    className="flex-1 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-sm transition-colors disabled:opacity-50"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={async () => {
+                                        await handleDeleteMessages('everyone');
+                                        setShowDeleteConfirm(false);
+                                    }}
+                                    disabled={isDeleting}
+                                    className="flex-1 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl text-sm transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:bg-red-400 shadow-sm shadow-red-600/20"
+                                >
+                                    {isDeleting ? <Loader2 className="size-4 animate-spin" /> : "Delete"}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
