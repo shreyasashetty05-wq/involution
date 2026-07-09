@@ -31,11 +31,13 @@ export async function updateSession(request: NextRequest) {
     );
 
     const path = request.nextUrl.pathname;
+    const isAdminRoute = path.startsWith("/admin");
+    const isAdminApi = path === "/api/kyc/pending" || path.includes("/review");
     
-    // Skip middleware for assets, Next internals, or API calls
+    // Skip middleware for assets, Next internals, or standard API calls
     if (
         path.startsWith("/_next") ||
-        path.startsWith("/api/") ||
+        (path.startsWith("/api/") && !isAdminApi) ||
         path.includes(".")
     ) {
         return supabaseResponse;
@@ -54,6 +56,13 @@ export async function updateSession(request: NextRequest) {
     if (!user) {
         // If not logged in and requesting private page, redirect to login
         if (!isPublicRoute) {
+            // Unauthenticated API requests should get 401 instead of redirect
+            if (isAdminApi) {
+                return new NextResponse(JSON.stringify({ error: "Unauthorized", message: "Please log in" }), {
+                    status: 401,
+                    headers: { "Content-Type": "application/json" }
+                });
+            }
             const url = request.nextUrl.clone();
             url.pathname = "/login";
             return NextResponse.redirect(url);
@@ -61,73 +70,109 @@ export async function updateSession(request: NextRequest) {
         return supabaseResponse;
     }
 
-    // User is logged in
-    if (path === "/login" || path === "/register") {
-        const role = user.user_metadata?.role || "investor";
-        const url = request.nextUrl.clone();
-        url.pathname = role === "investor" ? "/investors/dashboard" : "/startups/dashboard";
-        return NextResponse.redirect(url);
-    }
-
-    // Retrieve KYC status directly from database for real-time accuracy
+    // Retrieve KYC status and strict DB Role concurrently for performance
     let kycDone = false;
     let kycStatus = "None";
+    let dbRole = null;
+
     if (user.email) {
-        const { data: kycRecord } = await supabase
-            .from("kyc_documents")
-            .select("status")
-            .eq("email", user.email)
-            .order("created_at", { ascending: false })
-            .limit(1)
-            .maybeSingle();
+        const [kycRes, roleRes] = await Promise.all([
+            supabase
+                .from("kyc_documents")
+                .select("status")
+                .eq("email", user.email)
+                .order("created_at", { ascending: false })
+                .limit(1)
+                .maybeSingle(),
+            supabase
+                .from("user_roles")
+                .select("role")
+                .eq("email", user.email)
+                .maybeSingle()
+        ]);
 
-        if (kycRecord) {
-            kycStatus = kycRecord.status;
-            kycDone = kycRecord.status === "Approved";
+        if (kycRes.data) {
+            kycStatus = kycRes.data.status;
+            kycDone = kycRes.data.status === "Approved";
+        }
+        if (roleRes.data) {
+            dbRole = roleRes.data.role;
         }
     }
 
-    if (!kycDone && (path.startsWith("/investors") || path.startsWith("/startups"))) {
-        const url = request.nextUrl.clone();
-        if (kycStatus === "Pending") {
-            url.pathname = "/kyc/pending";
-        } else {
-            url.pathname = "/kyc";
+    // Strict role takes precedence, fallback to user_metadata if not defined in DB
+    const role = dbRole || user.user_metadata?.role || "investor";
+
+    // Enforce Admin RBAC
+    if (isAdminRoute || isAdminApi) {
+        if (role !== "admin") {
+            if (isAdminApi) {
+                return new NextResponse(JSON.stringify({ error: "Forbidden", message: "Admin access required" }), {
+                    status: 403,
+                    headers: { "Content-Type": "application/json" }
+                });
+            }
+            const url = request.nextUrl.clone();
+            url.pathname = "/";
+            return NextResponse.redirect(url);
         }
-        return NextResponse.redirect(url);
     }
 
-    if (path === "/kyc" && kycStatus === "Pending") {
-        const url = request.nextUrl.clone();
-        url.pathname = "/kyc/pending";
-        return NextResponse.redirect(url);
-    }
-
-    if (path === "/kyc/pending" && kycStatus === "Approved") {
-        const role = user.user_metadata?.role || "investor";
+    // User is logged in
+    if (path === "/login" || path === "/register") {
+        if (role === "admin") {
+            const url = request.nextUrl.clone();
+            url.pathname = "/admin/kyc";
+            return NextResponse.redirect(url);
+        }
         const url = request.nextUrl.clone();
         url.pathname = role === "investor" ? "/investors/dashboard" : "/startups/dashboard";
         return NextResponse.redirect(url);
     }
 
-    // Role-based protection
-    const role = user.user_metadata?.role || "investor";
-    if (path.startsWith("/investors") && role !== "investor") {
-        const url = request.nextUrl.clone();
-        url.pathname = "/startups/dashboard";
-        return NextResponse.redirect(url);
-    }
-    const isStartupMgmt = 
-        path === "/startups" || 
-        path === "/startups/" || 
-        path.startsWith("/startups/dashboard") || 
-        path.startsWith("/startups/publish");
+    // KYC Check applies to investors and startups, but not admins
+    if (role !== "admin") {
+        if (!kycDone && (path.startsWith("/investors") || path.startsWith("/startups"))) {
+            const url = request.nextUrl.clone();
+            if (kycStatus === "Pending") {
+                url.pathname = "/kyc/pending";
+            } else {
+                url.pathname = "/kyc";
+            }
+            return NextResponse.redirect(url);
+        }
 
-    if (isStartupMgmt && role === "investor") {
-        const url = request.nextUrl.clone();
-        url.pathname = "/investors/dashboard";
-        return NextResponse.redirect(url);
+        if (path === "/kyc" && kycStatus === "Pending") {
+            const url = request.nextUrl.clone();
+            url.pathname = "/kyc/pending";
+            return NextResponse.redirect(url);
+        }
+
+        if (path === "/kyc/pending" && kycStatus === "Approved") {
+            const url = request.nextUrl.clone();
+            url.pathname = role === "investor" ? "/investors/dashboard" : "/startups/dashboard";
+            return NextResponse.redirect(url);
+        }
+
+        // Role-based protection for regular users
+        if (path.startsWith("/investors") && role !== "investor") {
+            const url = request.nextUrl.clone();
+            url.pathname = "/startups/dashboard";
+            return NextResponse.redirect(url);
+        }
+        const isStartupMgmt = 
+            path === "/startups" || 
+            path === "/startups/" || 
+            path.startsWith("/startups/dashboard") || 
+            path.startsWith("/startups/publish");
+
+        if (isStartupMgmt && role === "investor") {
+            const url = request.nextUrl.clone();
+            url.pathname = "/investors/dashboard";
+            return NextResponse.redirect(url);
+        }
     }
 
     return supabaseResponse;
 }
+

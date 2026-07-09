@@ -26,3 +26,23 @@ export const createClient = (cookieStore: Awaited<ReturnType<typeof cookies>>) =
     },
   );
 };
+
+export async function isAdmin() {
+    const cookieStore = await cookies();
+    const supabase = createClient(cookieStore);
+    
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user || !user.email) return false;
+
+    const { data: roleData } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("email", user.email)
+        .maybeSingle();
+
+    if (roleData && roleData.role === "admin") {
+        return true;
+    }
+
+    return false;
+}

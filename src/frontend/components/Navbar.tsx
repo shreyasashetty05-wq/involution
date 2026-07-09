@@ -19,18 +19,32 @@ export default function Navbar() {
     const supabase = createClient();
     const router = useRouter();
     const [user, setUser] = useState<User | null>(null);
+    const [dbRole, setDbRole] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchUser = async () => {
             const { data: { user } } = await supabase.auth.getUser();
+            if (user?.email) {
+                const { data } = await supabase.from('user_roles').select('role').eq('email', user.email).maybeSingle();
+                if (data?.role) {
+                    setDbRole(data.role);
+                }
+            }
             setUser(user);
             setLoading(false);
         };
         fetchUser();
 
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-            setUser(session?.user ?? null);
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+            const currentUser = session?.user ?? null;
+            if (currentUser?.email) {
+                const { data } = await supabase.from('user_roles').select('role').eq('email', currentUser.email).maybeSingle();
+                setDbRole(data?.role || null);
+            } else {
+                setDbRole(null);
+            }
+            setUser(currentUser);
             setLoading(false);
         });
 
@@ -43,7 +57,7 @@ export default function Navbar() {
         router.push("/");
     };
 
-    const role = user?.user_metadata?.role || "investor";
+    const role = dbRole || user?.user_metadata?.role || "investor";
     const name = user?.user_metadata?.full_name || user?.email?.split('@')[0] || "User";
     const image = user?.user_metadata?.avatar_url || null;
     const isAuthenticated = !loading && !!user;
@@ -62,7 +76,12 @@ export default function Navbar() {
                     <Link href="/about" className="hover:text-emerald-700 transition-colors">About</Link>
 
                     {isAuthenticated ? (
-                        role === "investor" ? (
+                        role === "admin" ? (
+                            <>
+                                <Link href="/admin/kyc" className="hover:text-emerald-700 transition-colors font-bold text-emerald-600">Admin Panel</Link>
+                                <Link href="/admin/users" className="hover:text-emerald-700 transition-colors">Users</Link>
+                            </>
+                        ) : role === "investor" ? (
                             <>
                                 <Link href="/investors/dashboard" className="hover:text-emerald-700 transition-colors">Portfolio</Link>
                                 <Link href="/investors/incube" className="hover:text-emerald-700 transition-colors">Incube</Link>

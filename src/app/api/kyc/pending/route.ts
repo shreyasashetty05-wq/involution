@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from "@supabase/supabase-js";
+import { isAdmin } from "@/utils/supabase/server";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -14,6 +15,10 @@ const supabase = createClient(supabaseUrl!, supabaseKey!);
 **/
 export async function GET() {
     try {
+        if (!(await isAdmin())) {
+            return NextResponse.json({ success: false, error: "Forbidden: Admin access required" }, { status: 403 });
+        }
+
         const { data: pending, error } = await supabase
             .from("kyc_documents")
             .select("*")
