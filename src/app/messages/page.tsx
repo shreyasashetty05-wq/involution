@@ -2,7 +2,9 @@
 
 import { useState, Suspense, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Send, FileSignature, CheckCircle2, ShieldCheck, User, FileText, ChevronRight, Video, Calendar, Clock, AlertTriangle, PlayCircle, CheckSquare, Search, Lock, Sparkles } from "lucide-react";
+import { Send, FileSignature, CheckCircle2, ShieldCheck, User, FileText, ChevronRight, Video, Calendar, Clock, AlertTriangle, PlayCircle, CheckSquare, Search, Lock, Sparkles, Paperclip, Loader2, ArrowLeft, Trash2 } from "lucide-react";
+import { createClient } from "@/utils/supabase/client";
+import FileAttachment from "@/components/FileAttachment";
 
 /* ─── PII Masker ──────────────────────────────────────── */
 const maskPII = (text: string, isSigned: boolean) => {
@@ -97,6 +99,16 @@ function DealWorkspace() {
 
     const [messages, setMessages] = useState<any[]>([]);
     const [inputMessage, setInputMessage] = useState("");
+    const [isUploading, setIsUploading] = useState(false);
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
+    const [selectedMessageIds, setSelectedMessageIds] = useState<any[]>([]);
+    const [isDeleting, setIsDeleting] = useState(false);
+    const isSelectionMode = selectedMessageIds.length > 0;
+    const pressTimer = useRef<NodeJS.Timeout | null>(null);
+
     const [meetings, setMeetings] = useState<any[]>([]);
     const [meetingDate, setMeetingDate] = useState("");
     const [meetingTime, setMeetingTime] = useState("");
@@ -126,6 +138,17 @@ function DealWorkspace() {
         scrollToBottom();
     }, [messages]);
 
+    useEffect(() => {
+        const fetchUser = async () => {
+            const supabase = createClient();
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+                setCurrentUserId(user.email || user.id);
+            }
+        };
+        fetchUser();
+    }, []);
+
     const fetchMessages = async () => {
         if (!startupId) return;
         try {
@@ -139,25 +162,37 @@ function DealWorkspace() {
             if (data.success && data.deal) {
                 const {currentUser} = data;
 
-                // Map DB messages to UI format with correct sides
-                const newMessages = data.deal.messages.map((m: any) => ({
-                    id: m._id || Math.random(),
-                    sender: m.senderId === currentUser ? 'me' : 'them',
-                    text: m.text,
-                    time: m.time
-                }));
+                // Map DB messages to UI format with correct sides and ensure stable IDs
+                const newMessages = data.deal.messages.map((m: any, index: number) => {
+                    const stableId = m.id || m._id || `msg_${index}_${m.time}_${m.senderId}`;
+                    return {
+                        id: stableId,
+                        sender: m.senderId === currentUser ? 'me' : 'them',
+                        text: m.text,
+                        time: m.time,
+                        file: m.file
+                    };
+                });
 
                 setMessages(prevMessages => {
-                    // Compare to avoid unnecessary re-renders
-                    if (prevMessages.length !== newMessages.length) {
-                        return newMessages;
+                    // Smart merge to prevent flickering
+                    if (prevMessages.length === 0) return newMessages;
+
+                    // If identical length, only update if content changed
+                    if (prevMessages.length === newMessages.length) {
+                        const hasChanges = newMessages.some((newMsg, i) => {
+                            const prevMsg = prevMessages[i];
+                            return prevMsg.id !== newMsg.id || 
+                                   prevMsg.text !== newMsg.text || 
+                                   JSON.stringify(prevMsg.file) !== JSON.stringify(newMsg.file);
+                        });
+                        return hasChanges ? newMessages : prevMessages;
                     }
-                    const prevLast = prevMessages[prevMessages.length - 1];
-                    const newLast = newMessages[newMessages.length - 1];
-                    if (prevLast?.id !== newLast?.id || prevLast?.text !== newLast?.text) {
-                        return newMessages;
-                    }
-                    return prevMessages;
+                    
+                    // If lengths differ, we must update. But we can preserve identical objects 
+                    // where possible to help React, though mapping newMessages is generally fine 
+                    // as long as the `id` property is stable (which it now is).
+                    return newMessages;
                 });
 
                 if (data.deal.currentPhase) {
@@ -253,6 +288,79 @@ function DealWorkspace() {
         setTimeout(() => setCurrentPhase(nextPhase), 200);
     };
 
+    const toggleMessageSelection = (msgId: any) => {
+        setSelectedMessageIds(prev =>
+            prev.includes(msgId) ? prev.filter(id => id !== msgId) : [...prev, msgId]
+        );
+    };
+
+    const handleMessageRightClick = (e: React.MouseEvent, msgId: any) => {
+        e.preventDefault();
+        toggleMessageSelection(msgId);
+    };
+
+    const handleTouchStart = (msgId: any) => {
+        pressTimer.current = setTimeout(() => {
+            toggleMessageSelection(msgId);
+        }, 500);
+    };
+
+    const handleTouchEnd = () => {
+        if (pressTimer.current) {
+            clearTimeout(pressTimer.current);
+            pressTimer.current = null;
+        }
+    };
+
+    const handleMessageClick = (msgId: any) => {
+        if (isSelectionMode) {
+            toggleMessageSelection(msgId);
+        }
+    };
+
+    const handleDeleteMessages = async (mode: 'me' | 'everyone') => {
+        if (!selectedMessageIds.length) return;
+        setIsDeleting(true);
+
+        const messagesToDelete = messages.filter(m => selectedMessageIds.includes(m.id));
+
+        // Delete files from storage if 'everyone'
+        if (mode === 'everyone') {
+            const filesToRemove = messagesToDelete.filter(m => m.file).map(m => m.file.path);
+            if (filesToRemove.length > 0) {
+                const supabase = createClient();
+                const { error } = await supabase.storage.from('deal-room-files').remove(filesToRemove);
+                if (error) {
+                    console.error("Failed to remove files from storage:", error);
+                }
+            }
+        }
+
+        // Optimistically update UI
+        setMessages(m => m.filter(msg => !selectedMessageIds.includes(msg.id)));
+        setSelectedMessageIds([]);
+
+        // Call API
+        try {
+            await fetch('/api/deals', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    startupId,
+                    investorId,
+                    action: 'deleteMessages',
+                    messageIds: selectedMessageIds,
+                    mode
+                })
+            });
+        } catch (err) {
+            console.error("Failed to delete messages:", err);
+        } finally {
+            setIsDeleting(false);
+            await fetchMessages();
+        }
+    };
+
     /**
     * Handles message form submission, adds the message optimistically to the UI, and saves it to the database.
     * @example
@@ -263,12 +371,60 @@ function DealWorkspace() {
     **/
     const sendMessage = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!inputMessage.trim() || !startupId) return;
+        if ((!inputMessage.trim() && !selectedFile) || !startupId || isUploading) return;
 
+        let fileData = null;
         const messageText = inputMessage;
-        setInputMessage("");
 
-        const newMsg = { id: Date.now(), sender: "me", text: messageText, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) };
+        if (selectedFile) {
+            setIsUploading(true);
+            const supabase = createClient();
+            const invId = investorId || currentUserId;
+            if (!invId) {
+                alert("Session error. Please wait or refresh.");
+                setIsUploading(false);
+                return;
+            }
+
+            const fileExt = selectedFile.name.split('.').pop();
+            const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+            const filePath = `${startupId}/${invId}/${fileName}`;
+
+            const { data, error } = await supabase.storage
+                .from('deal-room-files')
+                .upload(filePath, selectedFile);
+
+            if (error) {
+                alert("Upload failed: " + error.message);
+                setIsUploading(false);
+                return;
+            }
+
+            fileData = {
+                name: selectedFile.name,
+                path: filePath,
+                size: selectedFile.size,
+                type: selectedFile.type
+            };
+        }
+
+        setInputMessage("");
+        setSelectedFile(null);
+        if (fileInputRef.current) {
+            fileInputRef.current.value = "";
+        }
+
+        const messageId = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Date.now().toString() + Math.random().toString(36).substring(7);
+
+        const newMsg: any = { 
+            id: messageId, 
+            sender: "me", 
+            text: messageText, 
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
+        };
+        if (fileData) {
+            newMsg.file = fileData;
+        }
 
         // Optimistic UI update
         setMessages(m => [...m, newMsg]);
@@ -276,10 +432,14 @@ function DealWorkspace() {
         // Save to DB
         try {
             const bodyPayload: any = {
+                id: messageId,
                 startupId,
                 startupName,
-                text: messageText
+                text: messageText,
             };
+            if (fileData) {
+                bodyPayload.file = fileData;
+            }
             if (investorId) {
                 bodyPayload.investorId = investorId;
             }
@@ -293,6 +453,41 @@ function DealWorkspace() {
             await fetchMessages();
         } catch (err) {
             console.error("Failed to save message", err);
+        } finally {
+            setIsUploading(false);
+        }
+    };
+
+    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            const file = e.target.files[0];
+            
+            // Validate size (20MB)
+            if (file.size > 20 * 1024 * 1024) {
+                alert("File size exceeds 20MB limit.");
+                e.target.value = "";
+                return;
+            }
+            
+            // MIME type validation for the allowed extensions
+            const allowedTypes = [
+                'image/jpeg', 'image/png', 'image/webp',
+                'application/pdf', 'application/msword',
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                'application/vnd.ms-excel',
+                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'application/vnd.ms-powerpoint',
+                'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+                'application/zip', 'text/plain'
+            ];
+            
+            if (!allowedTypes.includes(file.type)) {
+                alert("Unsupported file type.");
+                e.target.value = "";
+                return;
+            }
+
+            setSelectedFile(file);
         }
     };
 
@@ -467,35 +662,85 @@ function DealWorkspace() {
                         {/* ── CHAT ── */}
                         {activeTab === 'chat' && (
                             <>
-                                {/* Chat header */}
-                                <div className="px-5 py-3 border-b border-slate-100 bg-slate-50 flex items-center gap-3 shrink-0">
-                                    <div className="size-9 rounded-full bg-indigo-100 flex items-center justify-center">
-                                        <User className="text-indigo-600 size-4" />
+                                {/* Chat header or Action Bar */}
+                                {isSelectionMode ? (
+                                    <div className="px-5 py-3 border-b border-emerald-100 bg-emerald-50 flex items-center justify-between shrink-0 transition-all">
+                                        <div className="flex items-center gap-3">
+                                            <button onClick={() => setSelectedMessageIds([])} className="p-1 hover:bg-emerald-100 rounded-full text-emerald-700 transition-colors">
+                                                <ArrowLeft className="size-5" />
+                                            </button>
+                                            <p className="font-semibold text-emerald-800 text-sm">{selectedMessageIds.length} selected</p>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <button 
+                                                onClick={() => handleDeleteMessages('me')}
+                                                disabled={isDeleting}
+                                                className="px-3 py-1.5 text-xs font-medium bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg shadow-sm transition-all"
+                                            >
+                                                Delete for Me
+                                            </button>
+                                            {/* Only allow Delete for Everyone if current user sent all selected messages */}
+                                            {messages.filter(m => selectedMessageIds.includes(m.id)).every(m => m.sender === 'me') && (
+                                                <button 
+                                                    onClick={() => {
+                                                        if (confirm("Delete these messages for everyone? This cannot be undone.")) {
+                                                            handleDeleteMessages('everyone');
+                                                        }
+                                                    }}
+                                                    disabled={isDeleting}
+                                                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-red-50 hover:bg-red-100 text-red-600 border border-red-100 rounded-lg shadow-sm transition-all"
+                                                >
+                                                    <Trash2 className="size-3.5" />
+                                                    Delete for Everyone
+                                                </button>
+                                            )}
+                                        </div>
                                     </div>
-                                    <div>
-                                        <p className="font-semibold text-slate-800 text-sm">{startupName}</p>
-                                        <p className="text-[11px] text-emerald-600 flex items-center gap-1">
-                                            <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse inline-block" /> Encrypted P2P Connection
-                                        </p>
+                                ) : (
+                                    <div className="px-5 py-3 border-b border-slate-100 bg-slate-50 flex items-center gap-3 shrink-0">
+                                        <div className="size-9 rounded-full bg-indigo-100 flex items-center justify-center">
+                                            <User className="text-indigo-600 size-4" />
+                                        </div>
+                                        <div>
+                                            <p className="font-semibold text-slate-800 text-sm">{startupName}</p>
+                                            <p className="text-[11px] text-emerald-600 flex items-center gap-1">
+                                                <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse inline-block" /> Encrypted P2P Connection
+                                            </p>
+                                        </div>
                                     </div>
-                                </div>
+                                )}
 
                                 {/* Messages */}
                                 <div className="flex-1 p-5 overflow-y-auto space-y-4">
                                     <div className="bg-amber-50 border border-amber-200 text-amber-700 p-3 rounded-xl text-xs text-center max-w-md mx-auto">
                                         PII (phones, emails) are masked until Phase 5 (Agreement Execution).
                                     </div>
-                                    {messages.map(msg => (
-                                        <div key={msg.id} className={`flex ${msg.sender === 'me' ? 'justify-end' : 'justify-start'}`}>
-                                            <div className={`max-w-[72%] rounded-2xl px-4 py-2.5 text-sm
-                                                ${msg.sender === 'me'
-                                                    ? 'bg-emerald-600 text-white rounded-tr-sm'
-                                                    : 'bg-slate-100 text-slate-800 rounded-tl-sm border border-slate-200'}`}>
-                                                <p>{maskPII(msg.text, agreementSigned)}</p>
-                                                <p className={`text-[10px] mt-1 text-right ${msg.sender === 'me' ? 'text-emerald-100' : 'text-slate-400'}`}>{msg.time}</p>
+                                    {messages.map(msg => {
+                                        const isSelected = selectedMessageIds.includes(msg.id);
+                                        return (
+                                            <div 
+                                                key={msg.id} 
+                                                className={`flex ${msg.sender === 'me' ? 'justify-end' : 'justify-start'} cursor-pointer`}
+                                                onClick={() => handleMessageClick(msg.id)}
+                                                onContextMenu={(e) => handleMessageRightClick(e, msg.id)}
+                                                onTouchStart={() => handleTouchStart(msg.id)}
+                                                onTouchEnd={handleTouchEnd}
+                                            >
+                                                <div className={`max-w-[72%] rounded-2xl px-4 py-2.5 text-sm transition-all
+                                                    ${isSelected ? 'ring-2 ring-emerald-400 opacity-90 scale-[0.98]' : ''}
+                                                    ${msg.sender === 'me'
+                                                        ? 'bg-emerald-600 text-white rounded-tr-sm'
+                                                        : 'bg-slate-100 text-slate-800 rounded-tl-sm border border-slate-200'}`}>
+                                                    
+                                                    {msg.file && <FileAttachment file={msg.file} />}
+                                                    
+                                                    {msg.text && <p className={msg.file ? "mt-2" : ""}>{maskPII(msg.text, agreementSigned)}</p>}
+                                                    
+                                                    <p className={`text-[10px] mt-1 text-right ${msg.sender === 'me' ? 'text-emerald-100' : 'text-slate-400'}`}>{msg.time}</p>
+                                                </div>
                                             </div>
-                                        </div>
-                                    ))}
+                                        );
+                                    })}
                                     {messages.length === 0 && (
                                         <div className="text-center py-16 opacity-40">
                                             <Lock className="size-10 mx-auto mb-2 text-slate-400" />
@@ -506,17 +751,44 @@ function DealWorkspace() {
                                 </div>
 
                                 {/* Input */}
-                                <form onSubmit={sendMessage} className="p-4 border-t border-slate-100 bg-slate-50 flex gap-3 shrink-0">
-                                    <input
-                                        type="text"
-                                        placeholder="Type your secure message..."
-                                        className="grow bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-400 transition-all"
-                                        value={inputMessage}
-                                        onChange={e => setInputMessage(e.target.value)}
-                                    />
-                                    <button type="submit" disabled={!inputMessage.trim()}
+                                <form onSubmit={sendMessage} className="p-4 border-t border-slate-100 bg-slate-50 flex gap-3 shrink-0 items-end">
+                                    <div className="flex flex-col grow gap-2">
+                                        {selectedFile && (
+                                            <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-2 text-xs flex justify-between items-center w-max max-w-full">
+                                                <span className="truncate mr-4 text-emerald-800">{selectedFile.name}</span>
+                                                <button type="button" onClick={() => { setSelectedFile(null); if(fileInputRef.current) fileInputRef.current.value = ""; }} className="text-emerald-600 hover:text-red-500 shrink-0 font-bold">X</button>
+                                            </div>
+                                        )}
+                                        <div className="flex gap-2">
+                                            <button 
+                                                type="button" 
+                                                onClick={() => fileInputRef.current?.click()}
+                                                className="size-11 shrink-0 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl flex items-center justify-center text-slate-500 transition-all"
+                                                title="Attach a file"
+                                                disabled={isUploading}
+                                            >
+                                                <Paperclip className="size-5" />
+                                            </button>
+                                            <input 
+                                                type="file" 
+                                                ref={fileInputRef} 
+                                                onChange={handleFileSelect} 
+                                                className="hidden" 
+                                                accept="image/jpeg,image/png,image/webp,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/zip,text/plain"
+                                            />
+                                            <input
+                                                type="text"
+                                                placeholder="Type your secure message..."
+                                                className="grow bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-400 transition-all disabled:opacity-50"
+                                                value={inputMessage}
+                                                onChange={e => setInputMessage(e.target.value)}
+                                                disabled={isUploading}
+                                            />
+                                        </div>
+                                    </div>
+                                    <button type="submit" disabled={(!inputMessage.trim() && !selectedFile) || isUploading}
                                         className="size-11 shrink-0 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-200 disabled:cursor-not-allowed rounded-xl flex items-center justify-center text-white transition-all">
-                                        <Send className="size-4" />
+                                        {isUploading ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
                                     </button>
                                 </form>
                             </>

@@ -68,6 +68,14 @@ export async function GET(req: NextRequest) {
             throw error;
         }
 
+        if (deal && deal.messages) {
+            deal.messages = deal.messages.filter((msg: any) => {
+                if (msg.deletedForEveryone) return false;
+                if (msg.deletedFor && msg.deletedFor.includes(sessionUserId)) return false;
+                return true;
+            });
+        }
+
         return NextResponse.json({ success: true, deal: mapDealToCamel(deal), currentUser: sessionUserId });
 
     } catch (error: any) {
@@ -94,14 +102,14 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
         }
         const sessionUserId = user.email || user.id;
-        const { startupId, startupName, text, investorId: requestedInvestorId } = await req.json();
+        const { startupId, startupName, text, file, investorId: requestedInvestorId, id } = await req.json();
 
         // If the frontend passed an investorId, the sender is likely the startup. 
         // If not, the sender is the investor themselves.
         const investorId = requestedInvestorId || sessionUserId;
 
-        if (!startupId || !startupName || !text) {
-            return NextResponse.json({ success: false, error: 'startupId, startupName, and text are required' }, { status: 400 });
+        if (!startupId || !startupName || (!text && !file)) {
+            return NextResponse.json({ success: false, error: 'startupId, startupName, and either text or file are required' }, { status: 400 });
         }
 
         const timeString = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -118,11 +126,17 @@ export async function POST(req: NextRequest) {
 
         if (deal) {
             // Append message
-            const updatedMessages = [...(deal.messages || []), {
+            const newMessage: any = {
+                id: id || crypto.randomUUID(), // Save stable ID
                 senderId: sessionUserId, // Whoever is logged in is the sender
-                text,
+                text: text || "",
                 time: timeString
-            }];
+            };
+            if (file) {
+                newMessage.file = file;
+            }
+
+            const updatedMessages = [...(deal.messages || []), newMessage];
             
             const { data: updatedDeal, error: updateError } = await supabase
                 .from("deals")
@@ -135,6 +149,16 @@ export async function POST(req: NextRequest) {
             deal = updatedDeal;
         } else {
             // Create new deal
+            const newMessage: any = {
+                id: id || crypto.randomUUID(), // Save stable ID
+                senderId: investorId,
+                text: text || "",
+                time: timeString
+            };
+            if (file) {
+                newMessage.file = file;
+            }
+
             const { data: newDeal, error: createError } = await supabase
                 .from("deals")
                 .insert({
@@ -143,11 +167,7 @@ export async function POST(req: NextRequest) {
                     startup_name: startupName,
                     status: 'negotiating',
                     current_phase: 1, // Start at Phase 1 for new deals
-                    messages: [{
-                        senderId: investorId,
-                        text,
-                        time: timeString
-                    }]
+                    messages: [newMessage]
                 })
                 .select()
                 .single();
@@ -241,6 +261,34 @@ export async function PUT(req: NextRequest) {
                 status: meeting.status || 'scheduled'
             }];
             updateData.meetings = updatedMeetings;
+        } else if (action === 'deleteMessages') {
+            const { messageIds, mode } = body; // mode can be 'me' or 'everyone'
+            
+            if (!messageIds || !Array.isArray(messageIds) || !mode) {
+                return NextResponse.json({ success: false, error: 'messageIds and mode are required' }, { status: 400 });
+            }
+
+            const updatedMessages = (deal.messages || []).map((msg: any, index: number) => {
+                // Determine ID (either `id`, `_id` or the fallback stable ID used by frontend)
+                const stableId = msg.id || msg._id || `msg_${index}_${msg.time}_${msg.senderId}`;
+                const idMatches = messageIds.includes(stableId);
+                if (idMatches) {
+                    if (mode === 'me') {
+                        const deletedFor = msg.deletedFor || [];
+                        if (!deletedFor.includes(sessionUserId)) {
+                            deletedFor.push(sessionUserId);
+                        }
+                        return { ...msg, deletedFor };
+                    } else if (mode === 'everyone') {
+                        // Only the sender can delete for everyone
+                        if (msg.senderId === sessionUserId) {
+                            return { ...msg, deletedForEveryone: true, text: "", file: null };
+                        }
+                    }
+                }
+                return msg;
+            });
+            updateData.messages = updatedMessages;
         }
 
         const { data: updatedDeal, error: updateError } = await supabase
