@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { CheckCircle, XCircle, FileSearch, ShieldAlert } from "lucide-react";
 
-// Remove mock arrays; fetching natively from MongoDB
+// Remove mock arrays; fetching natively from Supabase
 
 /**
  * Renders the KYC admin dashboard for reviewing pending user submissions, viewing uploaded documents, and approving or rejecting applications.

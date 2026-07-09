@@ -40,7 +40,7 @@ export default function AISearchEngine() {
     const [isLoadingData, setIsLoadingData] = useState(true);
     const [showAdvanced, setShowAdvanced] = useState(false);
 
-    // Fetch verified startups from MongoDB
+    // Fetch verified startups from Supabase
     useEffect(() => {
         /**
          * Fetches startup data from the API, stores it in state, and sorts the results by score.

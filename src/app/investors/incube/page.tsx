@@ -28,7 +28,7 @@ export default function IncubeSearch() {
     const [results, setResults] = useState<any[]>([]);
     const [isLoadingData, setIsLoadingData] = useState(true);
 
-    // Fetch verified student startups from MongoDB
+    // Fetch verified student startups from Supabase
     useEffect(() => {
         /**
         * Fetches student-type startup data from the API, stores it in state, and initializes the results sorted by score.
