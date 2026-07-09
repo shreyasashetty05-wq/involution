@@ -48,6 +48,13 @@ export default function InvestorDashboard() {
         };
 
         fetchDashboardData();
+        
+        // Poll for real-time updates matching Deal Room implementation
+        const intervalId = setInterval(() => {
+            fetchDashboardData();
+        }, 1500);
+        
+        return () => clearInterval(intervalId);
     }, []);
 
     if (loading) {

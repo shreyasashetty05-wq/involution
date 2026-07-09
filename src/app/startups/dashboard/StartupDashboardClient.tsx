@@ -46,6 +46,13 @@ export default function StartupDashboardClient({ myStartups }: StartupDashboardC
 
         if (myStartups.length > 0) {
             fetchDeals();
+            
+            // Poll for real-time updates matching Deal Room implementation
+            const intervalId = setInterval(() => {
+                fetchDeals();
+            }, 1500);
+            
+            return () => clearInterval(intervalId);
         } else {
             setIsLoading(false);
         }
