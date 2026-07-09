@@ -163,8 +163,8 @@ function DealWorkspace() {
                 const {currentUser} = data;
 
                 // Map DB messages to UI format with correct sides and ensure stable IDs
-                const newMessages = data.deal.messages.map((m: any, index: number) => {
-                    const stableId = m.id || m._id || `msg_${index}_${m.time}_${m.senderId}`;
+                const newMessages = data.deal.messages.map((m: any) => {
+                    const stableId = m.id || m._id || `msg_${m.time}_${m.senderId}_${(m.text || '').substring(0, 15)}`;
                     return {
                         id: stableId,
                         sender: m.senderId === currentUser ? 'me' : 'them',
@@ -680,7 +680,7 @@ function DealWorkspace() {
                                                 Delete for Me
                                             </button>
                                             {/* Only allow Delete for Everyone if current user sent all selected messages */}
-                                            {messages.filter(m => selectedMessageIds.includes(m.id)).every(m => m.sender === 'me') && (
+                                            {selectedMessageIds.length > 0 && messages.filter(m => selectedMessageIds.includes(m.id)).every(m => m.sender === 'me') && (
                                                 <button 
                                                     onClick={() => {
                                                         if (confirm("Delete these messages for everyone? This cannot be undone.")) {

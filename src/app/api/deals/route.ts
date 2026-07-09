@@ -268,9 +268,9 @@ export async function PUT(req: NextRequest) {
                 return NextResponse.json({ success: false, error: 'messageIds and mode are required' }, { status: 400 });
             }
 
-            const updatedMessages = (deal.messages || []).map((msg: any, index: number) => {
+            const updatedMessages = (deal.messages || []).map((msg: any) => {
                 // Determine ID (either `id`, `_id` or the fallback stable ID used by frontend)
-                const stableId = msg.id || msg._id || `msg_${index}_${msg.time}_${msg.senderId}`;
+                const stableId = msg.id || msg._id || `msg_${msg.time}_${msg.senderId}_${(msg.text || '').substring(0, 15)}`;
                 const idMatches = messageIds.includes(stableId);
                 if (idMatches) {
                     if (mode === 'me') {
