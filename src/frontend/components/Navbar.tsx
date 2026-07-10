@@ -56,151 +56,46 @@ export default function Navbar() {
 
         const fetchNotifications = async () => {
             try {
-                let notifs: any[] = [];
-                const res = await fetch('/api/startups?type=regular');
+                const res = await fetch('/api/notifications');
                 const json = await res.json();
-                const startups = json.success ? json.data : [];
+                let notifs = json.success ? json.data : [];
 
-                if (role === 'admin') {
-                    startups.forEach((s: any) => {
-                        if (s.kyc_status === 'Pending') {
-                            notifs.push({
-                                id: `${s._id || s.id}-kyc`,
-                                title: "📄 New KYC awaiting review",
-                                desc: `${s.name} submitted their KYC verification.`,
-                                time: new Date(s.createdAt || Date.now()),
-                                link: `/admin/kyc`,
-                            });
-                        }
+                const readStorage = localStorage.getItem(`read_notifs_${user?.id || 'guest'}`);
+                const deletedStorage = localStorage.getItem(`deleted_notifs_${user?.id || 'guest'}`);
+                const readIds = readStorage ? JSON.parse(readStorage) : [];
+                const deletedIds = deletedStorage ? JSON.parse(deletedStorage) : [];
 
-                        const updates = s.financial_updates || [];
-                        const pendingUpdates = updates.filter((u: any) => u.status === 'Pending');
-                        pendingUpdates.forEach((u: any) => {
-                            notifs.push({
-                                id: `${u.id}-fin`,
-                                title: "💰 New Financial Update awaiting verification",
-                                desc: `${s.name} submitted financials for ${u.monthYear || u.reportingDate}.`,
-                                time: new Date(u.dateSubmitted || Date.now()),
-                                link: `/admin/financial-verification`,
-                            });
-                        });
-                        
-                        const respondedUpdates = updates.filter((u: any) => u.status === 'Responded');
-                        respondedUpdates.forEach((u: any) => {
-                            notifs.push({
-                                id: `${u.id}-fin-res`,
-                                title: "📝 Startup responded to More Info",
-                                desc: `${s.name} uploaded requested documents for ${u.monthYear || u.reportingDate}.`,
-                                time: new Date(u.dateSubmitted || Date.now()),
-                                link: `/admin/financial-verification`,
-                            });
-                        });
-                    });
-                } else if (role === 'startup') {
-                    const myStartups = startups.filter((s: any) => s.owner_email === user?.email);
-                    myStartups.forEach((s: any) => {
-                        if (s.kyc_status === 'Approved') {
-                            notifs.push({
-                                id: `${s._id || s.id}-kyc-app`,
-                                title: "✅ Your KYC has been approved",
-                                desc: "Your identity verification is complete.",
-                                time: new Date(s.createdAt || Date.now() - 300000), 
-                                link: `/startups/dashboard`,
-                            });
-                        } else if (s.kyc_status === 'Rejected') {
-                            notifs.push({
-                                id: `${s._id || s.id}-kyc-rej`,
-                                title: "❌ Your KYC was rejected",
-                                desc: `Reason: ${s.admin_remarks || 'Please check your dashboard for details.'}`,
-                                time: new Date(s.createdAt || Date.now()),
-                                link: `/startups/dashboard`,
-                            });
-                        } else if (s.kyc_status === 'Request More Info') {
-                            notifs.push({
-                                id: `${s._id || s.id}-kyc-req`,
-                                title: "📝 KYC More Information Required",
-                                desc: `Reason: ${s.admin_remarks || 'Please provide additional details.'}`,
-                                time: new Date(s.createdAt || Date.now()),
-                                link: `/startups/dashboard`,
-                            });
-                        }
+                // Filter out any locally deleted global notifications
+                notifs = notifs.filter((n: any) => !deletedIds.includes(n.id));
 
-                        const updates = s.financial_updates || [];
-                        updates.forEach((u: any) => {
-                            if (u.status === 'Rejected') {
-                                notifs.push({
-                                    id: `${u.id}-rej`,
-                                    title: "❌ Your financial update was rejected",
-                                    desc: `Reason: ${u.adminRemarks || 'Please review your submission.'}`,
-                                    time: new Date(u.dateSubmitted || Date.now()),
-                                    link: `/startups/dashboard`,
-                                });
-                            } else if (u.status === 'Request More Info') {
-                                notifs.push({
-                                    id: `${u.id}-req`,
-                                    title: "📝 More information required",
-                                    desc: `Reason: ${u.adminRemarks || 'Please upload missing documents.'}`,
-                                    time: new Date(u.dateSubmitted || Date.now()),
-                                    link: `/startups/dashboard`,
-                                });
-                            } else if (u.status === 'Approved') {
-                                notifs.push({
-                                    id: `${u.id}-app`,
-                                    title: "✅ Financial Update Approved",
-                                    desc: "Your monthly report has been verified.",
-                                    time: new Date(u.dateSubmitted || Date.now()),
-                                    link: `/startups/${s._id || s.id}`,
-                                });
-                            }
-                        });
-                    });
-                } else if (role === 'investor') {
+                // Map local read status for global notifications
+                notifs = notifs.map((n: any) => ({
+                    ...n,
+                    is_read: n.is_read || readIds.includes(n.id)
+                }));
+
+                // Filter for investors to only see notifications for startups they follow (if they are investor-role global broadcasts)
+                if (role === 'investor') {
                     const f = localStorage.getItem('inv_followed_startups');
                     const followedIds = f ? JSON.parse(f) : [];
-                    const followedStartups = startups.filter((s: any) => followedIds.includes(s._id || s.id));
                     
-                    followedStartups.forEach((s: any) => {
-                        const approved = s.financial_updates?.filter((u: any) => u.status === 'Approved').sort((a: any, b: any) => new Date(a.reportingDate || a.monthYear).getTime() - new Date(b.reportingDate || b.monthYear).getTime()) || [];
-                        
-                        if (approved.length > 0) {
-                            const last = approved[approved.length - 1];
-                            notifs.push({
-                                id: `${last.id}-appv`,
-                                title: "✅ New Financial Report Approved",
-                                desc: `${s.name}'s monthly report has been verified.`,
-                                time: new Date(last.dateSubmitted || Date.now()),
-                                link: `/startups/${s._id || s.id}`
-                            });
-                            
-                            notifs.push({
-                                id: `${last.id}-rev`,
-                                title: `📈 ${s.name} updated its financials`,
-                                desc: `Revenue has been verified and updated.`,
-                                time: new Date(last.dateSubmitted || Date.now()),
-                                link: `/startups/${s._id || s.id}`
-                            });
+                    notifs = notifs.filter((n: any) => {
+                        // If it's specifically addressed to this user, keep it
+                        if (n.user_email === user?.email) return true;
+                        // If it's a global investor broadcast, check if they follow the startup
+                        if (n.role === 'investor') {
+                            return n.startup_id && followedIds.includes(n.startup_id);
                         }
-
-                        if (s.videos && s.videos.length > 0) {
-                            notifs.push({
-                                id: `${s._id || s.id}-video`,
-                                title: "🎥 New Pitch Video Uploaded",
-                                desc: `${s.name} added a pitch video.`,
-                                time: new Date(s.createdAt || Date.now() - 86400000), 
-                                link: `/startups/${s._id || s.id}`,
-                            });
-                        }
+                        return false;
                     });
                 }
 
-                notifs = notifs.sort((a, b) => b.time.getTime() - a.time.getTime()).slice(0, 20);
                 setNotifications(notifs);
 
-                const readStorage = localStorage.getItem(`read_notifs_${user?.id || 'guest'}`);
-                const readIds = readStorage ? JSON.parse(readStorage) : [];
-                const unread = notifs.filter(n => !readIds.includes(n.id)).length;
+                // Update unread count based on actual is_read from DB or local storage fallback
+                // We'll trust the DB is_read now
+                const unread = notifs.filter((n: any) => !n.is_read).length;
                 setUnreadCount(unread);
-
             } catch (e) {
                 console.error("Failed to fetch notifications", e);
             }
@@ -211,19 +106,37 @@ export default function Navbar() {
         return () => clearInterval(intervalId);
     }, [loading, user, dbRole]);
 
-    const markAsRead = (id: string) => {
-        const readStorage = localStorage.getItem(`read_notifs_${user?.id || 'guest'}`);
-        const readIds = readStorage ? JSON.parse(readStorage) : [];
-        if (!readIds.includes(id)) {
-            readIds.push(id);
-            localStorage.setItem(`read_notifs_${user?.id || 'guest'}`, JSON.stringify(readIds));
+    const markAsRead = async (id: string) => {
+        try {
+            const readStorage = localStorage.getItem(`read_notifs_${user?.id || 'guest'}`);
+            const readIds = readStorage ? JSON.parse(readStorage) : [];
+            if (!readIds.includes(id)) {
+                readIds.push(id);
+                localStorage.setItem(`read_notifs_${user?.id || 'guest'}`, JSON.stringify(readIds));
+            }
+
+            await fetch(`/api/notifications/${id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ is_read: true })
+            });
+            setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n));
             setUnreadCount(prev => Math.max(0, prev - 1));
+        } catch (e) {
+            console.error(e);
         }
     };
 
-    const markAllAsRead = () => {
-        const allIds = notifications.map(n => n.id);
-        localStorage.setItem(`read_notifs_${user?.id || 'guest'}`, JSON.stringify(allIds));
+    const markAllAsRead = async () => {
+        const readStorage = localStorage.getItem(`read_notifs_${user?.id || 'guest'}`);
+        const readIds = readStorage ? JSON.parse(readStorage) : [];
+        
+        notifications.forEach(n => {
+            if (!readIds.includes(n.id)) readIds.push(n.id);
+        });
+        localStorage.setItem(`read_notifs_${user?.id || 'guest'}`, JSON.stringify(readIds));
+
+        setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
         setUnreadCount(0);
     };
 
@@ -312,8 +225,7 @@ export default function Navbar() {
                                                 <div className="p-6 text-center text-slate-500 text-sm">No new notifications.</div>
                                             ) : (
                                                 notifications.map(n => {
-                                                    const readStorage = localStorage.getItem(`read_notifs_${user?.id || 'guest'}`);
-                                                    const isRead = readStorage ? JSON.parse(readStorage).includes(n.id) : false;
+                                                    const isRead = n.is_read;
                                                     return (
                                                     <div key={n.id} className={`p-4 transition-colors relative group ${isRead ? 'bg-white' : 'bg-emerald-50/30'}`}>
                                                         {!isRead && <div className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500"></div>}
@@ -322,9 +234,9 @@ export default function Navbar() {
                                                                 {n.title}
                                                             </Link>
                                                         </div>
-                                                        <p className="text-xs text-slate-600 mb-2">{n.desc}</p>
+                                                        <p className="text-xs text-slate-600 mb-2">{n.description}</p>
                                                         <div className="flex justify-between items-center mt-2">
-                                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{formatRelativeTime(n.time)}</span>
+                                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{formatRelativeTime(new Date(n.created_at))}</span>
                                                             {!isRead && (
                                                                 <button onClick={() => markAsRead(n.id)} className="text-[10px] font-bold text-emerald-600 opacity-0 group-hover:opacity-100 transition-opacity">Mark as read</button>
                                                             )}
@@ -334,7 +246,7 @@ export default function Navbar() {
                                             )}
                                         </div>
                                         <div className="p-3 border-t border-slate-100 text-center bg-slate-50">
-                                            <button className="text-xs font-bold text-slate-500 hover:text-slate-700">View All Notifications</button>
+                                            <Link href="/notifications" className="text-xs font-bold text-slate-500 hover:text-slate-700">View All Notifications</Link>
                                         </div>
                                     </div>
                                 )}

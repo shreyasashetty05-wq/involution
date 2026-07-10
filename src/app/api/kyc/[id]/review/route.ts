@@ -39,6 +39,27 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
             return NextResponse.json({ success: false, error: "Document not found" }, { status: 404 });
         }
 
+        let notifTitle = "";
+        let notifDesc = "";
+        if (body.status === 'Approved') {
+            notifTitle = "✅ Your KYC has been approved";
+            notifDesc = "Your identity verification is complete.";
+        } else if (body.status === 'Rejected') {
+            notifTitle = "❌ Your KYC was rejected";
+            notifDesc = "Please check your dashboard for details.";
+        }
+
+        if (notifTitle) {
+            await supabase.from('notifications').insert({
+                user_email: doc.email,
+                role: 'startup', // Or investor depending on who submitted, but it's specific to the user
+                type: 'kyc_status',
+                title: notifTitle,
+                description: notifDesc,
+                link: `/startups/dashboard`
+            });
+        }
+
         return NextResponse.json({ success: true, data: doc }, { status: 200 });
     } catch (error: any) {
         console.error("KYC Review Execution Error:", error);

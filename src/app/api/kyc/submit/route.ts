@@ -91,6 +91,15 @@ export async function POST(req: Request) {
             console.error("Failed to update user auth metadata:", metadataError);
         }
 
+        // Notify Admins
+        await supabase.from('notifications').insert({
+            role: 'admin',
+            type: 'kyc_submitted',
+            title: "📄 New KYC awaiting review",
+            description: `${kycPayload.name} submitted their KYC verification.`,
+            link: `/admin/kyc`
+        });
+
         return NextResponse.json({ success: true, data: kycRecord }, { status: 201 });
     } catch (error: any) {
         console.error("KYC Submit Form Failed:", error);

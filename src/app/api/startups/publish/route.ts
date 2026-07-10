@@ -43,6 +43,17 @@ export async function POST(req: Request) {
             body: JSON.stringify({ startupId: newStartup.id }),
         }).catch(err => console.error("Failed to trigger initial AI Analysis:", err));
 
+        if (body.videos && body.videos.some((v: string) => v.trim() !== "")) {
+            await supabase.from('notifications').insert({
+                role: 'investor',
+                type: 'video_uploaded',
+                title: "🎥 New Pitch Video Uploaded",
+                description: `${newStartup.name} added a pitch video.`,
+                link: `/startups/${newStartup.id}`,
+                startup_id: newStartup.id
+            });
+        }
+
         return NextResponse.json({ success: true, data: newStartup }, { status: 201 });
     } catch (error: any) {
         console.error("Failed to publish startup:", error);

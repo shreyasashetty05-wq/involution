@@ -77,15 +77,29 @@ export default function AISearchEngine() {
     }, []);
 
     const toggleSave = (id: string) => {
-        const next = savedStartups.includes(id) ? savedStartups.filter(x => x !== id) : [...savedStartups, id];
+        const isSaving = !savedStartups.includes(id);
+        const next = isSaving ? [...savedStartups, id] : savedStartups.filter(x => x !== id);
         setSavedStartups(next);
         localStorage.setItem('inv_saved_startups', JSON.stringify(next));
+        
+        fetch(`/api/startups/${id}/metrics`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'save', delta: isSaving ? 1 : -1 })
+        }).catch(console.error);
     };
 
     const toggleFollow = (id: string) => {
-        const next = followedStartups.includes(id) ? followedStartups.filter(x => x !== id) : [...followedStartups, id];
+        const isFollowing = !followedStartups.includes(id);
+        const next = isFollowing ? [...followedStartups, id] : followedStartups.filter(x => x !== id);
         setFollowedStartups(next);
         localStorage.setItem('inv_followed_startups', JSON.stringify(next));
+
+        fetch(`/api/startups/${id}/metrics`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'follow', delta: isFollowing ? 1 : -1 })
+        }).catch(console.error);
     };
 
     const toggleCompare = (id: string) => {

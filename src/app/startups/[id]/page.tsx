@@ -27,6 +27,16 @@ export default function StartupProfile() {
                 if (json.success) {
                     const match = json.data.find((s: Record<string, unknown>) => String(s._id) === idValue || String(s.id) === String(idValue));
                     setStartup(match);
+
+                    // Track View
+                    if (match && !sessionStorage.getItem(`viewed_${idValue}`)) {
+                        sessionStorage.setItem(`viewed_${idValue}`, 'true');
+                        fetch(`/api/startups/${idValue}/metrics`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ action: 'view', delta: 1 })
+                        }).catch(console.error);
+                    }
                 }
             } catch (error) {
                 console.error("Failed to load startup", error);

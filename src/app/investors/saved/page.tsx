@@ -47,12 +47,26 @@ export default function SavedStartups() {
         const next = savedStartups.filter((s: any) => (s._id || s.id) !== id);
         setSavedStartups(next);
         localStorage.setItem('inv_saved_startups', JSON.stringify(next.map(s => s._id || s.id)));
+        
+        // Since we are only removing from saved on this page:
+        fetch(`/api/startups/${id}/metrics`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'save', delta: -1 })
+        }).catch(console.error);
     };
 
     const toggleFollow = (id: string) => {
-        const next = followedList.includes(id) ? followedList.filter(x => x !== id) : [...followedList, id];
+        const isFollowing = !followedList.includes(id);
+        const next = isFollowing ? [...followedList, id] : followedList.filter(x => x !== id);
         setFollowedList(next);
         localStorage.setItem('inv_followed_startups', JSON.stringify(next));
+
+        fetch(`/api/startups/${id}/metrics`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'follow', delta: isFollowing ? 1 : -1 })
+        }).catch(console.error);
     };
 
     const toggleCompare = (id: string) => {

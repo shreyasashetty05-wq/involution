@@ -40,7 +40,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ startu
 
         const { data: startup, error: fetchError } = await supabase
             .from("startups")
-            .select("financial_updates")
+            .select("financial_updates, owner_email, name")
             .eq("id", startupId)
             .maybeSingle();
 
@@ -70,6 +70,42 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ startu
             .eq("id", startupId);
 
         if (updateError) throw updateError;
+
+        // Notify Startup and Investors
+        let notifTitle = "";
+        let notifDesc = "";
+        if (reqStatus === 'Approved') {
+            notifTitle = "✅ Financial Update Approved";
+            notifDesc = "Your monthly report has been verified.";
+            
+            // Also notify investors
+            await supabase.from('notifications').insert({
+                role: 'investor',
+                type: 'financial_approved',
+                title: `📈 ${startup.name} updated its financials`,
+                description: `Revenue has been verified and updated.`,
+                link: `/startups/${startupId}`,
+                startup_id: startupId
+            });
+        } else if (reqStatus === 'Rejected') {
+            notifTitle = "❌ Your financial update was rejected";
+            notifDesc = `Reason: ${reqRemarks || 'Please review your submission.'}`;
+        } else if (reqStatus === 'Request More Info') {
+            notifTitle = "📝 More information required";
+            notifDesc = `Reason: ${reqRemarks || 'Please upload missing documents.'}`;
+        }
+
+        if (notifTitle) {
+            await supabase.from('notifications').insert({
+                user_email: startup.owner_email,
+                role: 'startup',
+                type: 'financial_status',
+                title: notifTitle,
+                description: notifDesc,
+                link: `/startups/dashboard`,
+                startup_id: startupId
+            });
+        }
 
         return NextResponse.json({ success: true, data: currentUpdates[updateIndex] }, { status: 200 });
     } catch (error: any) {

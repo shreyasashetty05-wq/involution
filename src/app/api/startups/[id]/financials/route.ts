@@ -89,6 +89,16 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
         if (updateError) throw updateError;
 
+        // Notify Admins
+        await supabase.from('notifications').insert({
+            role: 'admin',
+            type: 'financial_submitted',
+            title: "💰 New Financial Update awaiting verification",
+            description: `${startup.name} submitted financials for ${reqReportingDate}.`,
+            link: `/admin/financial-verification`,
+            startup_id: startup.id
+        });
+
         return NextResponse.json({ success: true, data: updatedUpdates }, { status: 201 });
     } catch (error: any) {
         console.error("Failed to post financial update:", error);
