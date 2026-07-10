@@ -17,6 +17,9 @@ export default function AdminKYCDashboard() {
     const [list, setList] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [viewDocsFor, setViewDocsFor] = useState<any>(null); // For Image Modal
+    const [approvalModal, setApprovalModal] = useState<{ isOpen: boolean; action: "Approved" | "Rejected"; id: string } | null>(null);
+    const [password, setPassword] = useState("");
+    const [passwordError, setPasswordError] = useState("");
 
     useEffect(() => {
         const fetchPending = async () => {
@@ -43,15 +46,28 @@ export default function AdminKYCDashboard() {
      * @returns {Promise<void>} Resolves when the review request completes; errors are logged to the console.
      **/
     const handleAction = async (id: string, action: "Approved" | "Rejected") => {
+        setApprovalModal({ isOpen: true, action, id });
+        setPassword("");
+        setPasswordError("");
+    };
+
+    const confirmAction = async () => {
+        if (!approvalModal) return;
+        if (password !== "12345") {
+            setPasswordError("Invalid Approval Password.");
+            return;
+        }
+
         try {
-            await fetch(`/api/kyc/${id}/review`, {
+            await fetch(`/api/kyc/${approvalModal.id}/review`, {
                 method: "PUT",
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ status: action })
+                body: JSON.stringify({ status: approvalModal.action })
             });
             // Optimistic UI removal
-            setList(list.filter(item => item._id !== id));
+            setList(list.filter(item => item._id !== approvalModal.id));
             setViewDocsFor(null);
+            setApprovalModal(null);
         } catch (err) {
             console.error("KYC Action Failed:", err);
         }
@@ -183,6 +199,54 @@ export default function AdminKYCDashboard() {
                                 className="px-8 py-3 rounded-xl bg-green-500 hover:bg-green-600 text-slate-900 font-bold transition-colors shadow-[0_0_15px_rgba(34,197,94,0.3)]"
                             >
                                 Approve User
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Password Modal */}
+            {approvalModal && (
+                <div className="fixed inset-0 z-[60] bg-black/90 flex items-center justify-center p-6 overflow-y-auto">
+                    <div className="bg-white border border-slate-200 p-8 rounded-2xl w-full max-w-md shadow-2xl relative">
+                        <div className="flex justify-between items-center mb-6 pb-4 border-b border-slate-100">
+                            <h2 className="text-xl font-bold text-slate-900 font-outfit flex items-center gap-2">
+                                <ShieldAlert className="size-5 text-indigo-500" /> Security Verification
+                            </h2>
+                            <button onClick={() => setApprovalModal(null)} className="text-slate-500 hover:text-slate-900 transition-colors">
+                                <XCircle className="size-6" />
+                            </button>
+                        </div>
+
+                        <div className="space-y-4 mb-6">
+                            <p className="text-sm text-slate-600">Please enter your approval password to confirm this action ({approvalModal.action}).</p>
+                            <div>
+                                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest block mb-2">Approval Password</label>
+                                <input
+                                    type="password"
+                                    autoFocus
+                                    placeholder="Enter password..."
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 transition-all"
+                                    value={password}
+                                    onChange={(e) => { setPassword(e.target.value); setPasswordError(""); }}
+                                    onKeyDown={(e) => e.key === 'Enter' && confirmAction()}
+                                />
+                                {passwordError && <p className="text-red-500 text-xs font-bold mt-2">{passwordError}</p>}
+                            </div>
+                        </div>
+
+                        <div className="flex gap-4 justify-end">
+                            <button
+                                onClick={() => setApprovalModal(null)}
+                                className="px-6 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={confirmAction}
+                                className={`px-8 py-3 rounded-xl text-white font-bold transition-colors shadow-lg ${approvalModal.action === 'Approved' ? 'bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/30' : 'bg-red-500 hover:bg-red-600 shadow-red-500/30'}`}
+                            >
+                                Confirm {approvalModal.action}
                             </button>
                         </div>
                     </div>

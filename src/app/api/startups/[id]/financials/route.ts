@@ -38,34 +38,46 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         }
 
         // 2. Extract payload
-        const reqMonthYear = body.monthYear;
+        const reqReportingType = body.reportingType;
+        const reqReportingDate = body.reportingDate;
         const reqRevenue = Number(body.revenue);
         const reqProfit = Number(body.profit);
+        const reqNetLoss = body.netLoss ? Number(body.netLoss) : null;
+        const reqNotes = body.notes || "";
         const reqDocUrl = body.documentUrl || "";
         const reqAiScore = Number(body.aiConfidenceScore);
 
-        if (!reqMonthYear || isNaN(reqRevenue) || isNaN(reqProfit) || isNaN(reqAiScore)) {
+        if (!reqReportingType || !reqReportingDate || isNaN(reqRevenue) || isNaN(reqProfit) || isNaN(reqAiScore)) {
             return NextResponse.json({ success: false, error: 'Invalid financial data payload.' }, { status: 400 });
         }
 
         const currentUpdates = startup.financial_updates || [];
 
-        // 3. Prevent duplicate month updates
-        const updateExists = currentUpdates.some((update: any) => update.monthYear === reqMonthYear || update.month_year === reqMonthYear);
+        // 3. Prevent duplicate exact date updates (optional but good practice)
+        const updateExists = currentUpdates.some((update: any) => update.reportingDate === reqReportingDate && update.reportingType === reqReportingType);
         if (updateExists) {
-            return NextResponse.json({ success: false, error: `An update for ${reqMonthYear} already exists.` }, { status: 400 });
+            return NextResponse.json({ success: false, error: `An update for ${reqReportingDate} already exists.` }, { status: 400 });
         }
 
         // 4. Push the new update
         const newUpdate = {
             id: crypto.randomUUID(),
             _id: crypto.randomUUID(),
-            monthYear: reqMonthYear,
+            monthYear: reqReportingDate, // fallback for legacy
+            reportingType: reqReportingType,
+            reportingDate: reqReportingDate,
             revenue: reqRevenue,
             profit: reqProfit,
+            netLoss: reqNetLoss,
+            notes: reqNotes,
             documentUrl: reqDocUrl,
             aiConfidenceScore: reqAiScore,
-            dateSubmitted: new Date().toISOString()
+            status: "Pending",
+            documentStatus: reqDocUrl ? "Pending" : null,
+            dateSubmitted: new Date().toISOString(),
+            verifiedAt: null,
+            verifiedBy: null,
+            adminRemarks: null
         };
 
         const updatedUpdates = [...currentUpdates, newUpdate];

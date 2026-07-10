@@ -25,6 +25,10 @@ export async function fetchStartupById(
         return NextResponse.json({ success: false, error: 'Startup not found' }, { status: 404 });
     }
 
+    if (startup.financial_updates) {
+        startup.financial_updates = startup.financial_updates.filter((u: any) => u.status === 'Approved');
+    }
+
     return { startup, startupDataString: JSON.stringify(startup, null, 2) };
 }
 

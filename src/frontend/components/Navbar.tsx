@@ -79,6 +79,7 @@ export default function Navbar() {
                         role === "admin" ? (
                             <>
                                 <Link href="/admin/kyc" className="hover:text-emerald-700 transition-colors font-bold text-emerald-600">Admin Panel</Link>
+                                <Link href="/admin/financial-verification" className="hover:text-emerald-700 transition-colors font-bold text-emerald-600">Financial Verification</Link>
                                 <Link href="/admin/users" className="hover:text-emerald-700 transition-colors">Users</Link>
                             </>
                         ) : role === "investor" ? (

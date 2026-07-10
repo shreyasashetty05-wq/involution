@@ -7,7 +7,7 @@ import { ArrowLeft, MessageSquare, Briefcase, TrendingUp, Presentation, CheckCir
 import AIChat from "@/frontend/components/AIChat";
 import ScrollReveal from "@/frontend/components/ScrollReveal";
 import { motion } from "framer-motion";
-
+import { formatRelativeTime } from "@/utils/timeHelper";
 
 
 // Remove mock data. We will fetch dynamically now.
@@ -26,6 +26,8 @@ export default function StartupProfile() {
     const [startup, setStartup] = useState<Record<string, any> | null>(null);
     const [loading, setLoading] = useState(true);
     const [playingVideoIdx, setPlayingVideoIdx] = useState<number | null>(null);
+    const [hoverIdx, setHoverIdx] = useState<number | null>(null);
+    const [hoverType, setHoverType] = useState<"rev" | "profit" | null>(null);
 
     useEffect(() => {
         /**
@@ -91,7 +93,7 @@ export default function StartupProfile() {
         if (!data || data.length === 0) return { path: "", area: "", max: 0, min: 0 };
         const max = Math.max(...data);
         const min = Math.min(...data);
-        const range = max - min || 1;
+        const range = max === min ? 1 : max - min;
 
         const pathData = data.map((val, i) => {
             const x = (i / (data.length - 1)) * 100;
@@ -103,22 +105,123 @@ export default function StartupProfile() {
         return { path: pathData, area: areaPath, max, min };
     };
 
-    const revChart = generatePath(startup.financials?.revenue || []);
-    const profitChart = generatePath(startup.financials?.netProfit || []);
+    const approvedUpdates = startup.financial_updates?.filter((u: any) => u.status === 'Approved')
+        .sort((a: any, b: any) => new Date(a.reportingDate || a.monthYear).getTime() - new Date(b.reportingDate || b.monthYear).getTime()) || [];
 
-    const calculateActivity = (updatedAt: string) => {
-        if (!updatedAt) return { status: "Unknown", color: "text-slate-400", bg: "bg-slate-100", border: "border-slate-200", days: -1 };
-        const updatedDate = new Date(updatedAt);
+    let totalRevenue = 0;
+    let totalProfit = 0;
+    let totalLoss = 0;
+    
+    const cumulativeUpdates = approvedUpdates.map((u: any) => {
+        totalRevenue += Number(u.revenue) || 0;
+        totalProfit += Number(u.profit) || 0;
+        totalLoss += Number(u.netLoss) || 0;
+        return {
+            ...u,
+            cumulativeRev: totalRevenue,
+            cumulativeProfit: totalProfit,
+            cumulativeLoss: totalLoss
+        };
+    });
+
+    const revChart = generatePath(cumulativeUpdates.length > 0 ? cumulativeUpdates.map((u: any) => u.cumulativeRev) : (startup.financials?.revenue || []));
+    const profitChart = generatePath(cumulativeUpdates.length > 0 ? cumulativeUpdates.map((u: any) => u.cumulativeProfit) : (startup.financials?.netProfit || []));
+
+    // Growth Indicators
+    let revGrowth = 0;
+    let profitGrowth = 0;
+    if (approvedUpdates.length >= 2) {
+        const last = approvedUpdates[approvedUpdates.length - 1];
+        const prev = approvedUpdates[approvedUpdates.length - 2];
+        if (Number(prev.revenue) > 0) {
+            revGrowth = ((Number(last.revenue) - Number(prev.revenue)) / Number(prev.revenue)) * 100;
+        }
+        if (Number(prev.profit) !== 0) {
+            profitGrowth = ((Number(last.profit) - Number(prev.profit)) / Math.abs(Number(prev.profit))) * 100;
+        }
+    }
+
+    const calculateActivity = () => {
+        const lastApproved = approvedUpdates.length > 0 ? approvedUpdates[approvedUpdates.length - 1] : null;
+        if (!lastApproved) return { status: "Unknown", color: "text-slate-400", bg: "bg-slate-100", border: "border-slate-200", days: -1, isStale: false };
+        
+        const updatedDate = new Date(lastApproved.verifiedAt || lastApproved.dateSubmitted);
         const diffTime = Math.abs(new Date().getTime() - updatedDate.getTime());
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
         
-        if (diffDays <= 7) return { status: "Highly Active", color: "text-emerald-600", bg: "bg-emerald-50", border: "border-emerald-200", days: diffDays };
-        if (diffDays <= 30) return { status: "Active", color: "text-blue-600", bg: "bg-blue-50", border: "border-blue-200", days: diffDays };
-        if (diffDays <= 60) return { status: "Needs Update", color: "text-yellow-600", bg: "bg-yellow-50", border: "border-yellow-200", days: diffDays };
-        return { status: "Inactive", color: "text-red-600", bg: "bg-red-50", border: "border-red-200", days: diffDays };
+        const isStale = diffDays > 32;
+
+        if (diffDays <= 7) return { status: "Highly Active", color: "text-emerald-600", bg: "bg-emerald-50", border: "border-emerald-200", days: diffDays, isStale, timeStr: formatRelativeTime(updatedDate) };
+        if (diffDays <= 30) return { status: "Active", color: "text-blue-600", bg: "bg-blue-50", border: "border-blue-200", days: diffDays, isStale, timeStr: formatRelativeTime(updatedDate) };
+        if (diffDays <= 60) return { status: "Needs Update", color: "text-yellow-600", bg: "bg-yellow-50", border: "border-yellow-200", days: diffDays, isStale, timeStr: formatRelativeTime(updatedDate) };
+        return { status: "Inactive", color: "text-red-600", bg: "bg-red-50", border: "border-red-200", days: diffDays, isStale, timeStr: formatRelativeTime(updatedDate) };
     };
 
-    const activityStatus = startup ? calculateActivity(startup.updatedAt) : null;
+    const activityStatus = startup ? calculateActivity() : null;
+
+    const timelineEvents: any[] = [];
+    approvedUpdates.forEach((update: any) => {
+        const pType = update.reportingType || 'Monthly';
+        const pDate = update.reportingDate || update.monthYear;
+        
+        timelineEvents.push({
+            label: 'Financial Update Submitted',
+            desc: `Financial data submitted for ${pType} (${pDate})`,
+            time: update.dateSubmitted,
+            status: 'Submitted',
+            color: 'bg-blue-500',
+            ring: 'ring-blue-200'
+        });
+        timelineEvents.push({
+            label: 'Revenue Updated',
+            desc: `Revenue logged for ${pType}`,
+            time: update.dateSubmitted,
+            status: 'Submitted',
+            color: 'bg-indigo-500',
+            ring: 'ring-indigo-200'
+        });
+        if (update.profit !== undefined) {
+            timelineEvents.push({
+                label: 'Profit Updated',
+                desc: `Net Profit logged for ${pType}`,
+                time: update.dateSubmitted,
+                status: 'Submitted',
+                color: 'bg-indigo-500',
+                ring: 'ring-indigo-200'
+            });
+        }
+        if (update.netLoss) {
+            timelineEvents.push({
+                label: 'Loss Updated',
+                desc: `Net Loss logged for ${pType}`,
+                time: update.dateSubmitted,
+                status: 'Submitted',
+                color: 'bg-orange-500',
+                ring: 'ring-orange-200'
+            });
+        }
+        if (update.documentUrl) {
+            timelineEvents.push({
+                label: 'Supporting Document Uploaded',
+                desc: `Financial proof attached for ${pType}`,
+                time: update.dateSubmitted,
+                status: 'Submitted',
+                color: 'bg-purple-500',
+                ring: 'ring-purple-200'
+            });
+        }
+        if (update.verifiedAt && update.status === 'Approved') {
+            timelineEvents.push({
+                label: 'Admin Approved',
+                desc: `Financials verified by Admin for ${pType}`,
+                time: update.verifiedAt,
+                status: 'Approved',
+                color: 'bg-emerald-500',
+                ring: 'ring-emerald-200'
+            });
+        }
+    });
+    timelineEvents.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
 
     return (
         <div className="min-h-screen pb-20">
@@ -220,15 +323,39 @@ export default function StartupProfile() {
                     {!startup.isStudent && (
                         <ScrollReveal delay={0.05}>
                         <div className="bg-white border border-slate-200 shadow-xl rounded-2xl p-6 space-y-8">
-                            <div>
-                            <div className="flex justify-between items-center mb-4">
-                                <h3 className="text-slate-900 font-bold text-lg flex items-center gap-2"><LineChart className="size-4 text-emerald-600" /> Revenue Growth (12M)</h3>
+                            {/* Cumulative Summary */}
+                            <div className="bg-slate-50 border border-slate-200 rounded-xl p-6 flex items-center justify-between">
+                                <div>
+                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Total Cumulative Revenue</p>
+                                    <p className="text-3xl font-bold font-mono text-emerald-600">₹{totalRevenue.toLocaleString()}</p>
+                                </div>
                                 <div className="text-right">
-                                    <span className="text-emerald-600 font-mono text-sm font-bold block">Max: ₹{revChart.max}K</span>
-                                    <span className="text-slate-400 font-mono text-xs block">Min: ₹{revChart.min}K</span>
+                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Total Cumulative Profit</p>
+                                    <p className={`text-3xl font-bold font-mono ${totalProfit >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>₹{totalProfit.toLocaleString()}</p>
                                 </div>
                             </div>
-                            <div className="relative h-40 w-full overflow-hidden rounded-xl border border-slate-200 bg-white/50">
+
+                            {/* Revenue Graph */}
+                            <div 
+                                className="relative group cursor-crosshair"
+                                onMouseLeave={() => { setHoverIdx(null); setHoverType(null); }}
+                                onMouseMove={(e) => {
+                                    if (cumulativeUpdates.length === 0) return;
+                                    const rect = e.currentTarget.getBoundingClientRect();
+                                    const x = e.clientX - rect.left;
+                                    const percentage = x / rect.width;
+                                    const idx = Math.min(cumulativeUpdates.length - 1, Math.max(0, Math.round(percentage * (cumulativeUpdates.length - 1))));
+                                    setHoverIdx(idx);
+                                    setHoverType("rev");
+                                }}
+                            >
+                            <div className="flex justify-between items-center mb-4">
+                                <h3 className="text-slate-900 font-bold text-lg flex items-center gap-2"><LineChart className="size-4 text-emerald-600" /> Cumulative Revenue Growth</h3>
+                                <div className="text-right">
+                                    <span className="text-emerald-600 font-mono text-sm font-bold block">Max: ₹{revChart.max}</span>
+                                </div>
+                            </div>
+                            <div className="relative h-48 w-full overflow-hidden rounded-xl border border-slate-200 bg-white">
                                 <svg className="size-full" viewBox="0 0 100 100" preserveAspectRatio="none">
                                     <defs>
                                         <linearGradient id="revGradient" x1="0" y1="0" x2="0" y2="1">
@@ -238,18 +365,74 @@ export default function StartupProfile() {
                                     </defs>
                                     <path d={revChart.area} fill="url(#revGradient)" />
                                     <path d={revChart.path} fill="none" stroke="#34d399" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                    
+                                    {hoverIdx !== null && hoverType === "rev" && cumulativeUpdates[hoverIdx] && (
+                                        <g>
+                                            <line 
+                                                x1={(hoverIdx / (cumulativeUpdates.length - 1)) * 100 || 0} 
+                                                y1="0" 
+                                                x2={(hoverIdx / (cumulativeUpdates.length - 1)) * 100 || 0} 
+                                                y2="100" 
+                                                stroke="#94a3b8" 
+                                                strokeDasharray="2 2" 
+                                                strokeWidth="0.5" 
+                                            />
+                                            <circle 
+                                                cx={(hoverIdx / (cumulativeUpdates.length - 1)) * 100 || 0} 
+                                                cy={100 - ((cumulativeUpdates[hoverIdx].cumulativeRev - revChart.min) / (revChart.max - revChart.min || 1)) * 100} 
+                                                r="2" 
+                                                fill="#10b981" 
+                                                stroke="white" 
+                                                strokeWidth="0.5" 
+                                            />
+                                        </g>
+                                    )}
                                 </svg>
+                                
+                                {/* Tooltip */}
+                                {hoverIdx !== null && hoverType === "rev" && cumulativeUpdates[hoverIdx] && (
+                                    <div 
+                                        className="absolute top-2 bg-slate-900/95 backdrop-blur text-white text-xs p-3 rounded-lg shadow-xl pointer-events-none border border-slate-700 w-48 z-10"
+                                        style={{ 
+                                            left: `${Math.min(80, Math.max(0, (hoverIdx / (cumulativeUpdates.length - 1)) * 100))}%`,
+                                            transform: 'translateX(-50%)' 
+                                        }}
+                                    >
+                                        <p className="font-bold text-slate-300 border-b border-slate-700 pb-1 mb-2">{cumulativeUpdates[hoverIdx].reportingType} • {cumulativeUpdates[hoverIdx].reportingDate}</p>
+                                        <div className="flex justify-between mb-1">
+                                            <span className="text-slate-400">Added Rev:</span>
+                                            <span className="font-mono text-emerald-400 font-bold">₹{cumulativeUpdates[hoverIdx].revenue}</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-slate-400">Total Rev:</span>
+                                            <span className="font-mono text-white font-bold">₹{cumulativeUpdates[hoverIdx].cumulativeRev}</span>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
 
-                        <div>
+                        {/* Profit Graph */}
+                        <div 
+                            className="relative group cursor-crosshair"
+                            onMouseLeave={() => { setHoverIdx(null); setHoverType(null); }}
+                            onMouseMove={(e) => {
+                                if (cumulativeUpdates.length === 0) return;
+                                const rect = e.currentTarget.getBoundingClientRect();
+                                const x = e.clientX - rect.left;
+                                const percentage = x / rect.width;
+                                const idx = Math.min(cumulativeUpdates.length - 1, Math.max(0, Math.round(percentage * (cumulativeUpdates.length - 1))));
+                                setHoverIdx(idx);
+                                setHoverType("profit");
+                            }}
+                        >
                             <div className="flex justify-between items-center mb-4">
-                                <h3 className="text-slate-900 font-bold text-lg flex items-center gap-2"><TrendingUp className="size-4 text-emerald-600" /> Net Profit Margin</h3>
+                                <h3 className="text-slate-900 font-bold text-lg flex items-center gap-2"><TrendingUp className="size-4 text-emerald-600" /> Cumulative Net Profit</h3>
                                 <div className="text-right">
-                                    <span className="text-emerald-600 font-mono text-sm font-bold block">Peak: ₹{profitChart.max}K</span>
+                                    <span className="text-emerald-600 font-mono text-sm font-bold block">Peak: ₹{profitChart.max}</span>
                                 </div>
                             </div>
-                            <div className="relative h-40 w-full overflow-hidden rounded-xl border border-slate-200 bg-white/50">
+                            <div className="relative h-48 w-full overflow-hidden rounded-xl border border-slate-200 bg-white">
                                 <svg className="size-full" viewBox="0 0 100 100" preserveAspectRatio="none">
                                     <defs>
                                         <linearGradient id="profitGradient" x1="0" y1="0" x2="0" y2="1">
@@ -259,11 +442,59 @@ export default function StartupProfile() {
                                     </defs>
                                     <path d={profitChart.area} fill="url(#profitGradient)" />
                                     <path d={profitChart.path} fill="none" stroke="#a3e635" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                    {/* Zero Line Marker if profit dips below zero */}
                                     {profitChart.min < 0 && (
-                                        <line x1="0" y1={`${100 - ((0 - profitChart.min) / (profitChart.max - profitChart.min)) * 100}`} x2="100" y2={`${100 - ((0 - profitChart.min) / (profitChart.max - profitChart.min)) * 100}`} stroke="#52525b" strokeDasharray="2 2" strokeWidth="1" />
+                                        <line x1="0" y1={`${100 - ((0 - profitChart.min) / (profitChart.max - profitChart.min || 1)) * 100}`} x2="100" y2={`${100 - ((0 - profitChart.min) / (profitChart.max - profitChart.min || 1)) * 100}`} stroke="#52525b" strokeDasharray="2 2" strokeWidth="1" />
+                                    )}
+                                    
+                                    {hoverIdx !== null && hoverType === "profit" && cumulativeUpdates[hoverIdx] && (
+                                        <g>
+                                            <line 
+                                                x1={(hoverIdx / (cumulativeUpdates.length - 1)) * 100 || 0} 
+                                                y1="0" 
+                                                x2={(hoverIdx / (cumulativeUpdates.length - 1)) * 100 || 0} 
+                                                y2="100" 
+                                                stroke="#94a3b8" 
+                                                strokeDasharray="2 2" 
+                                                strokeWidth="0.5" 
+                                            />
+                                            <circle 
+                                                cx={(hoverIdx / (cumulativeUpdates.length - 1)) * 100 || 0} 
+                                                cy={100 - ((cumulativeUpdates[hoverIdx].cumulativeProfit - profitChart.min) / (profitChart.max - profitChart.min || 1)) * 100} 
+                                                r="2" 
+                                                fill="#84cc16" 
+                                                stroke="white" 
+                                                strokeWidth="0.5" 
+                                            />
+                                        </g>
                                     )}
                                 </svg>
+
+                                {/* Tooltip */}
+                                {hoverIdx !== null && hoverType === "profit" && cumulativeUpdates[hoverIdx] && (
+                                    <div 
+                                        className="absolute top-2 bg-slate-900/95 backdrop-blur text-white text-xs p-3 rounded-lg shadow-xl pointer-events-none border border-slate-700 w-48 z-10"
+                                        style={{ 
+                                            left: `${Math.min(80, Math.max(0, (hoverIdx / (cumulativeUpdates.length - 1)) * 100))}%`,
+                                            transform: 'translateX(-50%)' 
+                                        }}
+                                    >
+                                        <p className="font-bold text-slate-300 border-b border-slate-700 pb-1 mb-2">{cumulativeUpdates[hoverIdx].reportingType} • {cumulativeUpdates[hoverIdx].reportingDate}</p>
+                                        <div className="flex justify-between mb-1">
+                                            <span className="text-slate-400">Added Profit:</span>
+                                            <span className={`font-mono font-bold ${Number(cumulativeUpdates[hoverIdx].profit) >= 0 ? 'text-lime-400' : 'text-red-400'}`}>₹{cumulativeUpdates[hoverIdx].profit}</span>
+                                        </div>
+                                        {cumulativeUpdates[hoverIdx].netLoss > 0 && (
+                                            <div className="flex justify-between mb-1">
+                                                <span className="text-slate-400">Added Loss:</span>
+                                                <span className="font-mono text-red-400 font-bold">₹{cumulativeUpdates[hoverIdx].netLoss}</span>
+                                            </div>
+                                        )}
+                                        <div className="flex justify-between">
+                                            <span className="text-slate-400">Total Profit:</span>
+                                            <span className="font-mono text-white font-bold">₹{cumulativeUpdates[hoverIdx].cumulativeProfit}</span>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
 
@@ -282,6 +513,27 @@ export default function StartupProfile() {
                                     <p className="text-xs text-slate-400 uppercase tracking-widest mb-1">Est. LTV</p>
                                     <p className="text-xl font-bold text-slate-600 font-mono">₹{startup.financials?.ltv}</p>
                                 </div>
+                            </div>
+                        </div>
+
+                        {/* Activity Timeline Section */}
+                        <div className="border-t border-slate-200 pt-6">
+                            <h3 className="text-slate-900 font-bold text-lg mb-4 flex items-center gap-2"><Clock className="size-4 text-indigo-500" /> Financial Activity Timeline</h3>
+                            <div className="space-y-4 pl-2 border-l-2 border-slate-100 ml-2">
+                                {timelineEvents.slice(0, 10).map((event: any, idx: number) => (
+                                    <div key={idx} className="relative pl-6">
+                                        <div className={`absolute top-1.5 -left-[5px] size-2 rounded-full ${event.color} border-2 border-white ring-1 ${event.ring}`}></div>
+                                        <p className="text-sm font-semibold text-slate-800">{event.label}</p>
+                                        <p className="text-xs text-slate-500">{event.desc}</p>
+                                        <div className="flex items-center gap-2 mt-1">
+                                            <p className={`text-[10px] font-bold uppercase ${event.status === 'Approved' ? 'text-emerald-600' : 'text-slate-400'}`}>{event.status}</p>
+                                            <span className="text-[10px] text-slate-400">• {formatRelativeTime(event.time)}</span>
+                                        </div>
+                                    </div>
+                                ))}
+                                {timelineEvents.length === 0 && (
+                                    <p className="text-sm text-slate-400 italic pl-6">No approved financial activity yet.</p>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -331,17 +583,64 @@ export default function StartupProfile() {
 
                         <div className="space-y-4 mb-8">
                             <div className="flex justify-between items-center">
-                                <span className="text-sm text-slate-400">Monthly Revenue</span>
-                                <span className="font-mono text-slate-600 font-medium">₹ {(startup.revenue / 1000).toFixed(0)}K</span>
+                                <span className="text-sm text-slate-400">Latest Revenue</span>
+                                <div className="text-right flex items-center gap-2">
+                                    {revGrowth !== 0 && (
+                                        <span className={`text-[10px] font-bold ${revGrowth > 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+                                            {revGrowth > 0 ? '↑' : '↓'} {Math.abs(revGrowth).toFixed(1)}%
+                                        </span>
+                                    )}
+                                    <span className="font-mono text-emerald-600 font-medium">₹ {approvedUpdates.length > 0 ? (approvedUpdates[approvedUpdates.length - 1].revenue / 1000).toFixed(0) : (startup.revenue / 1000).toFixed(0)}K</span>
+                                </div>
                             </div>
                             <div className="flex justify-between items-center">
-                                <span className="text-sm text-slate-400">Burn Rate</span>
-                                <span className="font-mono text-red-400 font-medium">₹ {(startup.burn / 1000).toFixed(0)}K</span>
+                                <span className="text-sm text-slate-400">Latest Profit</span>
+                                <div className="text-right flex items-center gap-2">
+                                    {profitGrowth !== 0 && (
+                                        <span className={`text-[10px] font-bold ${profitGrowth > 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+                                            {profitGrowth > 0 ? '↑' : '↓'} {Math.abs(profitGrowth).toFixed(1)}%
+                                        </span>
+                                    )}
+                                    <span className={`font-mono font-medium ${approvedUpdates.length > 0 && Number(approvedUpdates[approvedUpdates.length - 1].profit) < 0 ? 'text-red-400' : 'text-slate-600'}`}>₹ {approvedUpdates.length > 0 ? (approvedUpdates[approvedUpdates.length - 1].profit / 1000).toFixed(0) : 0}K</span>
+                                </div>
                             </div>
-                            <div className="flex justify-between items-center">
-                                <span className="text-sm text-slate-400">Runway</span>
-                                <span className="font-medium text-slate-600">~14 Months</span>
-                            </div>
+                            {approvedUpdates.length > 0 && approvedUpdates[approvedUpdates.length - 1].netLoss && (
+                                <div className="flex justify-between items-center">
+                                    <span className="text-sm text-slate-400">Latest Loss</span>
+                                    <span className="font-mono text-red-500 font-medium">₹ {(approvedUpdates[approvedUpdates.length - 1].netLoss / 1000).toFixed(0)}K</span>
+                                </div>
+                            )}
+                            {approvedUpdates.length > 0 && (
+                                <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-lg shadow-sm">
+                                    <p className="text-xs text-emerald-600 font-bold uppercase mb-2 flex items-center gap-1"><CheckCircle2 className="size-4" /> Financials Verified</p>
+                                    <div className="grid grid-cols-2 gap-2 text-xs">
+                                        <div>
+                                            <p className="text-slate-400">Last Verified Date</p>
+                                            <p className="font-medium text-slate-700">{formatRelativeTime(approvedUpdates[approvedUpdates.length - 1].verifiedAt || approvedUpdates[approvedUpdates.length - 1].dateSubmitted)}</p>
+                                        </div>
+                                        <div className="col-span-1">
+                                            <p className="text-slate-400">Verified By</p>
+                                            <p className="font-medium text-slate-700 truncate" title="InVolution Verification Team">InVolution Verification Team</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-slate-400">Reporting Type</p>
+                                            <p className="font-medium text-slate-700">{approvedUpdates[approvedUpdates.length - 1].reportingType || 'Monthly'}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-slate-400">Reporting Date</p>
+                                            <p className="font-medium text-slate-700">{approvedUpdates[approvedUpdates.length - 1].reportingDate || approvedUpdates[approvedUpdates.length - 1].monthYear}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-slate-400">Last Approved Revenue</p>
+                                            <p className="font-medium text-emerald-600 font-mono">₹{approvedUpdates[approvedUpdates.length - 1].revenue}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-slate-400">Last Approved Profit</p>
+                                            <p className="font-medium text-emerald-600 font-mono">₹{approvedUpdates[approvedUpdates.length - 1].profit}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                             </>
                         )}
@@ -359,11 +658,19 @@ export default function StartupProfile() {
                                         <div>
                                             <p className={`font-bold ${activityStatus.color}`}>{activityStatus.status}</p>
                                             <p className="text-xs text-slate-500 mt-0.5">
-                                                {activityStatus.days >= 0 ? `Last updated ${activityStatus.days} day${activityStatus.days === 1 ? '' : 's'} ago` : 'No update data available'}
+                                                {activityStatus.isStale 
+                                                    ? 'No verified update data available' 
+                                                    : `✓ Updated ${activityStatus.timeStr}`}
                                             </p>
                                         </div>
                                     </div>
                                 </div>
+                                {activityStatus.isStale && (
+                                    <div className="mb-8 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600 font-medium flex gap-2">
+                                        <AlertTriangle className="size-4 shrink-0 mt-0.5" />
+                                        Financial information has not been updated for more than 32 days.
+                                    </div>
+                                )}
                             </>
                         )}
 
