@@ -186,24 +186,23 @@ function DealWorkspace() {
                 });
 
                 setMessages(prevMessages => {
-                    // Smart merge to prevent flickering
-                    if (prevMessages.length === 0) return newMessages;
+                    const pendingMessages = prevMessages.filter(m => m.isPending);
+                    const newPending = pendingMessages.filter(pm => !newMessages.some((nm: any) => nm.id === pm.id));
+                    
+                    const merged = [...newMessages, ...newPending];
 
                     // If identical length, only update if content changed
-                    if (prevMessages.length === newMessages.length) {
-                        const hasChanges = newMessages.some((newMsg, i) => {
+                    if (prevMessages.length === merged.length) {
+                        const hasChanges = merged.some((msg, i) => {
                             const prevMsg = prevMessages[i];
-                            return prevMsg.id !== newMsg.id || 
-                                   prevMsg.text !== newMsg.text || 
-                                   JSON.stringify(prevMsg.file) !== JSON.stringify(newMsg.file);
+                            return prevMsg.id !== msg.id || 
+                                   prevMsg.text !== msg.text || 
+                                   JSON.stringify(prevMsg.file) !== JSON.stringify(msg.file);
                         });
-                        return hasChanges ? newMessages : prevMessages;
+                        return hasChanges ? merged : prevMessages;
                     }
                     
-                    // If lengths differ, we must update. But we can preserve identical objects 
-                    // where possible to help React, though mapping newMessages is generally fine 
-                    // as long as the `id` property is stable (which it now is).
-                    return newMessages;
+                    return merged;
                 });
 
                 if (data.deal.currentPhase) {
@@ -373,40 +372,36 @@ function DealWorkspace() {
             });
             
             if (!res.ok) throw new Error("API deletion failed");
+            setShowDeleteConfirm(false);
         } catch (err) {
             console.error("Failed to delete messages:", err);
             // 5. Restore messages on failure
             setMessages(m => {
-                // Merge and sort them back roughly by time
                 const restored = [...m, ...messagesToDelete];
-                // Try to sort by time string (HH:MM AM/PM) or just append
                 return restored; 
             });
             alert("Failed to delete messages. They have been restored.");
+            setShowDeleteConfirm(false);
         } finally {
             setIsDeleting(false);
             await fetchMessages(); // Fetch true state from server
         }
     };
 
-    /**
-    * Handles message form submission, adds the message optimistically to the UI, and saves it to the database.
-    * @example
-    * sync(event)
-    * void
-    * @param {React.FormEvent} e - Form submission event.
-    * @returns {Promise<void>} Resolves when the message has been processed and the save attempt completes.
-    **/
     const sendMessage = async (e: React.FormEvent) => {
         e.preventDefault();
         if ((!inputMessage.trim() && !selectedFile) || !startupId || isUploading) return;
 
-        let fileData = null;
+        let optimisticFileData = null;
+        let fileExt = null;
+        let fileName = null;
+        let filePath = null;
+
         const messageText = inputMessage;
+        const messageId = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Date.now().toString() + Math.random().toString(36).substring(7);
 
         if (selectedFile) {
             setIsUploading(true);
-            const supabase = createClient();
             const invId = investorId || currentUserId;
             if (!invId) {
                 alert("Session error. Please wait or refresh.");
@@ -414,48 +409,65 @@ function DealWorkspace() {
                 return;
             }
 
-            const fileExt = selectedFile.name.split('.').pop();
-            const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
-            const filePath = `${startupId}/${invId}/${fileName}`;
+            fileExt = selectedFile.name.split('.').pop();
+            fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+            filePath = `${startupId}/${invId}/${fileName}`;
 
-            const { data, error } = await supabase.storage
-                .from('deal-room-files')
-                .upload(filePath, selectedFile);
-
-            if (error) {
-                alert("Upload failed: " + error.message);
-                setIsUploading(false);
-                return;
-            }
-
-            fileData = {
+            optimisticFileData = {
                 name: selectedFile.name,
                 path: filePath,
                 size: selectedFile.size,
-                type: selectedFile.type
+                type: selectedFile.type,
+                previewUrl: URL.createObjectURL(selectedFile),
+                isUploading: true
             };
         }
 
         setInputMessage("");
+        const fileToUpload = selectedFile;
         setSelectedFile(null);
         if (fileInputRef.current) {
             fileInputRef.current.value = "";
         }
 
-        const messageId = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Date.now().toString() + Math.random().toString(36).substring(7);
-
         const newMsg: any = { 
             id: messageId, 
             sender: "me", 
             text: messageText, 
-            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            isPending: true
         };
-        if (fileData) {
-            newMsg.file = fileData;
+        if (optimisticFileData) {
+            newMsg.file = optimisticFileData;
         }
 
         // Optimistic UI update
         setMessages(m => [...m, newMsg]);
+
+        let finalFileData = null;
+        if (fileToUpload && filePath) {
+            const supabase = createClient();
+            const { data, error } = await supabase.storage
+                .from('deal-room-files')
+                .upload(filePath, fileToUpload);
+
+            if (error) {
+                alert("Upload failed: " + error.message);
+                setMessages(m => m.filter(msg => msg.id !== messageId));
+                setIsUploading(false);
+                return;
+            }
+
+            finalFileData = {
+                name: fileToUpload.name,
+                path: filePath,
+                size: fileToUpload.size,
+                type: fileToUpload.type
+            };
+            
+            setMessages(m => m.map(msg => msg.id === messageId ? { ...msg, file: finalFileData } : msg));
+            setIsUploading(false);
+        }
 
         // Save to DB
         try {
@@ -465,8 +477,8 @@ function DealWorkspace() {
                 startupName,
                 text: messageText,
             };
-            if (fileData) {
-                bodyPayload.file = fileData;
+            if (finalFileData) {
+                bodyPayload.file = finalFileData;
             }
             if (investorId) {
                 bodyPayload.investorId = investorId;
@@ -478,11 +490,8 @@ function DealWorkspace() {
                 body: JSON.stringify(bodyPayload)
             });
             
-            await fetchMessages();
         } catch (err) {
             console.error("Failed to save message", err);
-        } finally {
-            setIsUploading(false);
         }
     };
 
@@ -589,7 +598,7 @@ function DealWorkspace() {
     const PHASE_COLOR = ["", "bg-emerald-500", "bg-emerald-500", "bg-indigo-600", "bg-amber-500", "bg-pink-500"];
 
     return (
-        <div className="flex flex-col min-h-[calc(100vh-64px)] bg-[#f4f6f5]">
+        <div className="flex flex-col h-[calc(100vh-64px)] bg-[#f4f6f5] overflow-hidden">
             {/* ── TOP BAR ── */}
             <div className="bg-slate-900 text-white px-6 py-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 shadow-lg">
                 <div>
@@ -735,8 +744,8 @@ function DealWorkspace() {
                                 )}
 
                                 {/* Messages */}
-                                <div className="flex-1 p-5 overflow-y-auto space-y-4">
-                                    <div className="bg-amber-50 border border-amber-200 text-amber-700 p-3 rounded-xl text-xs text-center max-w-md mx-auto">
+                                <div className="flex-1 overflow-y-auto py-5">
+                                    <div className="bg-amber-50 border border-amber-200 text-amber-700 p-3 rounded-xl text-xs text-center max-w-md mx-auto mb-4">
                                         PII (phones, emails) are masked until Phase 5 (Agreement Execution).
                                     </div>
                                     {messages.map(msg => {
@@ -744,17 +753,17 @@ function DealWorkspace() {
                                         return (
                                             <div 
                                                 key={msg.id} 
-                                                className={`flex ${msg.sender === 'me' ? 'justify-end' : 'justify-start'} cursor-pointer`}
+                                                className={`flex ${msg.sender === 'me' ? 'justify-end' : 'justify-start'} cursor-pointer px-5 py-1.5 transition-all duration-200 ${isSelected ? 'bg-emerald-50/80' : 'hover:bg-slate-50/50'}`}
                                                 onClick={() => handleMessageClick(msg.id)}
                                                 onContextMenu={(e) => handleMessageRightClick(e, msg.id)}
                                                 onTouchStart={() => handleTouchStart(msg.id)}
                                                 onTouchEnd={handleTouchEnd}
                                             >
-                                                <div className={`max-w-[72%] rounded-2xl px-4 py-2.5 text-sm transition-all
-                                                    ${isSelected ? 'ring-2 ring-emerald-400 opacity-90 scale-[0.98]' : ''}
+                                                <div className={`max-w-[72%] rounded-2xl px-4 py-2.5 text-[15px] leading-relaxed shadow-sm transition-transform duration-200 animate-in fade-in slide-in-from-bottom-2
+                                                    ${isSelected ? 'scale-[0.99] shadow-md ring-1 ring-emerald-200/50' : ''}
                                                     ${msg.sender === 'me'
-                                                        ? 'bg-emerald-600 text-white rounded-tr-sm'
-                                                        : 'bg-slate-100 text-slate-800 rounded-tl-sm border border-slate-200'}`}>
+                                                        ? 'bg-[#10b981] text-white rounded-tr-sm'
+                                                        : 'bg-white text-slate-800 rounded-tl-sm border border-slate-200'}`}>
                                                     
                                                     {msg.file && <FileAttachment file={msg.file} />}
                                                     
@@ -1079,7 +1088,9 @@ function DealWorkspace() {
                             </div>
                             <h3 className="text-lg font-bold text-slate-900 mb-2 font-outfit">Delete for Everyone?</h3>
                             <p className="text-sm text-slate-500 mb-6 leading-relaxed">
-                                This action will permanently delete this message and its attachment for both participants. This action cannot be undone.
+                                {messages.filter(m => selectedMessageIds.includes(m.id)).some(m => m.file) ? 
+                                    "This action will permanently delete the selected messages and their attachments for both participants. This action cannot be undone." : 
+                                    "This action will permanently delete the selected messages for both participants. This action cannot be undone."}
                             </p>
                             <div className="flex w-full gap-3">
                                 <button
