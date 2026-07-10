@@ -4,12 +4,14 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { FileText, MessageSquare, TrendingUp, Eye, CheckCircle2, ShieldCheck, Activity, Users, Star, BarChart3, Clock, LineChart, Bookmark, Bell, HeartPulse, BrainCircuit, Rocket, Target, Award, Copy, Share2, AlertTriangle, Scale } from "lucide-react";
 import { formatRelativeTime } from "@/utils/timeHelper";
+import { useToast } from "@/components/ui/ToastProvider";
 
 interface StartupDashboardClientProps {
     myStartups: any[];
 }
 
 export default function StartupDashboardClient({ myStartups }: StartupDashboardClientProps) {
+    const toast = useToast();
     const [activeDeals, setActiveDeals] = useState<any[]>([]);
     const [agreements, setAgreements] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -120,7 +122,7 @@ export default function StartupDashboardClient({ myStartups }: StartupDashboardC
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-3 w-full md:w-auto relative z-10">
-                                    <button onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/startups/${myStartup._id || myStartup.id}`); alert('Public link copied!'); }} className="flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-3 bg-white border border-slate-200 hover:border-emerald-300 text-slate-700 hover:text-emerald-700 font-bold rounded-xl transition-all shadow-sm">
+                                    <button onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/startups/${myStartup._id || myStartup.id}`); toast.success('✅ Public link copied to clipboard.'); }} className="flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-3 bg-white border border-slate-200 hover:border-emerald-300 text-slate-700 hover:text-emerald-700 font-bold rounded-xl transition-all shadow-sm">
                                         <Copy className="size-4" /> Share Link
                                     </button>
                                     <Link href={`/startups/${myStartup._id || myStartup.id}`} className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl transition-all shadow-md">

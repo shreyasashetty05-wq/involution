@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Inter, Outfit } from "next/font/google";
 import Navbar from "@/frontend/components/Navbar";
 import { Providers } from "@/frontend/components/Providers";
+import { ToastProvider } from "@/components/ui/ToastProvider";
+import { ModalProvider } from "@/components/ui/ModalProvider";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
@@ -31,8 +33,12 @@ export default function RootLayout({
         className={`${inter.variable} ${outfit.variable} font-sans bg-[#f8faf9] text-slate-900 antialiased min-h-screen flex flex-col`}
       >
         <Providers>
-          <Navbar />
-          <main className="grow pt-20">{children}</main>
+          <ToastProvider>
+            <ModalProvider>
+              <Navbar />
+              <main className="grow pt-20">{children}</main>
+            </ModalProvider>
+          </ToastProvider>
         </Providers>
       </body>
     </html>

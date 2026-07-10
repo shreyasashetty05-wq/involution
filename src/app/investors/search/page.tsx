@@ -5,8 +5,10 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Search, BrainCircuit, Activity, LineChart, ChevronRight, SlidersHorizontal, ArrowUpDown, ShieldCheck, Building2, Users, CheckCircle2, Bookmark, Share2, Rss, Clock, MapPin, TrendingUp, AlertTriangle, HeartPulse, Factory, Briefcase, Scale, Bell, X, Copy, Mail, MessageCircle, Linkedin, FileText } from "lucide-react";
 import { formatRelativeTime } from "@/utils/timeHelper";
+import { useToast } from "@/components/ui/ToastProvider";
 
 export default function AISearchEngine() {
+    const toast = useToast();
     const [filters, setFilters] = useState({
         keyword: "",
         sector: "All",
@@ -645,7 +647,7 @@ export default function AISearchEngine() {
                             </div>
 
                             <div className="space-y-2">
-                                <button onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/startups/${shareModalData._id || shareModalData.id}`); alert('Link copied!'); }} className="w-full flex items-center gap-3 p-3 hover:bg-slate-50 rounded-xl transition-colors text-left text-sm font-medium text-slate-700">
+                                <button onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/startups/${shareModalData._id || shareModalData.id}`); toast.success('✅ Public link copied to clipboard.'); }} className="w-full flex items-center gap-3 p-3 hover:bg-slate-50 rounded-xl transition-colors text-left text-sm font-medium text-slate-700">
                                     <div className="p-2 bg-slate-100 rounded-lg text-slate-600"><Copy className="size-4"/></div>
                                     Copy Startup Link
                                 </button>
@@ -663,7 +665,7 @@ export default function AISearchEngine() {
                                 </a>
                                 <button onClick={() => {
                                     const summary = `Startup: ${shareModalData.name}\nIndustry: ${shareModalData.sector}\nAsking: ${formatCurrency(shareModalData.requested)}\nView Deal: ${window.location.origin}/startups/${shareModalData._id || shareModalData.id}`;
-                                    navigator.clipboard.writeText(summary); alert('Summary copied!'); 
+                                    navigator.clipboard.writeText(summary); toast.success('✅ Summary copied to clipboard.'); 
                                 }} className="w-full flex items-center gap-3 p-3 hover:bg-slate-50 rounded-xl transition-colors text-left text-sm font-medium text-slate-700">
                                     <div className="p-2 bg-orange-100 rounded-lg text-orange-600"><FileText className="size-4"/></div>
                                     Copy Startup Summary

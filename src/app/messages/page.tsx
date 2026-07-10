@@ -5,6 +5,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Send, FileSignature, CheckCircle2, ShieldCheck, User, FileText, ChevronRight, Video, Calendar, Clock, AlertTriangle, PlayCircle, CheckSquare, Search, Lock, Sparkles, Paperclip, Loader2, ArrowLeft, Trash2 } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 import FileAttachment from "@/components/FileAttachment";
+import { useToast } from "@/components/ui/ToastProvider";
+
 
 /* ─── PII Masker ──────────────────────────────────────── */
 const maskPII = (text: string, isSigned: boolean) => {
@@ -265,15 +267,15 @@ function DealWorkspace() {
         if (currentPhase >= 5) return;
         
         if (currentPhase === 1 && messages.length === 0) {
-            alert("Please send a message to initiate contact before advancing.");
+            toast.warning("Please send a message to initiate contact before advancing.");
             return;
         }
         if (currentPhase === 3 && meetings.length === 0) {
-            alert("Please schedule at least one trust building meeting before advancing.");
+            toast.warning("Please schedule at least one trust building meeting before advancing.");
             return;
         }
         if (currentPhase === 4 && diligenceChecks.some(c => !c)) {
-            alert("Please complete all Due Diligence checks before proceeding to the Smart Agreement.");
+            toast.warning("Please complete all Due Diligence checks before proceeding to the Smart Agreement.");
             return;
         }
 
@@ -380,7 +382,7 @@ function DealWorkspace() {
                 const restored = [...m, ...messagesToDelete];
                 return restored; 
             });
-            alert("Failed to delete messages. They have been restored.");
+            toast.warning("Failed to delete messages. They have been restored.");
             setShowDeleteConfirm(false);
         } finally {
             setIsDeleting(false);
@@ -404,7 +406,7 @@ function DealWorkspace() {
             setIsUploading(true);
             const invId = investorId || currentUserId;
             if (!invId) {
-                alert("Session error. Please wait or refresh.");
+                toast.warning("Session error. Please wait or refresh.");
                 setIsUploading(false);
                 return;
             }
@@ -452,7 +454,7 @@ function DealWorkspace() {
                 .upload(filePath, fileToUpload);
 
             if (error) {
-                alert("Upload failed: " + error.message);
+                toast.warning("Upload failed: " + error.message);
                 setMessages(m => m.filter(msg => msg.id !== messageId));
                 setIsUploading(false);
                 return;
@@ -501,7 +503,7 @@ function DealWorkspace() {
             
             // Validate size (20MB)
             if (file.size > 20 * 1024 * 1024) {
-                alert("File size exceeds 20MB limit.");
+                toast.warning("File size exceeds 20MB limit.");
                 e.target.value = "";
                 return;
             }
@@ -519,7 +521,7 @@ function DealWorkspace() {
             ];
             
             if (!allowedTypes.includes(file.type)) {
-                alert("Unsupported file type.");
+                toast.warning("Unsupported file type.");
                 e.target.value = "";
                 return;
             }
@@ -545,7 +547,7 @@ function DealWorkspace() {
         // Check if an active meeting already exists to prevent duplicates
         const existingMeeting = meetings.find(m => m.status === 'Scheduled' || m.status === 'active');
         if (existingMeeting) {
-            alert("A Trust Meeting is already scheduled. Please use the existing meeting link.");
+            toast.warning("A Trust Meeting is already scheduled. Please use the existing meeting link.");
             return;
         }
 
@@ -571,7 +573,7 @@ function DealWorkspace() {
             
             if (!res.ok) {
                 const errData = await res.json();
-                alert(errData.error || "Failed to generate meeting link.");
+                toast.warning(errData.error || "Failed to generate meeting link.");
                 setIsScheduling(false);
                 return;
             }
@@ -581,7 +583,7 @@ function DealWorkspace() {
             setMeetingTime("");
         } catch (err) {
             console.error("Failed to schedule meeting", err);
-            alert("Failed to schedule meeting. Please try again.");
+            toast.warning("Failed to schedule meeting. Please try again.");
         } finally {
             setIsScheduling(false);
         }
@@ -890,7 +892,7 @@ function DealWorkspace() {
                                                     </button>
                                                 )}
                                                 <button onClick={() => {
-                                                    if (!m.link) { alert("Invalid Meeting URL."); return; }
+                                                    if (!m.link) { toast.warning("Invalid Meeting URL."); return; }
                                                     window.open(m.link, '_blank');
                                                 }} className="px-3 py-1.5 bg-white border border-slate-200 hover:bg-indigo-50 hover:border-indigo-300 text-indigo-600 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors whitespace-nowrap">
                                                     <PlayCircle className="size-3.5" /> Join Meet

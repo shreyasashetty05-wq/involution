@@ -4,8 +4,12 @@ import { useEffect, useState } from "react";
 import { formatRelativeTime } from "@/utils/timeHelper";
 import Link from "next/link";
 import { Check, CheckCircle2, Trash2, BellOff, Loader2 } from "lucide-react";
+import { useModal } from "@/components/ui/ModalProvider";
+import { useToast } from "@/components/ui/ToastProvider";
 
 export default function NotificationsPage() {
+    const modal = useModal();
+    const toast = useToast();
     const [notifications, setNotifications] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [clearing, setClearing] = useState(false);
@@ -118,7 +122,13 @@ export default function NotificationsPage() {
 
     const deleteSelected = async () => {
         if (selectedIds.size === 0) return;
-        if (!confirm(`Are you sure you want to delete ${selectedIds.size} notification(s)?`)) return;
+        const confirmed = await modal.confirm({
+            title: "Delete Notification(s)?",
+            description: `Are you sure you want to delete ${selectedIds.size} notification(s)?`,
+            destructive: true,
+            confirmText: "Delete"
+        });
+        if (!confirmed) return;
 
         try {
             const idsToDelete = Array.from(selectedIds);
@@ -135,13 +145,21 @@ export default function NotificationsPage() {
             for (const id of idsToDelete) {
                 fetch(`/api/notifications/${id}`, { method: 'DELETE' }).catch(console.error);
             }
+            toast.success("✅ Notification deleted.");
         } catch (e) {
             console.error(e);
+            toast.error("Failed to delete notifications.");
         }
     };
 
     const clearAll = async () => {
-        if (!confirm("Are you sure you want to clear all your notifications? This cannot be undone.")) return;
+        const confirmed = await modal.confirm({
+            title: "Clear all notifications?",
+            description: "Are you sure you want to clear all your notifications? This cannot be undone.",
+            destructive: true,
+            confirmText: "Clear All"
+        });
+        if (!confirmed) return;
         setClearing(true);
         try {
             const deletedStorage = localStorage.getItem(`deleted_notifs_${userId}`);
@@ -154,8 +172,10 @@ export default function NotificationsPage() {
             await fetch(`/api/notifications?action=clear_all`, { method: 'DELETE' });
             setNotifications([]);
             setSelectedIds(new Set());
+            toast.success("✅ Notifications cleared.");
         } catch (e) {
             console.error(e);
+            toast.error("Failed to clear notifications.");
         } finally {
             setClearing(false);
         }

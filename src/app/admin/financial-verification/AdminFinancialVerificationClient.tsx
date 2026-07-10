@@ -3,9 +3,11 @@
 import { useState } from "react";
 import { CheckCircle2, XCircle, AlertCircle, Clock, FileText, IndianRupee, MessageSquare, ChevronDown, ChevronUp } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useToast } from "@/components/ui/ToastProvider";
 
 export default function AdminFinancialVerificationClient({ startups }: { startups: any[] }) {
     const router = useRouter();
+    const toast = useToast();
     const [loadingMap, setLoadingMap] = useState<Record<string, boolean>>({});
     const [expandedStartup, setExpandedStartup] = useState<string | null>(null);
     const [remarksMap, setRemarksMap] = useState<Record<string, string>>({});
@@ -53,14 +55,15 @@ export default function AdminFinancialVerificationClient({ startups }: { startup
 
             if (res.ok) {
                 setApprovalModal(null);
+                toast.success("✅ Financial update verified.");
                 router.refresh();
             } else {
                 const data = await res.json();
-                alert(`Error: ${data.error}`);
+                toast.error(`Error: ${data.error}`);
             }
         } catch (error) {
             console.error(error);
-            alert("An error occurred");
+            toast.error("An error occurred");
         } finally {
             setLoadingMap(prev => ({ ...prev, [updateId]: false }));
         }
