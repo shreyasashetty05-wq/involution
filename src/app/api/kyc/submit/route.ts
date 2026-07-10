@@ -100,7 +100,16 @@ export async function POST(req: Request) {
             link: `/admin/kyc`
         });
 
-        return NextResponse.json({ success: true, data: kycRecord }, { status: 201 });
+        // Notify User
+        await supabase.from('notifications').insert({
+            user_email: user.email,
+            type: 'kyc_submitted',
+            title: "📄 KYC Submitted Successfully",
+            description: "Your KYC documents are under review. We will notify you once verified.",
+            link: `/kyc/pending`
+        });
+
+        return NextResponse.json({ success: true, data: kycRecord }, { status: 200 });
     } catch (error: any) {
         console.error("KYC Submit Form Failed:", error);
         return NextResponse.json({ success: false, error: error.message || 'Internal Server Error' }, { status: 500 });

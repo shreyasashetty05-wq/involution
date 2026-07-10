@@ -24,13 +24,15 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
         const { id } = await params;
         const body = await req.json();
 
-        if (!['Approved', 'Rejected'].includes(body.status)) {
+        if (!['Approved', 'Rejected', 'MoreInfo'].includes(body.status)) {
             return NextResponse.json({ success: false, error: "Invalid Verification Action" }, { status: 400 });
         }
 
+        const dbStatus = body.status === 'MoreInfo' ? 'Rejected' : body.status;
+
         const { data: doc, error } = await supabase
             .from("kyc_documents")
-            .update({ status: body.status })
+            .update({ status: dbStatus })
             .eq("id", id)
             .select()
             .single();
@@ -41,22 +43,30 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 
         let notifTitle = "";
         let notifDesc = "";
+        let notifType = "kyc_status";
+
         if (body.status === 'Approved') {
+            notifType = "kyc_approved";
             notifTitle = "✅ Your KYC has been approved";
-            notifDesc = "Your identity verification is complete.";
+            notifDesc = "Your identity verification is complete. You can now access all features.";
+        } else if (body.status === 'MoreInfo') {
+            notifType = "kyc_more_info";
+            notifTitle = "⚠️ More Information Requested for KYC";
+            notifDesc = body.remarks || "Please update your documents based on the latest feedback.";
         } else if (body.status === 'Rejected') {
+            notifType = "kyc_rejected";
             notifTitle = "❌ Your KYC was rejected";
-            notifDesc = "Please check your dashboard for details.";
+            notifDesc = body.remarks || "Please review your documents and try again.";
         }
 
         if (notifTitle) {
             await supabase.from('notifications').insert({
                 user_email: doc.email,
-                role: 'startup', // Or investor depending on who submitted, but it's specific to the user
-                type: 'kyc_status',
+                role: 'startup', 
+                type: notifType,
                 title: notifTitle,
                 description: notifDesc,
-                link: `/startups/dashboard`
+                link: `/kyc/pending`
             });
         }
 
