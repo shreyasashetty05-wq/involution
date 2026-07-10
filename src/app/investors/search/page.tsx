@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Search, BrainCircuit, Activity, LineChart, ChevronRight, SlidersHorizontal, ArrowUpDown, ShieldCheck, Building2, Users, CheckCircle2, Bookmark, Share2, Rss, Clock, MapPin, TrendingUp, AlertTriangle, HeartPulse, Factory, Briefcase } from "lucide-react";
+import { Search, BrainCircuit, Activity, LineChart, ChevronRight, SlidersHorizontal, ArrowUpDown, ShieldCheck, Building2, Users, CheckCircle2, Bookmark, Share2, Rss, Clock, MapPin, TrendingUp, AlertTriangle, HeartPulse, Factory, Briefcase, Scale, Bell, X, Copy, Mail, MessageCircle, Linkedin, FileText } from "lucide-react";
 import { formatRelativeTime } from "@/utils/timeHelper";
 
 export default function AISearchEngine() {
@@ -39,7 +39,25 @@ export default function AISearchEngine() {
     const [isLoadingData, setIsLoadingData] = useState(true);
     const [showAdvanced, setShowAdvanced] = useState(false);
 
+    // New Interaction States
+    const [savedStartups, setSavedStartups] = useState<string[]>([]);
+    const [followedStartups, setFollowedStartups] = useState<string[]>([]);
+    const [compareList, setCompareList] = useState<string[]>([]);
+    const [shareModalData, setShareModalData] = useState<any>(null);
+
     useEffect(() => {
+        // Load interactive states from local storage
+        try {
+            const s = localStorage.getItem('inv_saved_startups');
+            if (s) setSavedStartups(JSON.parse(s));
+            const f = localStorage.getItem('inv_followed_startups');
+            if (f) setFollowedStartups(JSON.parse(f));
+            const c = localStorage.getItem('inv_compare_list');
+            if (c) setCompareList(JSON.parse(c));
+        } catch (e) {
+            console.error(e);
+        }
+
         const fetchStartups = async () => {
             try {
                 const res = await fetch('/api/startups?type=regular');
@@ -57,6 +75,31 @@ export default function AISearchEngine() {
         };
         fetchStartups();
     }, []);
+
+    const toggleSave = (id: string) => {
+        const next = savedStartups.includes(id) ? savedStartups.filter(x => x !== id) : [...savedStartups, id];
+        setSavedStartups(next);
+        localStorage.setItem('inv_saved_startups', JSON.stringify(next));
+    };
+
+    const toggleFollow = (id: string) => {
+        const next = followedStartups.includes(id) ? followedStartups.filter(x => x !== id) : [...followedStartups, id];
+        setFollowedStartups(next);
+        localStorage.setItem('inv_followed_startups', JSON.stringify(next));
+    };
+
+    const toggleCompare = (id: string) => {
+        if (compareList.includes(id)) {
+            const next = compareList.filter(x => x !== id);
+            setCompareList(next);
+            localStorage.setItem('inv_compare_list', JSON.stringify(next));
+        } else {
+            if (compareList.length >= 3) return; // max 3
+            const next = [...compareList, id];
+            setCompareList(next);
+            localStorage.setItem('inv_compare_list', JSON.stringify(next));
+        }
+    };
 
     const getApprovedUpdates = (s: any) => s.financial_updates?.filter((u: any) => u.status === 'Approved').sort((a: any, b: any) => new Date(a.reportingDate || a.monthYear).getTime() - new Date(b.reportingDate || b.monthYear).getTime()) || [];
 
@@ -362,8 +405,9 @@ export default function AISearchEngine() {
                             <p className="text-slate-500">Evaluating multi-metric profiles and financials securely.</p>
                         </div>
                     ) : (
-                        <div className="grid gap-6">
+                        <div className="grid gap-6 pb-24">
                             {results.map((startup, idx) => {
+                                const startupId = startup._id || startup.id;
                                 const equityVal = Number(startup.equity) || 0;
                                 const impliedValuation = equityVal > 0 ? startup.requested / (equityVal / 100) : 0;
                                 
@@ -378,7 +422,7 @@ export default function AISearchEngine() {
                                 const sparklinePath = generateMiniSparkline(recentRevs);
 
                                 return (
-                                    <div key={startup._id || startup.id}
+                                    <div key={startupId}
                                         className="bg-white border border-slate-200 rounded-3xl shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 p-6 flex flex-col gap-6 group relative animate-in fade-in slide-in-from-bottom-4"
                                         style={{ animationDelay: `${Math.min(idx * 50, 500)}ms` }}
                                     >
@@ -413,7 +457,7 @@ export default function AISearchEngine() {
                                                     )}
                                                 </div>
                                                 <p className="text-slate-600 text-sm line-clamp-2 leading-relaxed pr-8">{startup.desc}</p>
-                                                {startup.desc?.length > 120 && <Link href={`/startups/${startup._id || startup.id}`} className="text-emerald-600 text-xs font-bold hover:underline mt-1 inline-block">Read More</Link>}
+                                                {startup.desc?.length > 120 && <Link href={`/startups/${startupId}`} className="text-emerald-600 text-xs font-bold hover:underline mt-1 inline-block">Read More</Link>}
                                             </div>
                                             
                                             {/* AI Match Circle (Top Right) */}
@@ -496,11 +540,33 @@ export default function AISearchEngine() {
                                             
                                             <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end">
                                                 <div className="flex items-center gap-1">
-                                                    <button className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all" title="Save"><Bookmark className="size-4"/></button>
-                                                    <button className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all" title="Share"><Share2 className="size-4"/></button>
-                                                    <button className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all" title="Follow"><Rss className="size-4"/></button>
+                                                    <div className="relative group/tt">
+                                                        <button onClick={() => toggleSave(startupId)} className={`p-2 rounded-xl transition-all ${savedStartups.includes(startupId) ? 'bg-emerald-100 text-emerald-600' : 'text-slate-400 hover:text-emerald-600 hover:bg-emerald-50'}`}>
+                                                            <Bookmark className={`size-4 ${savedStartups.includes(startupId) ? 'fill-current' : ''}`}/>
+                                                        </button>
+                                                        <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-800 text-white text-[10px] font-bold rounded opacity-0 group-hover/tt:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10 shadow-md">Save Startup</span>
+                                                    </div>
+                                                    
+                                                    <div className="relative group/tt">
+                                                        <button onClick={() => setShareModalData(startup)} className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all"><Share2 className="size-4"/></button>
+                                                        <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-800 text-white text-[10px] font-bold rounded opacity-0 group-hover/tt:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10 shadow-md">Share Startup</span>
+                                                    </div>
+
+                                                    <div className="relative group/tt">
+                                                        <button onClick={() => toggleCompare(startupId)} className={`p-2 rounded-xl transition-all ${compareList.includes(startupId) ? 'bg-purple-100 text-purple-600' : 'text-slate-400 hover:text-purple-600 hover:bg-purple-50'}`}>
+                                                            <Scale className="size-4"/>
+                                                        </button>
+                                                        <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-800 text-white text-[10px] font-bold rounded opacity-0 group-hover/tt:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10 shadow-md">Compare Startups</span>
+                                                    </div>
+
+                                                    <div className="relative group/tt">
+                                                        <button onClick={() => toggleFollow(startupId)} className={`p-2 rounded-xl transition-all ${followedStartups.includes(startupId) ? 'bg-indigo-100 text-indigo-600' : 'text-slate-400 hover:text-indigo-600 hover:bg-indigo-50'}`}>
+                                                            <Bell className={`size-4 ${followedStartups.includes(startupId) ? 'fill-current' : ''}`}/>
+                                                        </button>
+                                                        <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-800 text-white text-[10px] font-bold rounded opacity-0 group-hover/tt:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10 shadow-md">Follow Startup</span>
+                                                    </div>
                                                 </div>
-                                                <Link href={`/startups/${startup._id || startup.id}`} className="flex items-center gap-1.5 px-6 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-sm font-bold transition-all shadow-md hover:shadow-lg ml-2 group/btn">
+                                                <Link href={`/startups/${startupId}`} className="flex items-center gap-1.5 px-6 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-sm font-bold transition-all shadow-md hover:shadow-lg ml-2 group/btn">
                                                     Explore Startup <ChevronRight className="size-4 group-hover/btn:translate-x-0.5 transition-transform" />
                                                 </Link>
                                             </div>
@@ -527,6 +593,72 @@ export default function AISearchEngine() {
                 </div>
 
             </div>
+
+            {/* Compare Floating Banner */}
+            {compareList.length >= 2 && (
+                <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-6 py-4 rounded-full shadow-2xl flex items-center gap-6 z-40 animate-in slide-in-from-bottom-10 border border-slate-700">
+                    <div className="flex items-center gap-2">
+                        <Scale className="size-5 text-emerald-400" />
+                        <span className="font-bold text-sm whitespace-nowrap">{compareList.length} Selected for Comparison</span>
+                    </div>
+                    <Link href="/investors/compare" className="px-5 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-900 font-bold rounded-full transition-colors text-sm shadow-md whitespace-nowrap">
+                        Compare Now
+                    </Link>
+                    <button onClick={() => {setCompareList([]); localStorage.setItem('inv_compare_list', '[]')}} className="p-1 text-slate-400 hover:text-white transition-colors">
+                        <X className="size-4" />
+                    </button>
+                </div>
+            )}
+
+            {/* Share Modal */}
+            {shareModalData && (
+                <div className="fixed inset-0 bg-slate-900/40 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden animate-in fade-in zoom-in-95 border border-slate-100">
+                        <div className="p-6">
+                            <div className="flex justify-between items-center mb-6">
+                                <h3 className="font-bold text-xl text-slate-900">Share Startup</h3>
+                                <button onClick={() => setShareModalData(null)} className="p-2 bg-slate-50 text-slate-400 hover:text-slate-600 rounded-full transition-colors"><X className="size-4"/></button>
+                            </div>
+                            
+                            <div className="flex items-center gap-3 mb-6 p-3 bg-slate-50 rounded-xl border border-slate-100">
+                                <div className="size-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 font-bold font-outfit shrink-0">
+                                    {shareModalData.name?.charAt(0) || 'S'}
+                                </div>
+                                <div className="min-w-0">
+                                    <p className="font-bold text-slate-900 text-sm truncate">{shareModalData.name}</p>
+                                    <p className="text-xs text-slate-500 truncate">{shareModalData.sector}</p>
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <button onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/startups/${shareModalData._id || shareModalData.id}`); alert('Link copied!'); }} className="w-full flex items-center gap-3 p-3 hover:bg-slate-50 rounded-xl transition-colors text-left text-sm font-medium text-slate-700">
+                                    <div className="p-2 bg-slate-100 rounded-lg text-slate-600"><Copy className="size-4"/></div>
+                                    Copy Startup Link
+                                </button>
+                                <a href={`https://wa.me/?text=Check out this startup on InVolution: ${window.location.origin}/startups/${shareModalData._id || shareModalData.id}`} target="_blank" rel="noopener noreferrer" className="w-full flex items-center gap-3 p-3 hover:bg-slate-50 rounded-xl transition-colors text-left text-sm font-medium text-slate-700">
+                                    <div className="p-2 bg-green-100 rounded-lg text-green-600"><MessageCircle className="size-4"/></div>
+                                    Share via WhatsApp
+                                </a>
+                                <a href={`https://www.linkedin.com/sharing/share-offsite/?url=${window.location.origin}/startups/${shareModalData._id || shareModalData.id}`} target="_blank" rel="noopener noreferrer" className="w-full flex items-center gap-3 p-3 hover:bg-slate-50 rounded-xl transition-colors text-left text-sm font-medium text-slate-700">
+                                    <div className="p-2 bg-blue-100 rounded-lg text-blue-600"><Linkedin className="size-4"/></div>
+                                    Share via LinkedIn
+                                </a>
+                                <a href={`mailto:?subject=Investment Opportunity: ${shareModalData.name}&body=Check out ${shareModalData.name} on InVolution!%0D%0A%0D%0A${shareModalData.desc}%0D%0A%0D%0AView Deal: ${window.location.origin}/startups/${shareModalData._id || shareModalData.id}`} className="w-full flex items-center gap-3 p-3 hover:bg-slate-50 rounded-xl transition-colors text-left text-sm font-medium text-slate-700">
+                                    <div className="p-2 bg-purple-100 rounded-lg text-purple-600"><Mail className="size-4"/></div>
+                                    Share via Email
+                                </a>
+                                <button onClick={() => {
+                                    const summary = `Startup: ${shareModalData.name}\nIndustry: ${shareModalData.sector}\nAsking: ${formatCurrency(shareModalData.requested)}\nView Deal: ${window.location.origin}/startups/${shareModalData._id || shareModalData.id}`;
+                                    navigator.clipboard.writeText(summary); alert('Summary copied!'); 
+                                }} className="w-full flex items-center gap-3 p-3 hover:bg-slate-50 rounded-xl transition-colors text-left text-sm font-medium text-slate-700">
+                                    <div className="p-2 bg-orange-100 rounded-lg text-orange-600"><FileText className="size-4"/></div>
+                                    Copy Startup Summary
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

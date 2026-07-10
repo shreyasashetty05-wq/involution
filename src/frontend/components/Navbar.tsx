@@ -6,21 +6,19 @@ import { createClient } from "@/utils/supabase/client";
 import { useEffect, useState } from "react";
 import { User } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
+import { Bell } from "lucide-react";
+import { formatRelativeTime } from "@/utils/timeHelper";
 
-/**
-* Renders the top navigation bar with branding, role-based links, and authentication actions.
-* @example
-* Navbar()
-* <nav>...</nav>
-* @param {undefined} Argument - This component does not take any arguments.
-* @returns {JSX.Element} The rendered navigation bar component.
-**/
 export default function Navbar() {
     const supabase = createClient();
     const router = useRouter();
     const [user, setUser] = useState<User | null>(null);
     const [dbRole, setDbRole] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
+
+    const [notifications, setNotifications] = useState<any[]>([]);
+    const [unreadCount, setUnreadCount] = useState(0);
+    const [showNotifications, setShowNotifications] = useState(false);
 
     useEffect(() => {
         const fetchUser = async () => {
@@ -50,6 +48,175 @@ export default function Navbar() {
 
         return () => subscription.unsubscribe();
     }, [supabase]);
+
+    useEffect(() => {
+        const role = dbRole || user?.user_metadata?.role || "investor";
+        const isAuthenticated = !loading && !!user;
+        if (!isAuthenticated) return;
+
+        const fetchNotifications = async () => {
+            try {
+                let notifs: any[] = [];
+                const res = await fetch('/api/startups?type=regular');
+                const json = await res.json();
+                const startups = json.success ? json.data : [];
+
+                if (role === 'admin') {
+                    startups.forEach((s: any) => {
+                        if (s.kyc_status === 'Pending') {
+                            notifs.push({
+                                id: `${s._id || s.id}-kyc`,
+                                title: "📄 New KYC awaiting review",
+                                desc: `${s.name} submitted their KYC verification.`,
+                                time: new Date(s.createdAt || Date.now()),
+                                link: `/admin/kyc`,
+                            });
+                        }
+
+                        const updates = s.financial_updates || [];
+                        const pendingUpdates = updates.filter((u: any) => u.status === 'Pending');
+                        pendingUpdates.forEach((u: any) => {
+                            notifs.push({
+                                id: `${u.id}-fin`,
+                                title: "💰 New Financial Update awaiting verification",
+                                desc: `${s.name} submitted financials for ${u.monthYear || u.reportingDate}.`,
+                                time: new Date(u.dateSubmitted || Date.now()),
+                                link: `/admin/financial-verification`,
+                            });
+                        });
+                        
+                        if (s.videos && s.videos.length > 0) {
+                            notifs.push({
+                                id: `${s._id || s.id}-video`,
+                                title: "🎥 New Pitch Video Uploaded",
+                                desc: `${s.name} added a pitch video.`,
+                                time: new Date(s.createdAt || Date.now()),
+                                link: `/startups/${s._id || s.id}`,
+                            });
+                        }
+                    });
+                } else if (role === 'startup') {
+                    const myStartups = startups.filter((s: any) => s.owner_email === user?.email);
+                    myStartups.forEach((s: any) => {
+                        if (s.kyc_status === 'Approved') {
+                            notifs.push({
+                                id: `${s._id || s.id}-kyc-app`,
+                                title: "✅ Your KYC has been approved",
+                                desc: "Your identity verification is complete.",
+                                time: new Date(s.createdAt || Date.now() - 300000), 
+                                link: `/startups/dashboard`,
+                            });
+                        } else if (s.kyc_status === 'Rejected') {
+                            notifs.push({
+                                id: `${s._id || s.id}-kyc-rej`,
+                                title: "❌ Your KYC was rejected",
+                                desc: "Please check your dashboard for details.",
+                                time: new Date(s.createdAt || Date.now()),
+                                link: `/startups/dashboard`,
+                            });
+                        }
+
+                        const updates = s.financial_updates || [];
+                        updates.forEach((u: any) => {
+                            if (u.status === 'Rejected') {
+                                notifs.push({
+                                    id: `${u.id}-rej`,
+                                    title: "❌ Your financial update was rejected",
+                                    desc: `Reason: ${u.adminRemarks || 'Please review your submission.'}`,
+                                    time: new Date(u.dateSubmitted || Date.now()),
+                                    link: `/startups/dashboard`,
+                                });
+                            } else if (u.status === 'Request More Info') {
+                                notifs.push({
+                                    id: `${u.id}-req`,
+                                    title: "📝 More information required",
+                                    desc: `Reason: ${u.adminRemarks || 'Please upload missing documents.'}`,
+                                    time: new Date(u.dateSubmitted || Date.now()),
+                                    link: `/startups/dashboard`,
+                                });
+                            } else if (u.status === 'Approved') {
+                                notifs.push({
+                                    id: `${u.id}-app`,
+                                    title: "✅ Financial Update Approved",
+                                    desc: "Your monthly report has been verified.",
+                                    time: new Date(u.dateSubmitted || Date.now()),
+                                    link: `/startups/${s._id || s.id}`,
+                                });
+                            }
+                        });
+                    });
+                } else if (role === 'investor') {
+                    const f = localStorage.getItem('inv_followed_startups');
+                    const followedIds = f ? JSON.parse(f) : [];
+                    const followedStartups = startups.filter((s: any) => followedIds.includes(s._id || s.id));
+                    
+                    followedStartups.forEach((s: any) => {
+                        const approved = s.financial_updates?.filter((u: any) => u.status === 'Approved').sort((a: any, b: any) => new Date(a.reportingDate || a.monthYear).getTime() - new Date(b.reportingDate || b.monthYear).getTime()) || [];
+                        
+                        if (approved.length > 0) {
+                            const last = approved[approved.length - 1];
+                            notifs.push({
+                                id: `${last.id}-appv`,
+                                title: "✅ New Financial Report Approved",
+                                desc: `${s.name}'s monthly report has been verified.`,
+                                time: new Date(last.dateSubmitted || Date.now()),
+                                link: `/startups/${s._id || s.id}`
+                            });
+                            
+                            notifs.push({
+                                id: `${last.id}-rev`,
+                                title: `📈 ${s.name} updated its financials`,
+                                desc: `Revenue has been verified and updated.`,
+                                time: new Date(last.dateSubmitted || Date.now()),
+                                link: `/startups/${s._id || s.id}`
+                            });
+                        }
+
+                        if (s.videos && s.videos.length > 0) {
+                            notifs.push({
+                                id: `${s._id || s.id}-video`,
+                                title: "🎥 New Pitch Video Uploaded",
+                                desc: `${s.name} added a pitch video.`,
+                                time: new Date(s.createdAt || Date.now() - 86400000), 
+                                link: `/startups/${s._id || s.id}`,
+                            });
+                        }
+                    });
+                }
+
+                notifs = notifs.sort((a, b) => b.time.getTime() - a.time.getTime()).slice(0, 20);
+                setNotifications(notifs);
+
+                const readStorage = localStorage.getItem(`read_notifs_${user?.id || 'guest'}`);
+                const readIds = readStorage ? JSON.parse(readStorage) : [];
+                const unread = notifs.filter(n => !readIds.includes(n.id)).length;
+                setUnreadCount(unread);
+
+            } catch (e) {
+                console.error("Failed to fetch notifications", e);
+            }
+        };
+
+        fetchNotifications();
+        const intervalId = setInterval(fetchNotifications, 10000);
+        return () => clearInterval(intervalId);
+    }, [loading, user, dbRole]);
+
+    const markAsRead = (id: string) => {
+        const readStorage = localStorage.getItem(`read_notifs_${user?.id || 'guest'}`);
+        const readIds = readStorage ? JSON.parse(readStorage) : [];
+        if (!readIds.includes(id)) {
+            readIds.push(id);
+            localStorage.setItem(`read_notifs_${user?.id || 'guest'}`, JSON.stringify(readIds));
+            setUnreadCount(prev => Math.max(0, prev - 1));
+        }
+    };
+
+    const markAllAsRead = () => {
+        const allIds = notifications.map(n => n.id);
+        localStorage.setItem(`read_notifs_${user?.id || 'guest'}`, JSON.stringify(allIds));
+        setUnreadCount(0);
+    };
 
     const handleSignOut = async () => {
         await supabase.auth.signOut();
@@ -111,7 +278,60 @@ export default function Navbar() {
                             >
                                 {role === "investor" ? "Discover" : "Dashboard"}
                             </Link>
-                            <div className="flex items-center gap-3 pl-3 border-l border-slate-200">
+                            
+                            {/* Global Notification Center */}
+                            <div className="relative ml-2">
+                                <button onClick={() => setShowNotifications(!showNotifications)} className="p-2 text-slate-400 hover:text-emerald-600 transition-colors relative">
+                                    <Bell className="size-5" />
+                                    {unreadCount > 0 && (
+                                        <span className="absolute top-1 right-1 flex size-4">
+                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                            <span className="relative inline-flex rounded-full size-4 bg-red-500 border-2 border-white items-center justify-center text-[8px] font-bold text-white">{unreadCount}</span>
+                                        </span>
+                                    )}
+                                </button>
+                                {showNotifications && (
+                                    <div className="absolute right-0 mt-3 w-80 md:w-96 bg-white border border-slate-200 rounded-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2">
+                                        <div className="p-4 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
+                                            <h3 className="font-bold text-slate-900 flex items-center gap-2">Notifications</h3>
+                                            {unreadCount > 0 && (
+                                                <button onClick={markAllAsRead} className="text-xs font-bold text-emerald-600 hover:text-emerald-700 transition-colors">Mark all as read</button>
+                                            )}
+                                        </div>
+                                        <div className="max-h-96 overflow-y-auto divide-y divide-slate-50 custom-scrollbar">
+                                            {notifications.length === 0 ? (
+                                                <div className="p-6 text-center text-slate-500 text-sm">No new notifications.</div>
+                                            ) : (
+                                                notifications.map(n => {
+                                                    const readStorage = localStorage.getItem(`read_notifs_${user?.id || 'guest'}`);
+                                                    const isRead = readStorage ? JSON.parse(readStorage).includes(n.id) : false;
+                                                    return (
+                                                    <div key={n.id} className={`p-4 transition-colors relative group ${isRead ? 'bg-white' : 'bg-emerald-50/30'}`}>
+                                                        {!isRead && <div className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500"></div>}
+                                                        <div className="flex justify-between items-start mb-1">
+                                                            <Link href={n.link} onClick={() => {markAsRead(n.id); setShowNotifications(false);}} className="font-bold text-sm text-slate-900 hover:text-emerald-600 transition-colors pr-6">
+                                                                {n.title}
+                                                            </Link>
+                                                        </div>
+                                                        <p className="text-xs text-slate-600 mb-2">{n.desc}</p>
+                                                        <div className="flex justify-between items-center mt-2">
+                                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{formatRelativeTime(n.time)}</span>
+                                                            {!isRead && (
+                                                                <button onClick={() => markAsRead(n.id)} className="text-[10px] font-bold text-emerald-600 opacity-0 group-hover:opacity-100 transition-opacity">Mark as read</button>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                )})
+                                            )}
+                                        </div>
+                                        <div className="p-3 border-t border-slate-100 text-center bg-slate-50">
+                                            <button className="text-xs font-bold text-slate-500 hover:text-slate-700">View All Notifications</button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="flex items-center gap-3 pl-3 border-l border-slate-200 ml-2">
                                 {image ? (
                                     <Image src={image} alt="Avatar" width={28} height={28} className="size-7 rounded-full border-2 border-emerald-200 shadow-sm" />
                                 ) : (
