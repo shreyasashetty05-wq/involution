@@ -444,7 +444,7 @@ function DealWorkspace() {
         // Optimistic UI update
         setMessages(m => [...m, newMsg]);
 
-        let finalFileData = null;
+        let finalFileData: any = null;
         if (fileToUpload && filePath) {
             const supabase = createClient();
             const { data, error } = await supabase.storage
