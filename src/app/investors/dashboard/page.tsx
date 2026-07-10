@@ -4,6 +4,7 @@ import Link from "next/link";
 import { FileText, MessageSquare, TrendingUp, Download, Eye, Clock, ShieldCheck, Loader2, Bell, Bookmark, ArrowRight, Rss } from "lucide-react";
 import { useState, useEffect } from "react";
 import { formatRelativeTime } from "@/utils/timeHelper";
+import { createClient } from "@/utils/supabase/client";
 
 interface Agreement { id: string; startup: string; date: string; amount: string; equity: string; status: string; }
 interface ActiveChat { id: string; startupId: string; startup: string; lastMessage: string; time: string; unread: number; }
@@ -17,7 +18,10 @@ export default function InvestorDashboard() {
 
     const [followedStartups, setFollowedStartups] = useState<any[]>([]);
     const [notifications, setNotifications] = useState<any[]>([]);
+    const [unreadCount, setUnreadCount] = useState(0);
     const [showNotifications, setShowNotifications] = useState(false);
+    
+    const supabase = createClient();
 
     useEffect(() => {
         const fetchDashboardData = async () => {
@@ -80,7 +84,15 @@ export default function InvestorDashboard() {
                                 });
                             }
                         });
-                        setNotifications(notifs.sort((a, b) => b.time.getTime() - a.time.getTime()));
+                        
+                        const sortedNotifs = notifs.sort((a, b) => b.time.getTime() - a.time.getTime());
+                        setNotifications(sortedNotifs);
+
+                        const { data: { user } } = await supabase.auth.getUser();
+                        const readStorage = localStorage.getItem(`read_notifs_${user?.id || 'guest'}`);
+                        const readIds = readStorage ? JSON.parse(readStorage) : [];
+                        const unread = sortedNotifs.filter(n => !readIds.includes(n.id)).length;
+                        setUnreadCount(unread);
                     }
                 }
             } catch (e) {
@@ -102,6 +114,17 @@ export default function InvestorDashboard() {
         const next = followedStartups.filter(s => (s._id || s.id) !== id);
         setFollowedStartups(next);
         localStorage.setItem('inv_followed_startups', JSON.stringify(next.map(s => s._id || s.id)));
+    };
+
+    const markAsRead = async (id: string) => {
+        const { data: { user } } = await supabase.auth.getUser();
+        const readStorage = localStorage.getItem(`read_notifs_${user?.id || 'guest'}`);
+        const readIds = readStorage ? JSON.parse(readStorage) : [];
+        if (!readIds.includes(id)) {
+            readIds.push(id);
+            localStorage.setItem(`read_notifs_${user?.id || 'guest'}`, JSON.stringify(readIds));
+            setUnreadCount(prev => Math.max(0, prev - 1));
+        }
     };
 
     if (loading) {
@@ -135,10 +158,10 @@ export default function InvestorDashboard() {
                     <div className="relative">
                         <button onClick={() => setShowNotifications(!showNotifications)} className="p-2.5 bg-white border border-slate-200 hover:border-emerald-300 rounded-lg text-slate-600 hover:text-emerald-600 transition-colors relative shadow-sm">
                             <Bell className="size-5" />
-                            {notifications.length > 0 && (
+                            {unreadCount > 0 && (
                                 <span className="absolute -top-1 -right-1 flex h-4 w-4">
                                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                                    <span className="relative inline-flex rounded-full h-4 w-4 bg-red-500 border-2 border-white items-center justify-center text-[8px] font-bold text-white">{notifications.length}</span>
+                                    <span className="relative inline-flex rounded-full h-4 w-4 bg-red-500 border-2 border-white items-center justify-center text-[8px] font-bold text-white">{unreadCount}</span>
                                 </span>
                             )}
                         </button>
@@ -147,19 +170,23 @@ export default function InvestorDashboard() {
                             <div className="absolute right-0 mt-3 w-80 bg-white border border-slate-200 rounded-2xl shadow-xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2">
                                 <div className="p-4 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
                                     <h3 className="font-bold text-slate-900 flex items-center gap-2"><Bell className="size-4 text-emerald-500"/> Notifications</h3>
-                                    <span className="text-xs font-bold text-slate-400">{notifications.length} New</span>
+                                    <span className="text-xs font-bold text-slate-400">{unreadCount} New</span>
                                 </div>
                                 <div className="max-h-80 overflow-y-auto">
                                     {notifications.length === 0 ? (
                                         <div className="p-6 text-center text-slate-500 text-sm">No new notifications from startups you follow.</div>
                                     ) : (
-                                        notifications.map(n => (
-                                            <Link href={n.link} key={n.id} className="block p-4 border-b border-slate-50 hover:bg-slate-50 transition-colors">
+                                        notifications.map(n => {
+                                            const readStorage = localStorage.getItem(`read_notifs_guest`); // We fallback to guest if not available syncly
+                                            // The read sync is better handled but we can safely assume if it's read by using a quick check or just passing isRead down
+                                            // Since we're mapping we can do a simple read check
+                                            return (
+                                            <Link href={n.link} key={n.id} onClick={() => {markAsRead(n.id); setShowNotifications(false);}} className="block p-4 border-b border-slate-50 hover:bg-slate-50 transition-colors">
                                                 <h4 className="font-bold text-sm text-slate-900 mb-0.5">{n.title}</h4>
                                                 <p className="text-xs text-slate-500 mb-2">{n.desc}</p>
                                                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{formatRelativeTime(n.time)}</p>
                                             </Link>
-                                        ))
+                                        )})
                                     )}
                                 </div>
                             </div>

@@ -130,6 +130,15 @@ export async function updateSession(request: NextRequest) {
         return NextResponse.redirect(url);
     }
 
+    // Admin Dashboard Isolation
+    if (role === "admin") {
+        if (path.startsWith("/investors") || path.startsWith("/startups") || path.startsWith("/kyc")) {
+            const url = request.nextUrl.clone();
+            url.pathname = "/admin/kyc";
+            return NextResponse.redirect(url);
+        }
+    }
+
     // KYC Check applies to investors and startups, but not admins
     if (role !== "admin") {
         if (!kycDone && (path.startsWith("/investors") || path.startsWith("/startups"))) {

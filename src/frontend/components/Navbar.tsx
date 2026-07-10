@@ -85,15 +85,16 @@ export default function Navbar() {
                             });
                         });
                         
-                        if (s.videos && s.videos.length > 0) {
+                        const respondedUpdates = updates.filter((u: any) => u.status === 'Responded');
+                        respondedUpdates.forEach((u: any) => {
                             notifs.push({
-                                id: `${s._id || s.id}-video`,
-                                title: "🎥 New Pitch Video Uploaded",
-                                desc: `${s.name} added a pitch video.`,
-                                time: new Date(s.createdAt || Date.now()),
-                                link: `/startups/${s._id || s.id}`,
+                                id: `${u.id}-fin-res`,
+                                title: "📝 Startup responded to More Info",
+                                desc: `${s.name} uploaded requested documents for ${u.monthYear || u.reportingDate}.`,
+                                time: new Date(u.dateSubmitted || Date.now()),
+                                link: `/admin/financial-verification`,
                             });
-                        }
+                        });
                     });
                 } else if (role === 'startup') {
                     const myStartups = startups.filter((s: any) => s.owner_email === user?.email);
@@ -110,7 +111,15 @@ export default function Navbar() {
                             notifs.push({
                                 id: `${s._id || s.id}-kyc-rej`,
                                 title: "❌ Your KYC was rejected",
-                                desc: "Please check your dashboard for details.",
+                                desc: `Reason: ${s.admin_remarks || 'Please check your dashboard for details.'}`,
+                                time: new Date(s.createdAt || Date.now()),
+                                link: `/startups/dashboard`,
+                            });
+                        } else if (s.kyc_status === 'Request More Info') {
+                            notifs.push({
+                                id: `${s._id || s.id}-kyc-req`,
+                                title: "📝 KYC More Information Required",
+                                desc: `Reason: ${s.admin_remarks || 'Please provide additional details.'}`,
                                 time: new Date(s.createdAt || Date.now()),
                                 link: `/startups/dashboard`,
                             });

@@ -15,11 +15,23 @@ export async function GET(request: Request) {
             if (!error && data?.user) {
                 // Get role from cookie
                 const roleCookie = cookieStore.get("involution_role");
-                const role = roleCookie?.value || "investor";
+                let role = roleCookie?.value || "investor";
 
                 // Update user metadata to save role if not already set
-                const currentRole = data.user.user_metadata?.role;
+                let currentRole = data.user.user_metadata?.role;
                 
+                // Fetch dbRole explicitly to override cookie/metadata for admins
+                const { data: roleData } = await supabase
+                    .from("user_roles")
+                    .select("role")
+                    .eq("email", data.user.email)
+                    .maybeSingle();
+
+                if (roleData?.role === "admin") {
+                    currentRole = "admin";
+                    role = "admin";
+                }
+
                 // Check if they already have a KYC record
                 const userEmail = data.user.email;
                 let kycRecord = null;
@@ -49,7 +61,12 @@ export async function GET(request: Request) {
                 });
 
                 const redirectRole = currentRole || role;
-                const redirectPath = redirectRole === "investor" ? "/investors/dashboard" : "/startups/dashboard";
+                let redirectPath = redirectRole === "investor" ? "/investors/dashboard" : "/startups/dashboard";
+                
+                if (redirectRole === "admin") {
+                    redirectPath = "/admin/kyc";
+                }
+
                 return NextResponse.redirect(`${origin}${redirectPath}`);
             } else {
                 console.error("Supabase exchangeCodeForSession error:", error);
