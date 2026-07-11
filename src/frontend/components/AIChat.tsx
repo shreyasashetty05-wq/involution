@@ -1,7 +1,13 @@
 "use client";
 
-import { useState } from 'react';
-import { Bot, Send, Loader2, User, ThumbsUp, ThumbsDown } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { ChatHeader } from './chat/ChatHeader';
+import { MessageBubble } from './chat/MessageBubble';
+import { ChatInput } from './chat/ChatInput';
+import { TypingIndicator } from './chat/TypingIndicator';
+import { UploadedFile } from './chat/FileUploader';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowDown } from 'lucide-react';
 
 interface AIChatProps {
     startupId: string;
@@ -9,34 +15,52 @@ interface AIChatProps {
 
 interface Message {
     role: 'user' | 'ai';
-    content: string;
+    content: string | React.ReactNode;
     feedback?: 'upvote' | 'downvote';
+    time?: string;
 }
 
-/**
-* Renders an interactive AI chat interface for asking questions about a startup and submitting feedback on AI responses.
-* @example
-* AIChat({ startupId })
-* <AI chat component with message history, input, loading state, and feedback controls>
-* @param {AIChatProps} { startupId } - Props containing the startup identifier used for chat requests and feedback submission.
-* @returns {JSX.Element} The AI chat UI component.
-**/
+const QUICK_PROMPTS = ["Market Size", "Funding", "SWOT", "Competitors", "Risks", "Business Model", "Growth Strategy"];
+
+const INITIAL_MESSAGE = `### NexaFlow AI Setup Complete
+I've analyzed the startup's profile. Here's what I can help you discover:
+
+* **Market Opportunity:** Sizing and trends
+* **Revenue Model:** Pricing strategy and unit economics
+* **Risks:** Market, execution, and competitive threats
+* **Competitors:** Direct and indirect alternatives
+* **Growth Potential:** Scalability and GTM
+
+Feel free to ask a specific question or use one of the quick prompts below!`;
+
 export default function AIChat({ startupId }: AIChatProps) {
     const [messages, setMessages] = useState<Message[]>([
-        { role: 'ai', content: "Hello! I'm the InVolution AI Analyst. I've analyzed this startup's profile. What would you like to know?" }
+        { 
+            role: 'ai', 
+            content: INITIAL_MESSAGE,
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        }
     ]);
-    const [input, setInput] = useState("");
     const [isLoading, setIsLoading] = useState(false);
+    const messagesEndRef = useRef<HTMLDivElement>(null);
+    const scrollContainerRef = useRef<HTMLDivElement>(null);
+    const [showScrollButton, setShowScrollButton] = useState(false);
 
-    /**
-    * Submits upvote or downvote feedback for an AI chat message and records it on the server.
-    * @example
-    * sync(2, 'upvote')
-    * undefined
-    * @param {number} index - The index of the message to update with feedback.
-    * @param {'upvote' | 'downvote'} type - The feedback type to apply to the AI message.
-    * @returns {Promise<void>} A promise that resolves after the feedback update attempt completes.
-    **/
+    // Auto-scroll logic
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    };
+
+    useEffect(() => {
+        scrollToBottom();
+    }, [messages, isLoading]);
+
+    const handleScroll = () => {
+        if (!scrollContainerRef.current) return;
+        const { scrollTop, scrollHeight, clientHeight } = scrollContainerRef.current;
+        setShowScrollButton(scrollHeight - scrollTop - clientHeight > 150);
+    };
+
     const handleFeedback = async (index: number, type: 'upvote' | 'downvote') => {
         const msg = messages[index];
         if (msg.role !== 'ai' || msg.feedback) return;
@@ -50,8 +74,8 @@ export default function AIChat({ startupId }: AIChatProps) {
                 body: JSON.stringify({
                     startupId,
                     module: 'chat',
-                    context: index > 0 ? messages[index - 1].content : '',
-                    aiResponse: msg.content,
+                    context: index > 0 && typeof messages[index - 1].content === 'string' ? messages[index - 1].content : '',
+                    aiResponse: typeof msg.content === 'string' ? msg.content : 'Rich Content',
                     feedbackType: type
                 })
             });
@@ -60,24 +84,29 @@ export default function AIChat({ startupId }: AIChatProps) {
         }
     };
 
-    /**
-    * Handles chat form submission, sends the user's message to the AI chat API, and updates the conversation state with the response.
-    * @example
-    * sync(event)
-    * void
-    * @param {React.FormEvent} e - The form submission event.
-    * @returns {Promise<void>} A promise that resolves after the message is processed and the loading state is updated.
-    **/
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!input.trim() || isLoading) return;
+    const handleCopy = (content: string | React.ReactNode) => {
+        if (typeof content === 'string') {
+            navigator.clipboard.writeText(content);
+        }
+    };
 
-        const userMessage = input.trim();
-        setInput("");
-        setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
+    const handleSubmit = async (userMessage: string, files: UploadedFile[]) => {
+        if (!userMessage.trim() && files.length === 0) return;
+
+        const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        
+        let displayMessage = userMessage;
+        if (files.length > 0) {
+            const fileNames = files.map(f => f.name).join(', ');
+            displayMessage += `\n\n*(Attached: ${fileNames})*`;
+        }
+        
+        setMessages(prev => [...prev, { role: 'user', content: displayMessage, time: currentTime }]);
         setIsLoading(true);
 
         try {
+            // Note: If backend supported files, we'd send FormData here.
+            // For now, we preserve the existing API structure.
             const res = await fetch('/api/ai-chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -85,109 +114,131 @@ export default function AIChat({ startupId }: AIChatProps) {
             });
 
             const data = await res.json();
+            const aiTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
             if (data.success) {
-                setMessages(prev => [...prev, { role: 'ai', content: data.answer }]);
+                setMessages(prev => [...prev, { role: 'ai', content: data.answer, time: aiTime }]);
             } else {
-                setMessages(prev => [...prev, { role: 'ai', content: "Sorry, I encountered an error analyzing that request." }]);
+                setMessages(prev => [...prev, { role: 'ai', content: "Sorry, I encountered an error analyzing that request.", time: aiTime }]);
             }
         } catch (error) {
-            setMessages(prev => [...prev, { role: 'ai', content: "Sorry, there was a network error." }]);
+            setMessages(prev => [...prev, { role: 'ai', content: "Sorry, there was a network error.", time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }]);
         } finally {
             setIsLoading(false);
         }
     };
 
+    const handleShare = async () => {
+        if (messages.length === 0) {
+            alert("No messages to share.");
+            return;
+        }
+
+        try {
+            const res = await fetch('/api/chat/share', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ messages })
+            });
+
+            if (!res.ok) {
+                const errData = await res.json();
+                throw new Error(errData.error || "Failed to generate share link.");
+            }
+
+            const data = await res.json();
+            const { shareUrl } = data;
+
+            const title = 'NexaFlow AI Conversation';
+            
+            const copyToClipboard = async (text: string) => {
+                try {
+                    await navigator.clipboard.writeText(text);
+                    alert("✓ Share link copied.");
+                } catch (err) {
+                    alert("Failed to copy link to clipboard.");
+                }
+            };
+
+            if (navigator.share && window.isSecureContext) {
+                try {
+                    await navigator.share({
+                        title: title,
+                        text: "Check out this AI conversation!",
+                        url: shareUrl,
+                    });
+                } catch (error: any) {
+                    if (error.name !== 'AbortError') {
+                        await copyToClipboard(shareUrl);
+                    }
+                }
+            } else {
+                await copyToClipboard(shareUrl);
+            }
+        } catch (err: any) {
+            alert(`Share Failed: ${err.message}`);
+        }
+    };
+
     return (
-        <div className="size-full flex flex-col bg-gray-900/50 backdrop-blur-xl border border-gray-800 rounded-2xl overflow-hidden shadow-2xl">
-            {/* Header */}
-            <div className="bg-gradient-to-r from-emerald-600/20 to-blue-600/20 p-4 border-b border-gray-800 flex items-center gap-3">
-                <div className="p-2 bg-emerald-500/10 rounded-lg">
-                    <Bot className="size-6 text-emerald-400" />
-                </div>
-                <div>
-                    <h3 className="font-semibold text-white">InVolution AI Analyst</h3>
-                    <p className="text-xs text-gray-400">Ask anything about this startup</p>
-                </div>
+        <div className="w-full flex flex-col bg-[#0F172A] border border-[#334155] rounded-[24px] overflow-hidden shadow-2xl h-[700px] max-h-[85vh] font-sans relative">
+            <ChatHeader 
+                onNewChat={() => setMessages([{ role: 'ai', content: INITIAL_MESSAGE, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }])}
+                onClearChat={() => setMessages([])}
+                onExport={() => alert("Export chat function triggered.")}
+            />
+
+            <div 
+                ref={scrollContainerRef}
+                onScroll={handleScroll}
+                className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-8 scroll-smooth"
+            >
+                <AnimatePresence>
+                    {messages.map((msg, i) => (
+                        <MessageBubble 
+                            key={i} 
+                            role={msg.role} 
+                            content={msg.content} 
+                            time={msg.time}
+                            onCopy={() => handleCopy(msg.content)}
+                            onRegenerate={() => {
+                                if (i > 0 && messages[i-1].role === 'user') {
+                                    handleSubmit(messages[i-1].content as string, []);
+                                }
+                            }}
+                            onLike={() => handleFeedback(i, 'upvote')}
+                            onDislike={() => handleFeedback(i, 'downvote')}
+                            onShare={handleShare}
+                            liked={msg.feedback === 'upvote'}
+                            disliked={msg.feedback === 'downvote'}
+                        />
+                    ))}
+                </AnimatePresence>
+                
+                {isLoading && <TypingIndicator />}
+                
+                <div ref={messagesEndRef} className="h-4" />
             </div>
 
-            {/* Chat History */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-[300px] max-h-[500px]">
-                {messages.map((msg, i) => (
-                    <div key={i} className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                        {msg.role === 'ai' && (
-                            <div className="size-8 rounded-full bg-emerald-500/20 flex items-center justify-center shrink-0">
-                                <Bot className="size-4 text-emerald-400" />
-                            </div>
-                        )}
-                        <div className="flex flex-col gap-1 max-w-[85%]">
-                            <div className={`px-4 py-3 rounded-2xl text-sm leading-relaxed ${msg.role === 'user'
-                                ? 'bg-emerald-600 text-white rounded-tr-none'
-                                : 'bg-gray-800 text-gray-200 rounded-tl-none border border-gray-700'
-                                }`}>
-                                <div className="whitespace-pre-wrap">{msg.content}</div>
-                            </div>
-                            {msg.role === 'ai' && i > 0 && (
-                                <div className="flex items-center gap-2 mt-1 ml-1">
-                                    <button
-                                        onClick={() => handleFeedback(i, 'upvote')}
-                                        disabled={Boolean(msg.feedback)}
-                                        className={`p-1 rounded hover:bg-gray-800 transition-colors ${msg.feedback === 'upvote' ? 'text-emerald-400' : 'text-gray-500'}`}
-                                        title="Good response"
-                                    >
-                                        <ThumbsUp className="size-3.5" />
-                                    </button>
-                                    <button
-                                        onClick={() => handleFeedback(i, 'downvote')}
-                                        disabled={Boolean(msg.feedback)}
-                                        className={`p-1 rounded hover:bg-gray-800 transition-colors ${msg.feedback === 'downvote' ? 'text-red-400' : 'text-gray-500'}`}
-                                        title="Bad response"
-                                    >
-                                        <ThumbsDown className="size-3.5" />
-                                    </button>
-                                </div>
-                            )}
-                        </div>
-                        {msg.role === 'user' && (
-                            <div className="size-8 rounded-full bg-gray-700 flex items-center justify-center shrink-0">
-                                <User className="size-4 text-gray-300" />
-                            </div>
-                        )}
-                    </div>
-                ))}
-                {isLoading && (
-                    <div className="flex gap-3 justify-start">
-                        <div className="size-8 rounded-full bg-emerald-500/20 flex items-center justify-center shrink-0">
-                            <Bot className="size-4 text-emerald-400" />
-                        </div>
-                        <div className="px-4 py-3 rounded-2xl bg-gray-800 text-emerald-400 rounded-tl-none border border-gray-700 flex items-center gap-2">
-                            <Loader2 className="size-4 animate-spin" />
-                            <span className="text-sm">Analyzing data...</span>
-                        </div>
-                    </div>
-                )}
-            </div>
-
-            {/* Input Form */}
-            <form onSubmit={handleSubmit} className="p-4 bg-gray-900 border-t border-gray-800">
-                <div className="relative flex items-center">
-                    <input
-                        type="text"
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
-                        placeholder="e.g. What is the biggest risk here?"
-                        className="w-full bg-gray-800 border border-gray-700 text-white placeholder:text-gray-500 text-sm rounded-xl pl-4 pr-12 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all"
-                        disabled={isLoading}
-                    />
-                    <button
-                        type="submit"
-                        disabled={!input.trim() || isLoading}
-                        className="absolute right-2 p-2 bg-emerald-600 hover:bg-emerald-500 disabled:bg-gray-700 disabled:opacity-50 text-white rounded-lg transition-colors"
+            <AnimatePresence>
+                {showScrollButton && (
+                    <motion.button
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.8 }}
+                        onClick={scrollToBottom}
+                        className="absolute bottom-[180px] right-8 p-2.5 bg-[#1E293B] border border-[#334155] text-[#F8FAFC] rounded-full shadow-lg hover:bg-[#334155] transition-colors z-20"
                     >
-                        <Send className="size-4" />
-                    </button>
-                </div>
-            </form>
+                        <ArrowDown className="size-4" />
+                    </motion.button>
+                )}
+            </AnimatePresence>
+
+            <ChatInput 
+                onSubmit={handleSubmit} 
+                isLoading={isLoading} 
+                quickPrompts={QUICK_PROMPTS} 
+            />
         </div>
     );
 }
