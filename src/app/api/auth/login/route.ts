@@ -29,7 +29,7 @@ export async function POST(request: Request) {
         });
 
         if (error) {
-            console.error("Login error:", error);
+            console.error("Login error:", error?.message || "Unknown error");
             // Generic error message for authentication failures (prevents email enumeration)
             return NextResponse.json(
                 { error: "Invalid email or password." },
@@ -43,7 +43,7 @@ export async function POST(request: Request) {
         );
 
     } catch (error) {
-        console.error("Login exception:", error);
+        console.error("Login exception:", error instanceof Error ? error.message : "Unknown error");
         return NextResponse.json(
             { error: "Internal Server Error" },
             { status: 500 }

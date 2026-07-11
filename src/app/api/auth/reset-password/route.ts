@@ -30,7 +30,7 @@ export async function POST(request: Request) {
         // We always return success regardless of whether the email exists or if there's an error,
         // to prevent email enumeration attacks. We just log the error on the server.
         if (error) {
-            console.error("Password reset error:", error);
+            console.error("Password reset error:", error?.message || "Unknown error");
         }
 
         return NextResponse.json(
@@ -39,7 +39,7 @@ export async function POST(request: Request) {
         );
 
     } catch (error) {
-        console.error("Password reset exception:", error);
+        console.error("Password reset exception:", error instanceof Error ? error.message : "Unknown error");
         return NextResponse.json(
             { error: "Internal Server Error" },
             { status: 500 }

@@ -2,33 +2,78 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { UserPlus, ArrowLeft } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { UserPlus, ArrowLeft, Mail, Lock, User } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 
 /**
- * Renders the registration page where users choose to sign up as a startup founder or investor and continue with Google authentication.
- * @example
- * RegisterPage()
- * JSX for the registration page
- * @param {never} Argument - This component does not accept any arguments.
- * @returns {JSX.Element} The registration page UI.
- **/
+ * Renders the registration page where users choose a role and sign up via email or Google.
+ */
 export default function RegisterPage() {
-    const [isLoading, setIsLoading] = useState<"startup" | "investor" | "student" | null>(null);
+    const [isLoading, setIsLoading] = useState(false);
+    const [isEmailLoading, setIsEmailLoading] = useState(false);
+    const [role, setRole] = useState("investor");
+    
+    // Form states
+    const [username, setUsername] = useState("");
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [error, setError] = useState<string | null>(null);
+    const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
-    const handleRegister = async (role: "startup" | "investor" | "student") => {
-        setIsLoading(role);
+    const router = useRouter();
+
+    const handleGoogleRegister = async () => {
+        setIsLoading(true);
+        setError(null);
         document.cookie = `involution_role=${role}; path=/; max-age=3600`;
         const supabase = createClient();
-        const { error } = await supabase.auth.signInWithOAuth({
+        const { error: authError } = await supabase.auth.signInWithOAuth({
             provider: "google",
             options: {
                 redirectTo: `${window.location.origin}/api/auth/callback`
             }
         });
-        if (error) {
-            console.error("Registration Error:", error);
-            setIsLoading(null);
+        if (authError) {
+            console.error("Registration Error:", authError);
+            setError("Google sign up failed. Please try again.");
+            setIsLoading(false);
+        }
+    };
+
+    const handleEmailRegister = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsEmailLoading(true);
+        setError(null);
+        setSuccessMsg(null);
+        
+        document.cookie = `involution_role=${role}; path=/; max-age=3600`;
+
+        try {
+            const res = await fetch("/api/auth/signup", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email, password, username, role }),
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                setError(data.error || "Sign up failed. Please check your inputs.");
+                setIsEmailLoading(false);
+                return;
+            }
+
+            setSuccessMsg("Account created successfully! Redirecting...");
+            
+            // Redirect to login after a short delay
+            setTimeout(() => {
+                router.push("/login");
+            }, 1500);
+
+        } catch (err) {
+            setError("An unexpected error occurred. Please try again later.");
+            setIsEmailLoading(false);
         }
     };
 
@@ -38,7 +83,7 @@ export default function RegisterPage() {
             <div className="absolute top-0 left-0 size-[500px] bg-emerald-50 rounded-full blur-[120px] opacity-60 pointer-events-none" />
             <div className="absolute bottom-0 right-0 size-[400px] bg-emerald-100/40 rounded-full blur-[100px] pointer-events-none" />
 
-            <div className="w-full max-w-md relative z-10 animate-fade-in-up">
+            <div className="w-full max-w-md relative z-10 animate-fade-in-up my-8">
                 <Link href="/" className="inline-flex items-center gap-2 text-slate-400 hover:text-emerald-600 mb-8 transition-colors text-sm font-medium">
                     <ArrowLeft className="size-4" /> Back to Home
                 </Link>
@@ -52,53 +97,139 @@ export default function RegisterPage() {
                     </div>
 
                     <h1 className="text-3xl font-outfit font-bold text-slate-900 mb-2">Join InVolution</h1>
-                    <p className="text-slate-500 text-sm mb-8 px-4">
-                        Sign up with Google to create your account. KYC verification will follow after sign-up.
+                    <p className="text-slate-500 text-sm mb-6 px-4">
+                        Create your account to connect. KYC verification will follow after sign-up.
                     </p>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                    {/* Role toggle */}
+                    <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200 mb-6 mx-auto w-fit">
                         <button
-                            onClick={() => handleRegister("startup")}
-                            disabled={isLoading !== null}
-                            className="flex flex-col items-center gap-2 p-5 rounded-2xl border border-slate-200 bg-slate-50 hover:border-emerald-400 hover:bg-emerald-50 transition-all group disabled:opacity-50 disabled:pointer-events-none shadow-sm"
+                            type="button"
+                            onClick={() => setRole("investor")}
+                            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${role === "investor" ? "bg-emerald-600 text-white shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
                         >
-                            {isLoading === "startup" && (
-                                <div className="size-5 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin" />
-                            )}
-                            <h3 className="text-base font-bold text-slate-800 group-hover:text-emerald-700">Founder</h3>
-                            <p className="text-xs text-slate-400">Raise verified capital.</p>
+                            Investor
                         </button>
-
                         <button
-                            onClick={() => handleRegister("investor")}
-                            disabled={isLoading !== null}
-                            className="flex flex-col items-center gap-2 p-5 rounded-2xl border border-slate-200 bg-slate-50 hover:border-emerald-400 hover:bg-emerald-50 transition-all group disabled:opacity-50 disabled:pointer-events-none shadow-sm"
+                            type="button"
+                            onClick={() => setRole("startup")}
+                            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${role === "startup" ? "bg-emerald-600 text-white shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
                         >
-                            {isLoading === "investor" && (
-                                <div className="size-5 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin" />
-                            )}
-                            <h3 className="text-base font-bold text-slate-800 group-hover:text-emerald-700">Investor</h3>
-                            <p className="text-xs text-slate-400">Discover and fund unicorns.</p>
+                            Founder
                         </button>
-
                         <button
-                            onClick={() => handleRegister("student")}
-                            disabled={isLoading !== null}
-                            className="flex flex-col items-center gap-2 p-5 rounded-2xl border border-slate-200 bg-slate-50 hover:border-emerald-400 hover:bg-emerald-50 transition-all group disabled:opacity-50 disabled:pointer-events-none shadow-sm"
+                            type="button"
+                            onClick={() => setRole("student")}
+                            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${role === "student" ? "bg-emerald-600 text-white shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
                         >
-                            {isLoading === "student" && (
-                                <div className="size-5 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin" />
-                            )}
-                            <h3 className="text-base font-bold text-slate-800 group-hover:text-emerald-700">Student</h3>
-                            <p className="text-xs text-slate-400">Publish your ideas in Incube.</p>
+                            Student
                         </button>
                     </div>
 
-                    <p className="text-xs text-slate-400 mb-4">
-                        Both options use <span className="text-slate-600 font-medium">Continue with Google</span> to securely create your account.
-                    </p>
+                    {error && (
+                        <div className="mb-6 p-3 rounded-xl bg-red-50 border border-red-100 text-red-600 text-sm text-left animate-fade-in-up">
+                            {error}
+                        </div>
+                    )}
+                    
+                    {successMsg && (
+                        <div className="mb-6 p-3 rounded-xl bg-emerald-50 border border-emerald-100 text-emerald-600 text-sm text-left animate-fade-in-up">
+                            {successMsg}
+                        </div>
+                    )}
 
-                    <p className="text-center text-sm text-slate-400">
+                    <form onSubmit={handleEmailRegister} className="space-y-4 text-left">
+                        <div>
+                            <label className="block text-sm font-medium text-slate-700 mb-1">Username</label>
+                            <div className="relative">
+                                <User className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-slate-400" />
+                                <input 
+                                    type="text" 
+                                    value={username}
+                                    onChange={(e) => setUsername(e.target.value)}
+                                    placeholder="Choose a username"
+                                    required
+                                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all outline-none text-sm text-slate-700"
+                                />
+                            </div>
+                            <p className="mt-1 text-[10px] text-slate-400">Alphanumeric, underscores, hyphens only.</p>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
+                            <div className="relative">
+                                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-slate-400" />
+                                <input 
+                                    type="email" 
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    placeholder="Enter your email"
+                                    required
+                                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all outline-none text-sm text-slate-700"
+                                />
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-slate-700 mb-1">Password</label>
+                            <div className="relative">
+                                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-slate-400" />
+                                <input 
+                                    type="password" 
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    placeholder="Create a strong password"
+                                    required
+                                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all outline-none text-sm text-slate-700"
+                                />
+                            </div>
+                            <p className="mt-1 text-[10px] text-slate-400">Min 8 chars, 1 uppercase, 1 lowercase, 1 number, 1 special character.</p>
+                        </div>
+
+                        <button 
+                            type="submit" 
+                            disabled={isEmailLoading || isLoading}
+                            className="w-full py-3.5 px-6 bg-emerald-600 text-white rounded-xl font-semibold text-sm transition-all hover:bg-emerald-700 hover:scale-[1.02] active:scale-95 disabled:opacity-70 disabled:pointer-events-none shadow-sm shadow-emerald-600/20"
+                        >
+                            {isEmailLoading ? (
+                                <div className="flex items-center justify-center gap-2">
+                                    <div className="size-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                    <span>Creating account...</span>
+                                </div>
+                            ) : "Create Account"}
+                        </button>
+                    </form>
+
+                    <div className="flex items-center gap-3 my-6">
+                        <div className="h-px bg-slate-200 flex-1"></div>
+                        <span className="text-xs text-slate-400 font-medium">or continue with</span>
+                        <div className="h-px bg-slate-200 flex-1"></div>
+                    </div>
+
+                    <button
+                        onClick={handleGoogleRegister}
+                        disabled={isLoading || isEmailLoading}
+                        className="w-full flex items-center justify-center gap-3 py-3.5 px-6 bg-white border border-slate-300 text-slate-700 rounded-xl font-semibold text-sm transition-all hover:bg-slate-50 hover:border-slate-400 hover:scale-[1.02] active:scale-95 disabled:opacity-70 disabled:pointer-events-none shadow-sm"
+                    >
+                        {isLoading ? (
+                            <div className="size-5 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin"></div>
+                        ) : (
+                            <>
+                                <svg className="size-5" viewBox="0 0 24 24">
+                                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" />
+                                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+                                </svg>
+                                Continue with Google
+                            </>
+                        )}
+                    </button>
+
+                    <p className="mt-8 text-xs text-slate-400">
+                        By signing up, you agree to our <Link href="/rules" className="text-emerald-600 hover:underline font-medium">Rules & Liability Policy</Link>.
+                    </p>
+                    <p className="mt-3 text-xs text-slate-400">
                         Already have an account?{" "}
                         <Link href="/login" className="text-emerald-600 hover:text-emerald-700 font-medium">Log In</Link>
                     </p>

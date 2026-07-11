@@ -35,7 +35,7 @@ export async function POST(request: Request) {
         });
 
         if (error) {
-            console.error("Signup error:", error);
+            console.error("Signup error:", error?.message || "Unknown error");
             return NextResponse.json(
                 { error: "Signup failed. Please check your credentials or try again later." },
                 { status: 400 }
@@ -48,7 +48,7 @@ export async function POST(request: Request) {
         );
 
     } catch (error) {
-        console.error("Signup exception:", error);
+        console.error("Signup exception:", error instanceof Error ? error.message : "Unknown error");
         return NextResponse.json(
             { error: "Internal Server Error" },
             { status: 500 }
