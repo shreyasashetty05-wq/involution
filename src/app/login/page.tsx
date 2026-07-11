@@ -51,7 +51,7 @@ export default function LoginPage() {
             // Redirect based on role
             if (role === "investor") {
                 router.push("/investors/dashboard");
-            } else if (role === "startup") {
+            } else if (role === "startup" || role === "incubation") {
                 router.push("/startups/dashboard");
             } else {
                 router.push("/");

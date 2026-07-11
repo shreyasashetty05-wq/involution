@@ -124,7 +124,7 @@ export default function KYCSubmitPage() {
             setStatus("uploading");
             const formData = new FormData();
             formData.append("name", user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Active User");
-            formData.append("type", user?.user_metadata?.role === "investor" ? "Investor" : "Startup Founder");
+            formData.append("type", user?.user_metadata?.role === "investor" ? "Investor" : (user?.user_metadata?.role === "incubation" ? "Incubation Founder" : "Startup Founder"));
             formData.append("aadhaar", cleanedAadhaar);
             formData.append("pan", pan);
             formData.append("aadhaarFile", fileA);

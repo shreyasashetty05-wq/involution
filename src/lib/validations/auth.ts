@@ -50,7 +50,7 @@ export const signupSchema = z.object({
     email: emailSchema,
     password: passwordSchema,
     username: usernameSchema,
-    role: z.enum(["startup", "investor", "student"]).optional().default("investor"),
+    role: z.enum(["startup", "investor", "incubation"]).optional().default("investor"),
 });
 
 // Login Schema

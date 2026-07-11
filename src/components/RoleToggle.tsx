@@ -12,7 +12,7 @@ export function RoleToggle({ role, setRole }: RoleToggleProps) {
     const roles = [
         { value: "investor", label: "Investor" },
         { value: "startup", label: "Founder" },
-        { value: "student", label: "Student" },
+        { value: "incubation", label: "Student" },
     ];
 
     return (

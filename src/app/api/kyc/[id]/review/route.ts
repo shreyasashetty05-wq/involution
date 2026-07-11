@@ -49,6 +49,23 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
             notifType = "kyc_approved";
             notifTitle = "✅ Your KYC has been approved";
             notifDesc = "Your identity verification is complete. You can now access all features.";
+
+            // If KYC is approved, update panVerified in startups
+            const { data: userStartups } = await supabase
+                .from("startups")
+                .select("id, credibility")
+                .eq("owner_email", doc.email);
+            
+            if (userStartups) {
+                for (const st of userStartups) {
+                    await supabase
+                        .from("startups")
+                        .update({
+                            credibility: { ...(st.credibility || {}), panVerified: true }
+                        })
+                        .eq("id", st.id);
+                }
+            }
         } else if (body.status === 'MoreInfo') {
             notifType = "kyc_more_info";
             notifTitle = "⚠️ More Information Requested for KYC";

@@ -182,7 +182,7 @@ export default function StartupProfile() {
                                 <div className="flex flex-wrap items-center gap-3 mb-2">
                                     <h1 className="text-3xl md:text-4xl font-bold font-outfit text-slate-900">{startup?.name || 'Startup'}</h1>
                                     <span className="px-3 py-1 bg-emerald-50 border border-emerald-200 rounded-full text-xs font-bold text-emerald-600 flex items-center gap-1 shadow-sm">
-                                        <CheckCircle2 className="size-3.5" /> {startup.isStudent ? "Incubation Idea" : "KYC Verified"}
+                                        <CheckCircle2 className="size-3.5" /> {startup.isStudent ? "🏛 Incubation Startup" : "KYC Verified"}
                                     </span>
                                 </div>
                                 <div className="flex items-center flex-wrap gap-4 text-sm text-slate-500 font-medium mt-3">
@@ -201,7 +201,7 @@ export default function StartupProfile() {
                     </div>
 
                     {/* Compact Business Health Summary */}
-                    {!startup.isStudent && (
+                    {true && (
                         <ScrollReveal delay={0.15}>
                             <div className="mt-8 grid grid-cols-2 md:grid-cols-6 gap-4 p-4 bg-slate-50/80 border border-slate-200 rounded-2xl">
                                 <div>
@@ -285,7 +285,7 @@ export default function StartupProfile() {
                     </ScrollReveal>
 
                     {/* Advanced Financial Chart */}
-                    {!startup.isStudent && (
+                    {true && (
                         <ScrollReveal delay={0.05}>
                         <div className="bg-white border border-slate-200 shadow-sm hover:shadow-md transition-shadow duration-300 rounded-3xl p-6 md:p-8 space-y-10">
                             {/* Cumulative Summary */}
@@ -525,7 +525,7 @@ export default function StartupProfile() {
                             </div>
                         </div>
 
-                        {!startup.isStudent && (
+                        {true && (
                             <>
                                 <div className="w-full h-px bg-slate-100 my-6"></div>
                                 <div className="space-y-4">
@@ -588,7 +588,7 @@ export default function StartupProfile() {
                     </ScrollReveal>
 
                     {/* Founder Activity */}
-                    {!startup.isStudent && atomicActivities.length > 0 && (
+                    {atomicActivities.length > 0 && (
                         <ScrollReveal y={12} delay={0.1}>
                         <div className="bg-white border border-slate-200 shadow-sm hover:shadow-md transition-shadow duration-300 rounded-3xl p-6">
                             <h3 className="text-lg font-bold text-slate-900 mb-6 flex items-center gap-2">

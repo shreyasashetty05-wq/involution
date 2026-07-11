@@ -66,7 +66,7 @@ export default function PublishStartupPage() {
         fetchUser();
     }, [supabase]);
 
-    const isStudent = user?.user_metadata?.role === "student";
+    const isStudent = false; // We treat incubation same as startup founder for fields
     const [formData, setFormData] = useState({
         name: "",
         sector: "FinTech",

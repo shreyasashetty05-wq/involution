@@ -96,7 +96,7 @@ export async function POST(req: Request) {
             role: 'admin',
             type: 'kyc_submitted',
             title: "📄 New KYC awaiting review",
-            description: `${kycPayload.name} submitted their KYC verification.`,
+            description: `New ${kycPayload.type} KYC submitted by ${kycPayload.name}.`,
             link: `/admin/kyc`
         });
 

@@ -25,7 +25,7 @@ export async function GET(req: Request) {
         
         if (role === 'admin') {
             query = query.or(`role.eq.admin,user_email.eq.${user.email}`);
-        } else if (role === 'startup') {
+        } else if (role === 'startup' || role === 'incubation') {
             query = query.eq('user_email', user.email);
         } else if (role === 'investor') {
             // Investors might need to see notifications based on startup_id they follow
