@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Upload, CheckCircle2, AlertCircle, Loader2, ShieldCheck, FileText, Lock, Check } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Upload, CheckCircle2, AlertCircle, Loader2, ShieldCheck, FileText, Lock } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { formatBytes } from "@/utils/formatBytes";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -23,6 +24,8 @@ export default function KYCSubmitPage() {
     
     // Status states
     const [status, setStatus] = useState<"idle" | "uploading" | "submitting" | "success" | "error">("idle");
+    const statusRef = useRef(status);
+    useEffect(() => { statusRef.current = status; }, [status]);
     const [errorMsg, setErrorMsg] = useState("");
     const [fileErrorA, setFileErrorA] = useState("");
     const [fileErrorP, setFileErrorP] = useState("");
@@ -95,12 +98,7 @@ export default function KYCSubmitPage() {
         }
     };
 
-    const formatBytes = (bytes: number) => {
-        if (bytes === 0) return '0 Bytes';
-        const k = 1024, dm = 2, sizes = ['Bytes', 'KB', 'MB', 'GB'];
-        const i = Math.floor(Math.log(bytes) / Math.log(k));
-        return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
-    };
+
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -133,7 +131,7 @@ export default function KYCSubmitPage() {
             formData.append("panFile", fileP);
 
             setTimeout(() => {
-                if (status !== 'error') setStatus("submitting");
+                if (statusRef.current !== 'error') setStatus("submitting");
             }, 1000);
 
             const res = await fetch("/api/kyc/submit", {
@@ -278,15 +276,13 @@ export default function KYCSubmitPage() {
                         <div className="pt-6 border-t border-slate-100 flex justify-end">
                             <button
                                 type="submit"
-                                disabled={status === "uploading" || status === "submitting" || status === "success"}
+                                disabled={status === "uploading" || status === "submitting"}
                                 className="px-8 py-3 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-700 transition-all flex items-center justify-center min-w-[200px] gap-2 disabled:opacity-70 disabled:cursor-not-allowed shadow-sm hover:shadow"
                             >
                                 {status === "uploading" ? (
                                     <><Loader2 className="size-5 animate-spin" /> Uploading...</>
                                 ) : status === "submitting" ? (
                                     <><Loader2 className="size-5 animate-spin" /> Submitting...</>
-                                ) : status === "success" ? (
-                                    <><Check className="size-5" /> Waiting for verification...</>
                                 ) : (
                                     "Submit Documents"
                                 )}

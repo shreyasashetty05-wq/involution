@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Download, FileText, Loader2, X, ExternalLink, PlayCircle } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 import { createPortal } from "react-dom";
+import { formatBytes } from "@/utils/formatBytes";
 
 export default function FileAttachment({ file }: { file: any }) {
     const [url, setUrl] = useState<string | null>(file.previewUrl || null);
@@ -59,13 +60,8 @@ export default function FileAttachment({ file }: { file: any }) {
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [viewerOpen]);
 
-    const formatBytes = (bytes: number) => {
-        if (bytes === 0) return '0 Bytes';
-        const k = 1024;
-        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-        const i = Math.floor(Math.log(bytes) / Math.log(k));
-        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-    };
+
+
 
     const isImage = file.type.startsWith('image/');
     const isVideo = file.type.startsWith('video/');

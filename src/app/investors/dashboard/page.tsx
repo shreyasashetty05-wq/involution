@@ -129,7 +129,7 @@ export default function InvestorDashboard() {
         
         const intervalId = setInterval(() => {
             loadDashboard(); // Simplified to just reload everything to keep state in sync
-        }, 30000); // Increased interval so it doesn't spam APIs while reading
+        }, 120000); // Refresh every 2 minutes to avoid excessive API calls
         
         return () => clearInterval(intervalId);
     }, []);

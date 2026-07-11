@@ -9,8 +9,9 @@ import { useRouter } from "next/navigation";
 import { Bell } from "lucide-react";
 import { formatRelativeTime } from "@/utils/timeHelper";
 
+const supabase = createClient();
+
 export default function Navbar() {
-    const supabase = createClient();
     const router = useRouter();
     const [user, setUser] = useState<User | null>(null);
     const [dbRole, setDbRole] = useState<string | null>(null);
@@ -47,7 +48,7 @@ export default function Navbar() {
         });
 
         return () => subscription.unsubscribe();
-    }, [supabase]);
+    }, []);
 
     useEffect(() => {
         const role = dbRole || user?.user_metadata?.role || "investor";
@@ -102,7 +103,7 @@ export default function Navbar() {
         };
 
         fetchNotifications();
-        const intervalId = setInterval(fetchNotifications, 10000);
+        const intervalId = setInterval(fetchNotifications, 60000);
         return () => clearInterval(intervalId);
     }, [loading, user, dbRole]);
 
