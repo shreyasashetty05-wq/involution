@@ -43,7 +43,7 @@ export async function POST(req: Request) {
             body: JSON.stringify({ startupId: newStartup.id }),
         }).catch(err => console.error("Failed to trigger initial AI Analysis:", err));
 
-        if (body.videos && body.videos.some((v: string) => v.trim() !== "")) {
+        if (body.pitchVideos && body.pitchVideos.some((v: string) => v.trim() !== "")) {
             await supabase.from('notifications').insert({
                 role: 'investor',
                 type: 'video_uploaded',

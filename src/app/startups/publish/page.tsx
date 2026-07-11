@@ -1,61 +1,40 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { createClient } from "@/utils/supabase/client";
-import { Briefcase, TrendingUp, Presentation, AlertCircle, Save, Bot, Loader2, Building2, BarChart3, Settings2, ShieldCheck, ShieldAlert, LineChart } from "lucide-react";
+import { ShieldCheck, Save, Bot, Loader2, AlertCircle, UploadCloud, X, Plus } from "lucide-react";
+import { useRouter } from "next/navigation";
 
-// --- Audit Validator Helpers (pure, outside component) ---
+const SectionHeader = ({ num, title }: { num: string, title: string }) => (
+    <h3 className="text-xl font-bold flex items-center gap-3 text-slate-900 border-b border-slate-200 pb-4 mb-6">
+        <span className="flex items-center justify-center size-8 rounded-full bg-emerald-100 text-emerald-600 text-sm font-bold border border-emerald-200">{num}</span>
+        {title}
+    </h3>
+);
 
-const YT_REGEXP = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-const VIMEO_REGEXP = /(?:www\.|player\.)?vimeo.com\/(?:channels\/(?:\w+\/)?|groups\/(?:[^/]*)\/videos\/|album\/(?:\d+)\/video\/|video\/|)(\d+)(?:[a-zA-Z0-9_-]+)?/i;
+const Label = ({ children, required }: { children: React.ReactNode, required?: boolean }) => (
+    <label className="text-sm font-bold text-slate-700 block mb-2">
+        {children} {required && <span className="text-red-500">*</span>}
+    </label>
+);
 
+const Input = (props: any) => (
+    <input className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 transition-all font-medium" {...props} />
+);
 
-/**
-* Validates startup financial metrics and records errors or warnings for unrealistic values and risk conditions.
-* @example
-* validateFinancials({ margin: 50, runway: 6 }, { cac: 100, ltv: 500 }, { rev: 5000, fundingAsk: 2000000 }, errors, warnings)
-* undefined
-* @param {{ margin: number; runway: number }} metrics - Margin and runway values to validate.
-* @param {{ cac: number; ltv: number }} unitEconomics - Customer acquisition cost and lifetime value values to validate.
-* @param {{ rev: number; fundingAsk: number }} funding - Revenue and funding ask values to validate.
-* @param {string[]} errors - Array that receives validation error messages.
-* @param {string[]} warnings - Array that receives validation warning messages.
-* @returns {void} Does not return a value; mutates the provided errors and warnings arrays.
-**/
-function validateFinancials(
-    { margin, runway }: { margin: number; runway: number },
-    { cac, ltv }: { cac: number; ltv: number },
-    { rev, fundingAsk }: { rev: number; fundingAsk: number },
-    errors: string[],
-    warnings: string[]
-) {
-    if (margin > 80 || margin < -200) {
-        errors.push(`Unrealistic Net Margin (${margin}%). Verify your revenue and expenses.`);
-    }
-    if (cac > 0 && ltv > 0 && cac >= ltv) {
-        errors.push(`Unit Economics inversion detected. Customer Acquisition Cost (₹${cac}) cannot exceed Lifetime Value (₹${ltv}).`);
-    }
-    if (rev < 1000 && fundingAsk > 10000000) {
-        warnings.push("High Valuation Risk: Asking for >₹1Cr funding on less than ₹1k MRR may trigger auto-rejection by the AI Matchmaking system.");
-    }
-    if (runway > 0 && runway < 3 && fundingAsk === 0) {
-        warnings.push("Low Runway Warning: You have less than 3 months runway, consider requesting funding immediately.");
-    }
-}
+const Select = ({ children, ...props }: any) => (
+    <select className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 transition-all appearance-none font-medium" {...props}>
+        {children}
+    </select>
+);
 
-function validateVideos(videos: string[], errors: string[]) {
-    videos.forEach((vid, idx) => {
-        if (vid.trim() === "") return;
-        const isYt = vid.match(YT_REGEXP) && vid.match(YT_REGEXP)![2].length === 11;
-        const isVimeo = vid.match(VIMEO_REGEXP);
-        if (!isYt && !isVimeo) {
-            errors.push(`Video link #${idx + 1} is not a valid embeddable public YouTube or Vimeo URL.`);
-        }
-    });
-}
+const Textarea = (props: any) => (
+    <textarea className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 transition-all font-medium" {...props} />
+);
 
-export default function PublishStartupPage() {
+export default function StartupPublishForm() {
     const supabase = createClient();
+    const router = useRouter();
     const [user, setUser] = useState<any>(null);
 
     useEffect(() => {
@@ -66,161 +45,220 @@ export default function PublishStartupPage() {
         fetchUser();
     }, [supabase]);
 
-    const isStudent = false; // We treat incubation same as startup founder for fields
+    const [saving, setSaving] = useState(false);
+    const [success, setSuccess] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    // Form State
     const [formData, setFormData] = useState({
-        name: "",
-        sector: "FinTech",
-        businessModel: "B2B SaaS",
-        description: "",
-        equityForSale: "",
-        fundingRequired: "",
-        mrr: "",
-        netProfitMargin: "",
-        cac: "",
-        ltv: "",
-        projectedROI: "",
-        videos: [""],
+        // Section 1
+        logo: null as File | null,
+        logoPreview: "",
+        startupName: "",
+        startupTagline: "",
+
+        // Section 2
+        founderName: "",
         founderAge: "",
+        founderRole: "Founder",
+        founderPhoto: null as File | null,
+        founderPhotoPreview: "",
+        founderLinkedin: "",
+        teamMembers: [] as { photo: File | null, photoPreview: string, name: string, role: string, linkedin: string }[],
 
-        // 1. Basic Company Information
-        basicInfo: { founderNames: "", incorporationYear: new Date().getFullYear(), companyType: "Private Ltd", location: "", teamSize: 1 },
-        // 2. Business Model Details
-        businessInfo: { revenueModel: "Subscription", targetMarket: "", uvp: "", competitors: "", marketingStrategy: "" },
-        // 3. Financial Parameters
-        financialsMonthly: { revenue: "", expenses: "", cogs: "", netProfit: 0, grossMargin: 0, netMargin: 0, burnRate: 0, runway: 0 },
-        financialsYearly: { annualRevenue: "", annualExpenses: "", ebitda: "", assets: "", liabilities: "", cashInBank: "", debt: "" },
-        investmentDetails: { previousFunding: false, previousInvestors: "" },
-        // 4. Growth Metrics
-        growthMetrics: { mau: "", churnRate: "", conversionRate: "", ordersPerMonth: "", repeatCustomers: "", appDownloads: "" },
-        // 5. Operational Metrics
-        operationalMetrics: { skus: "", deliveryTime: "" },
-        // 6. Credibility & Trust Inputs
-        credibility: { gstRegistered: false, panVerified: false, aadhaarVerified: false, bankVerified: false, incubatorBacked: false, gstSummaryUrl: "", bankStatementUrl: "", caCertificateUrl: "" },
-        // 7. Risk Disclosure Section
-        riskDisclosure: { legalCases: false, outstandingLoans: false, criminalRecord: false, revenueFluctuationExplanation: "" },
+        // Section 3
+        industry: "FinTech",
+        companyType: "Private Ltd",
+        startupStage: "Seed",
+        yearFounded: new Date().getFullYear().toString(),
+        headquarters: "",
+        website: "",
 
-        // Optional AI Ready Fields (Internal)
-        aiReady: { last6MonthsRev: [0, 0, 0, 0, 0, 0], last6MonthsExp: [0, 0, 0, 0, 0, 0], growthRate: 0 }
+        // Section 4
+        businessModel: "B2B",
+        revenueModel: "Subscription",
+        targetMarket: "",
+        problemStatement: "",
+        solution: "",
+        uvp: "",
+        competitors: "",
+        startupDescription: "",
+
+        // Section 5
+        investmentRequired: "",
+        equityOffered: "",
+        currentValuation: "",
+        minInvestmentTicket: "",
+        useOfFunds: {
+            productDevelopment: false, hiring: false, marketing: false, infrastructure: false, expansion: false, operations: false, other: false
+        },
+
+        // Section 6
+        monthlyRevenue: "",
+        monthlyExpenses: "",
+        monthlyProfitLoss: "",
+        cashInBank: "",
+        monthlyBurnRate: "",
+        runway: "",
+
+        // Section 7
+        totalCustomers: "",
+        monthlyActiveUsers: "",
+        monthlyGrowth: "",
+        customerRetention: "",
+        repeatCustomers: "",
+
+        // Section 8
+        verification: {
+            gstRegistered: false, companyPanVerified: false, bankAccountVerified: false, startupIndiaRegistered: false, msmeRegistered: false, patentFiled: false, patentGranted: false
+        },
+
+        // Section 9
+        pendingLegalCases: false,
+        outstandingLoans: false,
+        previousFundingRaised: false,
+        fundingAmount: "",
+        investorName: "",
+        fundingRound: "",
+
+        // Section 10
+        pitchVideos: [""],
+
+        // Confirmation
+        confirmed: false
     });
 
-    const addVideoField = () => {
-        setFormData({ ...formData, videos: [...formData.videos, ""] });
+    const updateField = (field: string, value: any) => {
+        setFormData(prev => ({ ...prev, [field]: value }));
     };
 
-    const updateVideoField = (index: number, value: string) => {
-        const newVideos = [...formData.videos];
-        newVideos[index] = value;
-        setFormData({ ...formData, videos: newVideos });
-    };
-
-    // Auto-calculations effect (Very Important Feature)
-    useEffect(() => {
-        const rev = Number(formData.financialsMonthly.revenue) || 0;
-        const exp = Number(formData.financialsMonthly.expenses) || 0;
-        const cogs = Number(formData.financialsMonthly.cogs) || 0;
-        const cash = Number(formData.financialsYearly.cashInBank) || 0;
-
-        const netProfit = rev - exp;
-        const grossMargin = rev > 0 ? ((rev - cogs) / rev) * 100 : 0;
-        const netMargin = rev > 0 ? (netProfit / rev) * 100 : 0;
-        const burnRate = Math.max(0, exp - rev);
-        const runway = burnRate > 0 ? (cash / burnRate) : (cash > 0 ? 999 : 0);
-
-        setFormData(prev => ({
-            ...prev,
-            financialsMonthly: {
-                ...prev.financialsMonthly,
-                netProfit,
-                grossMargin: Number(grossMargin.toFixed(2)),
-                netMargin: Number(netMargin.toFixed(2)),
-                burnRate,
-                runway: Number(runway.toFixed(1))
-            }
-        }));
-    }, [formData.financialsMonthly.revenue, formData.financialsMonthly.expenses, formData.financialsMonthly.cogs, formData.financialsYearly.cashInBank]);
-
-    const handleNestedChange = (section: string, field: string, value: any) => {
+    const updateNestedField = (section: string, field: string, value: any) => {
         setFormData(prev => ({
             ...prev,
             [section]: {
-                // @ts-expect-error -- dynamic string key cannot be statically narrowed to keyof formData
-                ...prev[section],
+                ...(prev as any)[section],
                 [field]: value
             }
         }));
     };
 
-    const [saving, setSaving] = useState(false);
-    const [success, setSuccess] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const [isAuditing, setIsAuditing] = useState(false);
-    const [auditResult, setAuditResult] = useState<{ errors: string[], warnings: string[] } | null>(null);
+    // Derived Financials Calculations
+    useEffect(() => {
+        const rev = Number(formData.monthlyRevenue) || 0;
+        const exp = Number(formData.monthlyExpenses) || 0;
+        const cash = Number(formData.cashInBank) || 0;
 
-    /**
-    * Validates startup publishing form data and returns any blocking errors or advisory warnings.
-    * @example
-    * validatePublishForm(formData)
-    * { errors: [], warnings: [] }
-    * @param {object} formData - Form data containing financial metrics, funding requirements, and video URLs.
-    * @returns {{ errors: string[], warnings: string[] }} An object containing validation errors and warnings.
-    **/
-    const runAIAudit = () => {
-        const errors: string[] = [];
-        const warnings: string[] = [];
+        const profitLoss = rev - exp;
+        const burnRate = Math.max(0, exp - rev);
+        const runwayValue = burnRate > 0 ? (cash / burnRate) : (cash > 0 ? 999 : 0);
 
-        if (!isStudent) {
-            validateFinancials(
-                { margin: formData.financialsMonthly.netMargin, runway: formData.financialsMonthly.runway },
-                { cac: Number(formData.cac), ltv: Number(formData.ltv) },
-                { rev: Number(formData.financialsMonthly.revenue), fundingAsk: Number(formData.fundingRequired) },
-                errors,
-                warnings
-            );
+        setFormData(prev => ({
+            ...prev,
+            monthlyProfitLoss: profitLoss.toString(),
+            monthlyBurnRate: burnRate.toString(),
+            runway: runwayValue.toFixed(1)
+        }));
+    }, [formData.monthlyRevenue, formData.monthlyExpenses, formData.cashInBank]);
+
+    // Derived Valuation
+    useEffect(() => {
+        const req = Number(formData.investmentRequired) || 0;
+        const eq = Number(formData.equityOffered) || 0;
+        if (req > 0 && eq > 0) {
+            const val = req / (eq / 100);
+            setFormData(prev => ({ ...prev, currentValuation: val.toString() }));
+        } else {
+            setFormData(prev => ({ ...prev, currentValuation: "" }));
         }
+    }, [formData.investmentRequired, formData.equityOffered]);
 
-        validateVideos(formData.videos, errors);
-        return { errors, warnings };
+    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, field: string, index?: number) => {
+        if (e.target.files && e.target.files[0]) {
+            const file = e.target.files[0];
+            if (file.size > 5 * 1024 * 1024) {
+                alert("File size exceeds 5 MB limit.");
+                return;
+            }
+            if (!["image/png", "image/jpeg", "image/jpg"].includes(file.type)) {
+                alert("Only PNG, JPG, and JPEG are allowed.");
+                return;
+            }
+            const previewUrl = URL.createObjectURL(file);
+            
+            if (field === 'logo') {
+                updateField('logo', file);
+                updateField('logoPreview', previewUrl);
+            } else if (field === 'founder') {
+                updateField('founderPhoto', file);
+                updateField('founderPhotoPreview', previewUrl);
+            } else if (field === 'team' && index !== undefined) {
+                const newTeam = [...formData.teamMembers];
+                newTeam[index].photo = file;
+                newTeam[index].photoPreview = previewUrl;
+                updateField('teamMembers', newTeam);
+            }
+        }
     };
 
-    /**
-     * Validates the startup publish form with an AI audit, then submits the startup data to the publish API.
-     * @example
-     * sync(e)
-     * undefined
-     * @param {React.FormEvent} e - The form submission event.
-     * @returns {Promise<void>} Resolves when the audit and publish flow completes.
-     **/
+    const addTeamMember = () => {
+        if (formData.teamMembers.length < 4) {
+            updateField('teamMembers', [...formData.teamMembers, { photo: null, photoPreview: "", name: "", role: "Co-Founder", linkedin: "" }]);
+        }
+    };
+
+    const removeTeamMember = (index: number) => {
+        const newTeam = [...formData.teamMembers];
+        newTeam.splice(index, 1);
+        updateField('teamMembers', newTeam);
+    };
+
+    const updateTeamMember = (index: number, field: string, value: string) => {
+        const newTeam = [...formData.teamMembers];
+        (newTeam[index] as any)[field] = value;
+        updateField('teamMembers', newTeam);
+    };
+
+    const uploadFileToSupabase = async (file: File) => {
+        const ext = file.name.split('.').pop();
+        const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${ext}`;
+        const { data, error } = await supabase.storage.from('startup').upload(`startups/${fileName}`, file);
+        if (error) throw error;
+        const { data: { publicUrl } } = supabase.storage.from('startup').getPublicUrl(`startups/${fileName}`);
+        return publicUrl;
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError(null);
-        setAuditResult(null);
-        setIsAuditing(true);
-
-        await new Promise(resolve => { setTimeout(resolve, 1500); });
-        const audit = runAIAudit();
-        setIsAuditing(false);
-
-        if (audit.errors.length > 0) {
-            setAuditResult(audit);
-            return;
-        }
-
-        if (audit.warnings.length > 0 && !auditResult?.warnings) {
-            setAuditResult(audit);
-            return;
-        }
-
         setSaving(true);
+
         try {
+            // Upload images first
+            let uploadedLogo = "";
+            let uploadedFounder = "";
+            let uploadedTeam = [...formData.teamMembers];
+
+            if (formData.logo) uploadedLogo = await uploadFileToSupabase(formData.logo);
+            if (formData.founderPhoto) uploadedFounder = await uploadFileToSupabase(formData.founderPhoto);
+            
+            for (let i = 0; i < uploadedTeam.length; i++) {
+                if (uploadedTeam[i].photo) {
+                    uploadedTeam[i].photoPreview = await uploadFileToSupabase(uploadedTeam[i].photo!);
+                }
+            }
+
+            const payload = {
+                ...formData,
+                logoUrl: uploadedLogo,
+                founderPhotoUrl: uploadedFounder,
+                teamMembersData: uploadedTeam.map(t => ({ name: t.name, role: t.role, linkedin: t.linkedin, photoUrl: t.photoPreview })),
+                isStudent: false
+            };
+
             const res = await fetch('/api/startups/publish', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    ...formData,
-                    // Compatibility overrides map complex auto-calc fields to the original required base fields safely
-                    mrr: formData.financialsMonthly.revenue || formData.mrr || 0,
-                    netProfitMargin: formData.financialsMonthly.netMargin || formData.netProfitMargin || 0
-                })
+                body: JSON.stringify(payload)
             });
 
             if (!res.ok) {
@@ -236,456 +274,351 @@ export default function PublishStartupPage() {
         }
     };
 
-    return (
-        <div className="container mx-auto px-6 py-12 max-w-5xl min-h-screen">
-            <div className="mb-10 animate-fade-in-up">
-                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-lime-500/10 text-emerald-600 text-sm font-semibold mb-6 border border-lime-500/20 shadow-[0_0_10px_-2px_rgba(163,230,53,0.3)]">
-                    <ShieldCheck className="size-4" /> Professional Startup Data Standard
+    if (success) {
+        return (
+            <div className="container mx-auto px-6 py-12 max-w-5xl min-h-screen">
+                <div className="bg-white border border-slate-200 rounded-3xl shadow-sm p-8 lg:p-10 relative overflow-hidden text-center">
+                    <div className="size-24 bg-emerald-50 border border-emerald-200 rounded-full flex items-center justify-center mb-8 mx-auto">
+                        <Save className="size-12 text-emerald-600" />
+                    </div>
+                    <h2 className="text-3xl font-bold text-slate-900 mb-4">Profile Published!</h2>
+                    <p className="text-slate-500 max-w-md mx-auto text-lg">Your startup is now live. Investors can discover and review your profile.</p>
+                    <button onClick={() => router.push('/investors/search')} className="mt-10 px-10 py-4 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700 transition-colors shadow-lg">
+                        View Startups
+                    </button>
                 </div>
-                <h1 className="text-4xl font-outfit font-bold text-slate-900 mb-2">Publish Your Startup</h1>
-                <p className="text-slate-500 font-inter">Complete the 7-section verification standard. Our AI relies on accurate financial disclosures to match you with top-tier partners.</p>
+            </div>
+        );
+    }
+
+    return (
+        <div className="container mx-auto px-4 md:px-6 py-12 max-w-5xl min-h-screen bg-slate-50/50">
+            <div className="mb-10">
+                <h1 className="text-4xl font-bold text-slate-900 mb-2">Publish Your Startup</h1>
+                <p className="text-slate-500">Complete your startup profile to make it visible to investors. All information is securely stored and verified before being displayed.</p>
+                <div className="text-right text-xs text-red-500 mt-2 font-medium">* Required fields</div>
             </div>
 
-            <div className="bg-white border border-slate-200 rounded-3xl shadow-sm p-8 lg:p-10 relative overflow-hidden">
-                {success ? (
-                    <div className="py-20 text-center animate-in zoom-in duration-500">
-                        <div className="size-24 bg-emerald-900/40 border border-emerald-500/30 rounded-full flex items-center justify-center mb-8 mx-auto shadow-[0_0_30px_-5px_rgba(16,185,129,0.4)]">
-                            <Save className="size-12 text-emerald-600" />
+            <form onSubmit={handleSubmit} className="space-y-8">
+                {error && (
+                    <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3">
+                        <AlertCircle className="size-5 text-red-500 shrink-0 mt-0.5" />
+                        <p className="text-red-700 text-sm font-medium">{error}</p>
+                    </div>
+                )}
+
+                {/* 1. Company Branding */}
+                <div className="bg-white border border-slate-200 p-6 md:p-8 rounded-2xl shadow-sm">
+                    <SectionHeader num="1" title="Company Branding" />
+                    <div className="grid md:grid-cols-3 gap-8">
+                        <div className="col-span-1">
+                            <Label required>Company Logo</Label>
+                            <div className="mt-2">
+                                <input type="file" id="logo-upload" accept=".png,.jpg,.jpeg" className="hidden" onChange={(e) => handleFileUpload(e, 'logo')} required={!formData.logo} />
+                                <label htmlFor="logo-upload" className="flex flex-col items-center justify-center w-full aspect-square border-2 border-dashed border-slate-300 rounded-2xl hover:border-emerald-400 hover:bg-emerald-50/50 transition-colors cursor-pointer overflow-hidden relative group">
+                                    {formData.logoPreview ? (
+                                        <img src={formData.logoPreview} alt="Logo Preview" className="w-full h-full object-contain p-4" />
+                                    ) : (
+                                        <div className="text-center p-4">
+                                            <UploadCloud className="size-8 text-emerald-500 mx-auto mb-2 group-hover:scale-110 transition-transform" />
+                                            <span className="text-emerald-600 font-bold text-sm block">Upload Logo</span>
+                                            <span className="text-xs text-slate-400 mt-1 block">PNG, JPG up to 5MB</span>
+                                        </div>
+                                    )}
+                                </label>
+                            </div>
                         </div>
-                        <h2 className="text-3xl font-bold text-slate-900 font-outfit mb-4">Profile Verified & Published!</h2>
-                        <p className="text-slate-500 max-w-md mx-auto text-lg">Your startup is now live in the investor search engine. We will notify you when an AI match occurs.</p>
-                        <button onClick={() => setSuccess(false)} className="mt-10 px-10 py-4 bg-emerald-600 text-white font-bold rounded-full hover:bg-emerald-700 transition-colors shadow-[0_0_20px_-5px_rgba(163,230,53,0.4)]">
-                            Back to Dashboard
+                        <div className="col-span-2 space-y-6">
+                            <div>
+                                <Label required>Startup Name</Label>
+                                <Input required placeholder="e.g. InVolution AI" value={formData.startupName} onChange={(e: any) => updateField('startupName', e.target.value)} />
+                            </div>
+                            <div>
+                                <Label required>Startup Tagline</Label>
+                                <Input required placeholder="e.g. AI-powered platform connecting startups with investors" maxLength={120} value={formData.startupTagline} onChange={(e: any) => updateField('startupTagline', e.target.value)} />
+                                <div className="text-right text-xs text-slate-400 mt-1">{formData.startupTagline.length}/120</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* 2. Founder & Team */}
+                <div className="bg-white border border-slate-200 p-6 md:p-8 rounded-2xl shadow-sm space-y-10">
+                    <div>
+                        <SectionHeader num="2" title="Founder Information" />
+                        <div className="grid md:grid-cols-2 gap-6">
+                            <div><Label required>Founder Name</Label><Input required placeholder="e.g. Sohan S Salian" value={formData.founderName} onChange={(e: any) => updateField('founderName', e.target.value)} /></div>
+                            <div><Label required>Founder Age</Label><Input type="number" required placeholder="e.g. 24" value={formData.founderAge} onChange={(e: any) => updateField('founderAge', e.target.value)} /></div>
+                            <div>
+                                <Label required>Founder Role</Label>
+                                <Select required value={formData.founderRole} onChange={(e: any) => updateField('founderRole', e.target.value)}>
+                                    <option value="Founder">Founder</option><option value="CEO">CEO</option><option value="Co-Founder">Co-Founder</option><option value="CTO">CTO</option><option value="COO">COO</option><option value="CFO">CFO</option><option value="CMO">CMO</option><option value="Managing Director">Managing Director</option><option value="Director">Director</option><option value="President">President</option><option value="Other">Other</option>
+                                </Select>
+                            </div>
+                            <div className="md:row-span-2">
+                                <Label required>Founder Photo</Label>
+                                <input type="file" id="founder-upload" accept=".png,.jpg,.jpeg" className="hidden" onChange={(e) => handleFileUpload(e, 'founder')} required={!formData.founderPhoto} />
+                                <label htmlFor="founder-upload" className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-slate-300 rounded-xl hover:border-emerald-400 hover:bg-emerald-50/50 transition-colors cursor-pointer overflow-hidden mt-2">
+                                    {formData.founderPhotoPreview ? (
+                                        <img src={formData.founderPhotoPreview} alt="Founder Preview" className="w-full h-full object-cover" />
+                                    ) : (
+                                        <div className="text-center p-2">
+                                            <UploadCloud className="size-6 text-indigo-500 mx-auto mb-1" />
+                                            <span className="text-indigo-600 font-bold text-xs block">Upload Photo</span>
+                                            <span className="text-[10px] text-slate-400 mt-0.5 block">PNG, JPG up to 5MB</span>
+                                        </div>
+                                    )}
+                                </label>
+                            </div>
+                            <div><Label>LinkedIn (Optional)</Label><Input type="url" placeholder="https://linkedin.com/in/yourprofile" value={formData.founderLinkedin} onChange={(e: any) => updateField('founderLinkedin', e.target.value)} /></div>
+                        </div>
+                    </div>
+
+                    <div className="border-t border-slate-200 pt-8">
+                        <h4 className="text-lg font-bold text-slate-900 mb-4">Team Members</h4>
+                        <div className="bg-indigo-50/50 border border-indigo-100 rounded-xl p-4 flex gap-3 mb-6">
+                            <AlertCircle className="size-5 text-indigo-500 shrink-0" />
+                            <p className="text-sm text-indigo-900 font-medium">Team Size: Minimum 1 member (Founder only) Maximum 5 members (including Founder). Add team members below (You can add up to {4 - formData.teamMembers.length} more members).</p>
+                        </div>
+
+                        {formData.teamMembers.map((member, idx) => (
+                            <div key={idx} className="bg-slate-50 border border-slate-200 p-6 rounded-2xl mb-6 relative">
+                                <button type="button" onClick={() => removeTeamMember(idx)} className="absolute top-4 right-4 p-1.5 bg-white text-slate-400 hover:text-red-500 rounded-full shadow-sm border border-slate-200 transition-colors"><X className="size-4"/></button>
+                                <h5 className="font-bold text-slate-700 mb-4">Team Member {idx + 1}</h5>
+                                <div className="grid md:grid-cols-2 gap-6">
+                                    <div><Label required>Full Name</Label><Input required placeholder="e.g. Rahul Shetty" value={member.name} onChange={(e: any) => updateTeamMember(idx, 'name', e.target.value)} /></div>
+                                    <div>
+                                        <Label required>Role</Label>
+                                        <Select required value={member.role} onChange={(e: any) => updateTeamMember(idx, 'role', e.target.value)}>
+                                            <option value="Co-Founder">Co-Founder</option><option value="CTO">CTO</option><option value="COO">COO</option><option value="CFO">CFO</option><option value="CMO">CMO</option><option value="Product Manager">Product Manager</option><option value="AI Engineer">AI Engineer</option><option value="Lead Developer">Lead Developer</option><option value="Marketing Head">Marketing Head</option><option value="Sales Head">Sales Head</option><option value="Operations Head">Operations Head</option><option value="Business Development">Business Development</option><option value="Advisor">Advisor</option><option value="Other">Other</option>
+                                        </Select>
+                                    </div>
+                                    <div>
+                                        <Label required>Photo</Label>
+                                        <input type="file" id={`team-upload-${idx}`} accept=".png,.jpg,.jpeg" className="hidden" onChange={(e) => handleFileUpload(e, 'team', idx)} required={!member.photo} />
+                                        <label htmlFor={`team-upload-${idx}`} className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-slate-300 rounded-xl hover:border-indigo-400 hover:bg-indigo-50/50 transition-colors cursor-pointer overflow-hidden mt-1">
+                                            {member.photoPreview ? (
+                                                <img src={member.photoPreview} alt="Preview" className="w-full h-full object-cover" />
+                                            ) : (
+                                                <div className="text-center">
+                                                    <UploadCloud className="size-5 text-indigo-400 mx-auto mb-1" />
+                                                    <span className="text-indigo-600 font-bold text-xs block">Upload Photo</span>
+                                                </div>
+                                            )}
+                                        </label>
+                                    </div>
+                                    <div><Label>LinkedIn (Optional)</Label><Input type="url" placeholder="https://linkedin.com/in/yourprofile" value={member.linkedin} onChange={(e: any) => updateTeamMember(idx, 'linkedin', e.target.value)} /></div>
+                                </div>
+                            </div>
+                        ))}
+
+                        {formData.teamMembers.length < 4 && (
+                            <button type="button" onClick={addTeamMember} className="w-full py-4 border-2 border-dashed border-indigo-200 text-indigo-600 font-bold rounded-2xl hover:bg-indigo-50/50 hover:border-indigo-300 transition-colors flex items-center justify-center gap-2">
+                                <Plus className="size-5" /> Add Team Member
+                            </button>
+                        )}
+                    </div>
+                </div>
+
+                {/* 3. Company Information */}
+                <div className="bg-white border border-slate-200 p-6 md:p-8 rounded-2xl shadow-sm">
+                    <SectionHeader num="3" title="Company Information" />
+                    <div className="grid md:grid-cols-4 gap-6">
+                        <div className="col-span-1">
+                            <Label required>Industry / Sector</Label>
+                            <Select required value={formData.industry} onChange={(e: any) => updateField('industry', e.target.value)}>
+                                <option value="FinTech">FinTech</option><option value="HealthTech">HealthTech</option><option value="EdTech">EdTech</option><option value="SaaS">SaaS</option><option value="E-commerce">E-commerce</option><option value="AI/ML">AI/ML</option><option value="CleanTech">CleanTech</option><option value="DeepTech">DeepTech</option><option value="Other">Other</option>
+                            </Select>
+                        </div>
+                        <div className="col-span-1">
+                            <Label required>Company Type</Label>
+                            <Select required value={formData.companyType} onChange={(e: any) => updateField('companyType', e.target.value)}>
+                                <option value="Private Ltd">Private Ltd</option><option value="LLP">LLP</option><option value="Sole Proprietorship">Sole Proprietorship</option><option value="Inc">Inc</option><option value="Public Ltd">Public Ltd</option>
+                            </Select>
+                        </div>
+                        <div className="col-span-1">
+                            <Label required>Startup Stage</Label>
+                            <Select required value={formData.startupStage} onChange={(e: any) => updateField('startupStage', e.target.value)}>
+                                <option value="Ideation">Ideation</option><option value="Prototype">Prototype</option><option value="Pre-Seed">Pre-Seed</option><option value="Seed">Seed</option><option value="Series A">Series A</option><option value="Series B+">Series B+</option>
+                            </Select>
+                        </div>
+                        <div className="col-span-1">
+                            <Label required>Year Founded</Label>
+                            <Select required value={formData.yearFounded} onChange={(e: any) => updateField('yearFounded', e.target.value)}>
+                                {Array.from({length: 15}, (_, i) => new Date().getFullYear() - i).map(y => <option key={y} value={y}>{y}</option>)}
+                            </Select>
+                        </div>
+                        <div className="col-span-2"><Label required>Headquarters</Label><Input required placeholder="e.g. Bangalore, Karnataka" value={formData.headquarters} onChange={(e: any) => updateField('headquarters', e.target.value)} /></div>
+                        <div className="col-span-2"><Label>Company Website (Optional)</Label><Input type="url" placeholder="https://yourcompany.com" value={formData.website} onChange={(e: any) => updateField('website', e.target.value)} /></div>
+                    </div>
+                </div>
+
+                {/* 4. Business Details */}
+                <div className="bg-white border border-slate-200 p-6 md:p-8 rounded-2xl shadow-sm">
+                    <SectionHeader num="4" title="Business Details" />
+                    <div className="grid md:grid-cols-2 gap-6">
+                        <div>
+                            <Label required>Business Model</Label>
+                            <Select required value={formData.businessModel} onChange={(e: any) => updateField('businessModel', e.target.value)}>
+                                <option value="B2B">B2B</option><option value="B2C">B2C</option><option value="B2B2C">B2B2C</option><option value="D2C">D2C</option><option value="Marketplace">Marketplace</option>
+                            </Select>
+                        </div>
+                        <div>
+                            <Label required>Revenue Model</Label>
+                            <Select required value={formData.revenueModel} onChange={(e: any) => updateField('revenueModel', e.target.value)}>
+                                <option value="Subscription">Subscription</option><option value="One-time Sales">One-time Sales</option><option value="Commission">Commission</option><option value="Freemium">Freemium</option><option value="Advertising">Advertising</option><option value="Licensing">Licensing</option>
+                            </Select>
+                        </div>
+                        <div className="col-span-2"><Label required>Target Market</Label><Input required placeholder="e.g. SMEs in India" value={formData.targetMarket} onChange={(e: any) => updateField('targetMarket', e.target.value)} /></div>
+                        <div><Label required>Problem Statement</Label><Textarea required rows={3} placeholder="What problem does your startup solve?" value={formData.problemStatement} onChange={(e: any) => updateField('problemStatement', e.target.value)} /></div>
+                        <div><Label required>Solution</Label><Textarea required rows={3} placeholder="How does your startup solve this problem?" value={formData.solution} onChange={(e: any) => updateField('solution', e.target.value)} /></div>
+                        <div className="col-span-2"><Label required>Unique Value Proposition (UVP)</Label><Textarea required rows={2} placeholder="What makes your startup unique?" value={formData.uvp} onChange={(e: any) => updateField('uvp', e.target.value)} /></div>
+                        <div><Label required>Competitors</Label><Textarea required rows={3} placeholder="Who are your main competitors?" value={formData.competitors} onChange={(e: any) => updateField('competitors', e.target.value)} /></div>
+                        <div><Label required>Startup Description</Label><Textarea required rows={3} placeholder="Describe your startup, vision, and future goals." value={formData.startupDescription} onChange={(e: any) => updateField('startupDescription', e.target.value)} /></div>
+                    </div>
+                </div>
+
+                {/* 5. Investment Details */}
+                <div className="bg-white border border-slate-200 p-6 md:p-8 rounded-2xl shadow-sm">
+                    <SectionHeader num="5" title="Investment Details" />
+                    <div className="grid md:grid-cols-4 gap-6 mb-8">
+                        <div><Label required>Investment Required (₹)</Label><Input type="number" required placeholder="e.g. 5000000" value={formData.investmentRequired} onChange={(e: any) => updateField('investmentRequired', e.target.value)} /></div>
+                        <div><Label required>Equity Offered (%)</Label><Input type="number" required placeholder="e.g. 10" value={formData.equityOffered} onChange={(e: any) => updateField('equityOffered', e.target.value)} /></div>
+                        <div><Label required>Current Valuation (₹)</Label><Input type="number" required disabled className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-800 font-bold" value={formData.currentValuation} placeholder="Auto-calculated" /></div>
+                        <div><Label required>Minimum Investment Ticket (₹)</Label><Input type="number" required placeholder="e.g. 100000" value={formData.minInvestmentTicket} onChange={(e: any) => updateField('minInvestmentTicket', e.target.value)} /></div>
+                    </div>
+                    <div>
+                        <Label required>Use of Funds</Label>
+                        <div className="flex flex-wrap gap-4 mt-3">
+                            {['productDevelopment', 'hiring', 'marketing', 'infrastructure', 'expansion', 'operations', 'other'].map(key => (
+                                <label key={key} className="flex items-center gap-2 cursor-pointer">
+                                    <input type="checkbox" className="size-4 accent-emerald-500 rounded" checked={(formData.useOfFunds as any)[key]} onChange={(e) => updateNestedField('useOfFunds', key, e.target.checked)} />
+                                    <span className="text-sm text-slate-700 capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}</span>
+                                </label>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+
+                {/* 6. Financial Details */}
+                <div className="bg-white border border-slate-200 p-6 md:p-8 rounded-2xl shadow-sm">
+                    <SectionHeader num="6" title="Financial Details (Monthly)" />
+                    <div className="grid md:grid-cols-3 gap-6">
+                        <div><Label required>Monthly Revenue (₹)</Label><Input type="number" required placeholder="e.g. 500000" value={formData.monthlyRevenue} onChange={(e: any) => updateField('monthlyRevenue', e.target.value)} /></div>
+                        <div><Label required>Monthly Expenses (₹)</Label><Input type="number" required placeholder="e.g. 300000" value={formData.monthlyExpenses} onChange={(e: any) => updateField('monthlyExpenses', e.target.value)} /></div>
+                        <div><Label required>Monthly Profit / Loss (₹)</Label><Input type="number" disabled className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-800 font-bold" value={formData.monthlyProfitLoss} placeholder="Auto-calculated" /></div>
+                        <div><Label required>Cash in Bank (₹)</Label><Input type="number" required placeholder="e.g. 10000000" value={formData.cashInBank} onChange={(e: any) => updateField('cashInBank', e.target.value)} /></div>
+                        <div><Label required>Monthly Burn Rate (₹)</Label><Input type="number" disabled className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-800 font-bold" value={formData.monthlyBurnRate} placeholder="Auto-calculated" /></div>
+                        <div><Label required>Runway (Months)</Label><Input type="text" disabled className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-800 font-bold" value={formData.runway === '999' ? '∞' : formData.runway} placeholder="Auto-calculated" /></div>
+                    </div>
+                </div>
+
+                {/* 7. Growth Metrics */}
+                <div className="bg-white border border-slate-200 p-6 md:p-8 rounded-2xl shadow-sm">
+                    <SectionHeader num="7" title="Growth Metrics" />
+                    <div className="grid md:grid-cols-3 gap-6">
+                        <div><Label required>Total Customers</Label><Input type="number" required placeholder="e.g. 1000" value={formData.totalCustomers} onChange={(e: any) => updateField('totalCustomers', e.target.value)} /></div>
+                        <div><Label required>Monthly Active Users</Label><Input type="number" required placeholder="e.g. 5000" value={formData.monthlyActiveUsers} onChange={(e: any) => updateField('monthlyActiveUsers', e.target.value)} /></div>
+                        <div><Label required>Monthly Growth (%)</Label><Input type="number" required placeholder="e.g. 20" value={formData.monthlyGrowth} onChange={(e: any) => updateField('monthlyGrowth', e.target.value)} /></div>
+                        <div><Label required>Customer Retention (%)</Label><Input type="number" required placeholder="e.g. 80" value={formData.customerRetention} onChange={(e: any) => updateField('customerRetention', e.target.value)} /></div>
+                        <div><Label required>Repeat Customers (%)</Label><Input type="number" required placeholder="e.g. 60" value={formData.repeatCustomers} onChange={(e: any) => updateField('repeatCustomers', e.target.value)} /></div>
+                    </div>
+                </div>
+
+                {/* 8. Business Verification */}
+                <div className="bg-white border border-slate-200 p-6 md:p-8 rounded-2xl shadow-sm">
+                    <SectionHeader num="8" title="Business Verification" />
+                    <div className="grid md:grid-cols-3 lg:grid-cols-4 gap-4">
+                        {['gstRegistered', 'companyPanVerified', 'bankAccountVerified', 'startupIndiaRegistered', 'msmeRegistered', 'patentFiled', 'patentGranted'].map(key => (
+                            <label key={key} className="flex items-center gap-3 p-3 border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-50 transition-colors">
+                                <input type="checkbox" className="size-4 accent-emerald-500 rounded" checked={(formData.verification as any)[key]} onChange={(e) => updateNestedField('verification', key, e.target.checked)} />
+                                <span className="text-sm font-semibold text-slate-700 capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}</span>
+                            </label>
+                        ))}
+                    </div>
+                </div>
+
+                {/* 9. Risk Disclosure */}
+                <div className="bg-white border border-slate-200 p-6 md:p-8 rounded-2xl shadow-sm">
+                    <SectionHeader num="9" title="Risk Disclosure" />
+                    <div className="grid md:grid-cols-2 gap-8">
+                        <div className="space-y-6">
+                            <div>
+                                <Label required>Any Pending Legal Cases?</Label>
+                                <div className="flex gap-4 mt-2">
+                                    <label className="flex items-center gap-2 cursor-pointer"><input type="radio" name="legal" className="accent-emerald-500" checked={formData.pendingLegalCases} onChange={() => updateField('pendingLegalCases', true)}/> <span className="text-sm font-medium">Yes</span></label>
+                                    <label className="flex items-center gap-2 cursor-pointer"><input type="radio" name="legal" className="accent-emerald-500" checked={!formData.pendingLegalCases} onChange={() => updateField('pendingLegalCases', false)}/> <span className="text-sm font-medium">No</span></label>
+                                </div>
+                            </div>
+                            <div>
+                                <Label required>Any Outstanding Loans?</Label>
+                                <div className="flex gap-4 mt-2">
+                                    <label className="flex items-center gap-2 cursor-pointer"><input type="radio" name="loans" className="accent-emerald-500" checked={formData.outstandingLoans} onChange={() => updateField('outstandingLoans', true)}/> <span className="text-sm font-medium">Yes</span></label>
+                                    <label className="flex items-center gap-2 cursor-pointer"><input type="radio" name="loans" className="accent-emerald-500" checked={!formData.outstandingLoans} onChange={() => updateField('outstandingLoans', false)}/> <span className="text-sm font-medium">No</span></label>
+                                </div>
+                            </div>
+                            <div>
+                                <Label required>Previous Funding Raised?</Label>
+                                <div className="flex gap-4 mt-2">
+                                    <label className="flex items-center gap-2 cursor-pointer"><input type="radio" name="funding" className="accent-emerald-500" checked={formData.previousFundingRaised} onChange={() => updateField('previousFundingRaised', true)}/> <span className="text-sm font-medium">Yes</span></label>
+                                    <label className="flex items-center gap-2 cursor-pointer"><input type="radio" name="funding" className="accent-emerald-500" checked={!formData.previousFundingRaised} onChange={() => updateField('previousFundingRaised', false)}/> <span className="text-sm font-medium">No</span></label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        {formData.previousFundingRaised && (
+                            <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200 space-y-4">
+                                <h4 className="font-bold text-slate-800 mb-4">If Yes, Provide Details</h4>
+                                <div><Label required>Funding Amount (₹)</Label><Input required placeholder="e.g. 10000000" value={formData.fundingAmount} onChange={(e: any) => updateField('fundingAmount', e.target.value)} /></div>
+                                <div><Label required>Investor Name</Label><Input required placeholder="e.g. Angel Investor" value={formData.investorName} onChange={(e: any) => updateField('investorName', e.target.value)} /></div>
+                                <div><Label required>Funding Round</Label><Input required placeholder="e.g. Seed Round" value={formData.fundingRound} onChange={(e: any) => updateField('fundingRound', e.target.value)} /></div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* 10. Pitch Media */}
+                <div className="bg-white border border-slate-200 p-6 md:p-8 rounded-2xl shadow-sm">
+                    <SectionHeader num="10" title="Pitch Media" />
+                    <div className="space-y-4">
+                        <Label required>Pitch Video (YouTube Unlisted)</Label>
+                        {formData.pitchVideos.map((vid, idx) => (
+                            <div key={idx} className="flex gap-3">
+                                <Input type="url" required placeholder="https://www.youtube.com/watch?v=..." value={vid} onChange={(e: any) => {
+                                    const newVids = [...formData.pitchVideos];
+                                    newVids[idx] = e.target.value;
+                                    updateField('pitchVideos', newVids);
+                                }} />
+                                {formData.pitchVideos.length > 1 && (
+                                    <button type="button" onClick={() => {
+                                        const newVids = [...formData.pitchVideos];
+                                        newVids.splice(idx, 1);
+                                        updateField('pitchVideos', newVids);
+                                    }} className="px-4 py-3 bg-red-50 text-red-500 rounded-xl border border-red-100 hover:bg-red-100 font-bold transition-colors"><X className="size-5"/></button>
+                                )}
+                            </div>
+                        ))}
+                        <p className="text-xs text-slate-500">Add links to your pitch videos. You can add multiple videos.</p>
+                        <button type="button" onClick={() => updateField('pitchVideos', [...formData.pitchVideos, ""])} className="mt-2 px-4 py-2 border border-slate-200 text-slate-700 font-bold rounded-xl hover:bg-slate-50 transition-colors flex items-center gap-2 text-sm">
+                            <Plus className="size-4" /> Add Another Video
                         </button>
                     </div>
-                ) : (
-                    <form onSubmit={handleSubmit} className="space-y-12 relative z-10 text-slate-700">
+                </div>
 
-                        {/* Audit Modal */}
-                        {auditResult && (
-                            <div className="bg-white border-2 border-emerald-300 rounded-2xl p-6 shadow-2xl relative overflow-hidden animate-in fade-in slide-in-from-top-4">
-                                <div className="absolute top-0 right-0 p-4 opacity-5">
-                                    <Bot className="size-32" />
-                                </div>
-                                <h3 className="text-xl font-bold flex items-center gap-2 mb-4 text-emerald-600">
-                                    <Bot className="size-5" /> InVolution AI Audit Results
-                                </h3>
-
-                                {auditResult.errors.length > 0 && (
-                                    <div className="mb-4">
-                                        <p className="text-red-400 font-bold mb-2 flex items-center gap-1"><AlertCircle className="size-4" /> Critical Flags (Must resolve before publish):</p>
-                                        <ul className="list-disc pl-5 space-y-2 text-sm text-slate-700">
-                                            {auditResult.errors.map((err, i) => <li key={i}>{err}</li>)}
-                                        </ul>
-                                    </div>
-                                )}
-
-                                {auditResult.warnings.length > 0 && (
-                                    <div>
-                                        <p className="text-amber-700 font-bold mb-2 flex items-center gap-1"><AlertCircle className="size-4" /> Optimization Warnings:</p>
-                                        <ul className="list-disc pl-5 space-y-2 text-sm text-slate-700">
-                                            {auditResult.warnings.map((warn, i) => <li key={i}>{warn}</li>)}
-                                        </ul>
-                                        {auditResult.errors.length === 0 && (
-                                            <p className="text-sm font-medium text-slate-500 mt-6 pt-4 border-t border-slate-200">Click "Publish" again to acknowledge these warnings and bypass the AI lock.</p>
-                                        )}
-                                    </div>
-                                )}
-                            </div>
-                        )}
-
-                        {error && !auditResult && (
-                            <div className="bg-red-950/40 border border-red-500/30 rounded-xl p-4 flex items-start gap-3">
-                                <AlertCircle className="size-5 text-red-400 shrink-0 mt-0.5" />
-                                <p className="text-red-300 text-sm">{error}</p>
-                            </div>
-                        )}
-
-                        {/* SECTION 1: BASIC COMPANY INFORMATION */}
-                        <div className="space-y-6 bg-slate-50 border border-slate-200 p-6 sm:p-8 rounded-2xl relative overflow-hidden group">
-                            <div className="absolute top-0 left-0 w-2 h-full bg-emerald-600"></div>
-                            <h3 className="text-xl font-bold flex items-center gap-3 text-slate-900 border-b border-slate-200 pb-4">
-                                <span className="flex items-center justify-center size-8 rounded-full bg-lime-900/40 text-emerald-600 text-sm border border-lime-500/20">1</span>
-                                Basic Company Information
-                            </h3>
-                            <div className="grid md:grid-cols-2 gap-6">
-                                <div className="space-y-2 col-span-2">
-                                    <label className="text-sm font-bold text-slate-700">Startup Name</label>
-                                    <input type="text" required className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-800 placeholder:text-zinc-600 focus:outline-none focus:border-lime-500/50 focus:ring-1 focus:ring-lime-500/20 transition-all font-medium" placeholder="e.g. InVolution Core" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-sm font-bold text-slate-700">Founder Name(s)</label>
-                                    <input type="text" required className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-800 placeholder:text-zinc-600 focus:outline-none focus:border-lime-500/50 focus:ring-1 focus:ring-lime-500/20 transition-all font-medium" placeholder="Jane Doe, John Smith" value={formData.basicInfo.founderNames} onChange={(e) => handleNestedChange('basicInfo', 'founderNames', e.target.value)} />
-                                </div>
-
-                                <div className="space-y-2">
-                                    <label className="text-sm font-bold text-slate-700">Founder Age</label>
-                                    <input type="number" className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-800 placeholder:text-zinc-600 focus:outline-none focus:border-lime-500/50 focus:ring-1 focus:ring-lime-500/20 transition-all font-medium" placeholder="e.g. 30" value={formData.founderAge} onChange={(e) => setFormData({ ...formData, founderAge: e.target.value })} />
-                                </div>
-
-                                <div className="space-y-2">
-                                    <label className="text-sm font-bold text-slate-700">Sector / Industry</label>
-                                    <select className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:border-lime-500/50 focus:ring-1 focus:ring-lime-500/20 transition-all appearance-none font-medium" value={formData.sector} onChange={(e) => setFormData({ ...formData, sector: e.target.value })}>
-                                        <option value="FinTech">FinTech</option>
-                                        <option value="HealthTech">HealthTech</option>
-                                        <option value="EdTech">EdTech</option>
-                                        <option value="SaaS">SaaS</option>
-                                        <option value="Cleantech">CleanTech</option>
-                                        <option value="DeepTech">DeepTech</option>
-                                    </select>
-                                </div>
-                                {!isStudent && (
-                                    <>
-                                        <div className="space-y-2">
-                                            <label className="text-sm font-bold text-slate-700">Company Type</label>
-                                            <select className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:border-lime-500/50 focus:ring-1 focus:ring-lime-500/20 transition-all appearance-none font-medium" value={formData.basicInfo.companyType} onChange={(e) => handleNestedChange('basicInfo', 'companyType', e.target.value)}>
-                                                <option value="Private Ltd">Private Ltd</option>
-                                                <option value="LLP">LLP</option>
-                                                <option value="Sole Proprietorship">Sole Proprietorship</option>
-                                                <option value="Inc">Inc / Corp</option>
-                                            </select>
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label className="text-sm font-bold text-slate-700">Year of Incorporation</label>
-                                            <input type="number" required={!isStudent} className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:border-lime-500/50 focus:ring-1 focus:ring-lime-500/20 transition-all font-medium" value={formData.basicInfo.incorporationYear} onChange={(e) => handleNestedChange('basicInfo', 'incorporationYear', Number(e.target.value))} />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label className="text-sm font-bold text-slate-700">Registered Location</label>
-                                            <input type="text" className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-800 placeholder:text-zinc-600 focus:outline-none focus:border-lime-500/50 focus:ring-1 focus:ring-lime-500/20 transition-all font-medium" placeholder="Bangalore, India" value={formData.basicInfo.location} onChange={(e) => handleNestedChange('basicInfo', 'location', e.target.value)} />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label className="text-sm font-bold text-slate-700">Team Size</label>
-                                            <input type="number" className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:border-lime-500/50 focus:ring-1 focus:ring-lime-500/20 transition-all font-medium" value={formData.basicInfo.teamSize} onChange={(e) => handleNestedChange('basicInfo', 'teamSize', Number(e.target.value))} />
-                                        </div>
-                                    </>
-                                )}
-                            </div>
+                {/* Final Confirmation */}
+                <div className="bg-slate-50 border border-slate-200 p-6 md:p-8 rounded-2xl shadow-sm flex flex-col md:flex-row items-center justify-between gap-6">
+                    <label className="flex items-center gap-3 cursor-pointer">
+                        <input type="checkbox" required className="size-5 accent-emerald-600 rounded" checked={formData.confirmed} onChange={(e) => updateField('confirmed', e.target.checked)} />
+                        <div>
+                            <span className="font-bold text-slate-900 flex items-center gap-2"><ShieldCheck className="size-5 text-emerald-600"/> Final Confirmation</span>
+                            <span className="text-sm text-slate-500 mt-1 block">I confirm that all information provided is accurate and true to the best of my knowledge.</span>
                         </div>
-
-                        {/* SECTION 2: BUSINESS MODEL DETAILS */}
-                        <div className="space-y-6 bg-slate-50 border border-slate-200 p-6 sm:p-8 rounded-2xl relative overflow-hidden group">
-                            <div className="absolute top-0 left-0 w-2 h-full bg-indigo-400"></div>
-                            <h3 className="text-xl font-bold flex items-center gap-3 text-slate-900 border-b border-slate-200 pb-4">
-                                <span className="flex items-center justify-center size-8 rounded-full bg-indigo-900/40 text-indigo-400 text-sm border border-indigo-500/20">2</span>
-                                Business Model Details
-                            </h3>
-                            <div className="grid md:grid-cols-2 gap-6">
-                                {!isStudent && (
-                                    <>
-                                        <div className="space-y-2">
-                                            <label className="text-sm font-bold text-slate-700">Business Model Type</label>
-                                            <select className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/20 transition-all appearance-none font-medium" value={formData.businessModel} onChange={(e) => setFormData({ ...formData, businessModel: e.target.value })}>
-                                                <option value="B2B">B2B</option>
-                                                <option value="B2C">B2C</option>
-                                                <option value="D2C">D2C</option>
-                                                <option value="SaaS">SaaS</option>
-                                                <option value="Marketplace">Marketplace</option>
-                                                <option value="Subscription">Subscription</option>
-                                                <option value="Commission-based">Commission-based</option>
-                                                <option value="Hybrid">Hybrid</option>
-                                            </select>
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label className="text-sm font-bold text-slate-700">Revenue Model</label>
-                                            <select className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/20 transition-all appearance-none font-medium" value={formData.businessInfo.revenueModel} onChange={(e) => handleNestedChange('businessInfo', 'revenueModel', e.target.value)}>
-                                                <option value="One-time sales">One-time sales</option>
-                                                <option value="Subscription">Subscription</option>
-                                                <option value="Licensing">Licensing</option>
-                                                <option value="Ads">Ads</option>
-                                                <option value="Commission">Commission</option>
-                                                <option value="Freemium">Freemium</option>
-                                            </select>
-                                        </div>
-                                    </>
-                                )}
-                                <div className="space-y-2 col-span-2">
-                                    <label className="text-sm font-bold text-slate-700">Target Market</label>
-                                    <input type="text" className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-800 placeholder:text-zinc-600 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/20 transition-all font-medium" placeholder="e.g. Mid-market healthcare providers in APAC" value={formData.businessInfo.targetMarket} onChange={(e) => handleNestedChange('businessInfo', 'targetMarket', e.target.value)} />
-                                </div>
-                                {isStudent && (
-                                    <div className="space-y-2 col-span-2">
-                                        <label className="text-sm font-bold text-slate-700">Marketing Strategies</label>
-                                        <textarea rows={2} required className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-800 placeholder:text-zinc-600 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/20 transition-all font-medium" placeholder="How do you plan to acquire users?" value={formData.businessInfo.marketingStrategy} onChange={(e) => handleNestedChange('businessInfo', 'marketingStrategy', e.target.value)} />
-                                    </div>
-                                )}
-                                <div className="space-y-2 col-span-2">
-                                    <label className="text-sm font-bold text-slate-700">Unique Value Proposition (UVP)</label>
-                                    <textarea rows={2} className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-800 placeholder:text-zinc-600 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/20 transition-all font-medium" placeholder="What sets you completely apart..." value={formData.businessInfo.uvp} onChange={(e) => handleNestedChange('businessInfo', 'uvp', e.target.value)} />
-                                </div>
-                                <div className="space-y-2 col-span-2">
-                                    <label className="text-sm font-bold text-slate-700">Pitch Description (System Overview)</label>
-                                    <textarea rows={3} required className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-800 placeholder:text-zinc-600 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/20 transition-all font-medium" placeholder="Provide a high-level summary of operations..." value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} />
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* SECTION 3: FINANCIAL PARAMETERS */}
-                        <div className="space-y-6 bg-slate-50 border border-slate-200 p-6 sm:p-8 rounded-2xl relative overflow-hidden group">
-                            <div className="absolute top-0 right-0 size-64 bg-amber-500/5 blur-[100px] rounded-full pointer-events-none"></div>
-                            <div className="absolute top-0 left-0 w-2 h-full bg-amber-400"></div>
-
-                            <h3 className="text-xl font-bold flex items-center justify-between text-amber-700 border-b border-slate-200 pb-4">
-                                <span className="flex items-center gap-3">
-                                    <span className="flex items-center justify-center size-8 rounded-full bg-amber-900/40 text-amber-700 text-sm border border-amber-200">3</span>
-                                    Financial Parameters (AI Monitored)
-                                </span>
-                            </h3>
-
-                            {!isStudent && (
-                                <>
-                                    <div className="space-y-4">
-                                        <h4 className="text-sm font-bold text-slate-500 uppercase tracking-widest">Monthly Financial Entry (₹)</h4>
-                                <div className="grid md:grid-cols-3 gap-4">
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-bold text-slate-700">Total Revenue / MRR</label>
-                                        <input type="number" required className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-amber-500/50 font-mono text-amber-700 transition-all" placeholder="0" value={formData.financialsMonthly.revenue} onChange={(e) => handleNestedChange('financialsMonthly', 'revenue', e.target.value)} />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-bold text-slate-700">COGS (Cost of Goods)</label>
-                                        <input type="number" required className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-amber-500/50 font-mono text-slate-800 transition-all" placeholder="0" value={formData.financialsMonthly.cogs} onChange={(e) => handleNestedChange('financialsMonthly', 'cogs', e.target.value)} />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-bold text-slate-700">Total Expenses (Excl. COGS)</label>
-                                        <input type="number" required className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-amber-500/50 font-mono text-slate-800 transition-all" placeholder="0" value={formData.financialsMonthly.expenses} onChange={(e) => handleNestedChange('financialsMonthly', 'expenses', e.target.value)} />
-                                    </div>
-                                </div>
-
-                                {/* Auto Calculated Display Bar */}
-                                <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl grid grid-cols-2 md:grid-cols-5 gap-4">
-                                    <div>
-                                        <p className="text-[10px] text-amber-700 uppercase font-bold tracking-wider mb-1">Net Profit</p>
-                                        <p className={`font-mono text-sm font-bold ${formData.financialsMonthly.netProfit >= 0 ? "text-emerald-600" : "text-red-400"}`}>₹{formData.financialsMonthly.netProfit.toLocaleString()}</p>
-                                    </div>
-                                    <div>
-                                        <p className="text-[10px] text-amber-700 uppercase font-bold tracking-wider mb-1">Gross Margin</p>
-                                        <p className="font-mono text-sm font-bold text-slate-900">{formData.financialsMonthly.grossMargin}%</p>
-                                    </div>
-                                    <div>
-                                        <p className="text-[10px] text-amber-700 uppercase font-bold tracking-wider mb-1">Net Margin</p>
-                                        <p className={`font-mono text-sm font-bold ${formData.financialsMonthly.netMargin >= 0 ? "text-emerald-600" : "text-red-400"}`}>{formData.financialsMonthly.netMargin}%</p>
-                                    </div>
-                                    <div>
-                                        <p className="text-[10px] text-amber-700 uppercase font-bold tracking-wider mb-1">Monthly Burn</p>
-                                        <p className="font-mono text-sm font-bold text-slate-900">₹{formData.financialsMonthly.burnRate.toLocaleString()}</p>
-                                    </div>
-                                    <div>
-                                        <p className="text-[10px] text-amber-700 uppercase font-bold tracking-wider mb-1">Runway</p>
-                                        <p className="font-mono text-sm font-bold text-slate-900">{formData.financialsMonthly.runway === 999 ? "∞" : formData.financialsMonthly.runway} mo.</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="space-y-4 pt-6 mt-6 border-t border-slate-200">
-                                <h4 className="text-sm font-bold text-slate-500 uppercase tracking-widest">Yearly Posture & Runway</h4>
-                                <div className="grid md:grid-cols-4 gap-4">
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-bold text-slate-700">Annual Revenue</label>
-                                        <input type="number" className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-amber-500/50 font-mono text-slate-800 transition-all" value={formData.financialsYearly.annualRevenue} onChange={(e) => handleNestedChange('financialsYearly', 'annualRevenue', e.target.value)} />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-bold text-slate-700">EBITDA</label>
-                                        <input type="number" className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-amber-500/50 font-mono text-slate-800 transition-all" value={formData.financialsYearly.ebitda} onChange={(e) => handleNestedChange('financialsYearly', 'ebitda', e.target.value)} />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-bold text-slate-700">Cash in Bank</label>
-                                        <input type="number" className="w-full bg-emerald-950/40 border border-emerald-500/30 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-amber-500/50 font-mono text-emerald-600 transition-all" placeholder="Feeds runway calc" value={formData.financialsYearly.cashInBank} onChange={(e) => handleNestedChange('financialsYearly', 'cashInBank', e.target.value)} />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-bold text-slate-700">Total Debt</label>
-                                        <input type="number" className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-amber-500/50 font-mono text-slate-800 transition-all" value={formData.financialsYearly.debt} onChange={(e) => handleNestedChange('financialsYearly', 'debt', e.target.value)} />
-                                    </div>
-                                </div>
-                            </div>
-                        </>
-                    )}
-
-                            <div className="space-y-4 pt-6 mt-6 border-t border-slate-200">
-                                <h4 className="text-sm font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2"><TrendingUp className="size-4" /> Deal Fundamentals</h4>
-                                <div className="grid md:grid-cols-3 gap-6">
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-bold text-slate-700">Funding Required (₹)</label>
-                                        <input type="number" required className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-amber-500/50 font-mono text-xl text-amber-700 transition-all" placeholder="10000000" value={formData.fundingRequired} onChange={(e) => setFormData({ ...formData, fundingRequired: e.target.value })} />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-bold text-slate-700">Equity Offered (%)</label>
-                                        <input type="number" required className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-amber-500/50 font-mono text-xl text-slate-800 transition-all" placeholder="10" value={formData.equityForSale} onChange={(e) => setFormData({ ...formData, equityForSale: e.target.value })} />
-                                    </div>
-                                    <div className="p-3 bg-white border border-slate-200 rounded-xl flex items-center justify-between">
-                                        <div>
-                                            <p className="text-xs text-slate-9000">Implied Valuation</p>
-                                            <p className="text-xl font-bold font-mono text-slate-800">
-                                                {Number(formData.equityForSale) > 0 && Number(formData.fundingRequired) > 0
-                                                    ? `₹${(Number(formData.fundingRequired) / (Number(formData.equityForSale) / 100)).toLocaleString()}`
-                                                    : "₹0"}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {!isStudent && (
-                            <>
-                                {/* SECTION 4: GROWTH METRICS */}
-                                <div className="space-y-6 bg-slate-50 border border-slate-200 p-6 sm:p-8 rounded-2xl relative overflow-hidden group">
-                            <div className="absolute top-0 left-0 w-2 h-full bg-pink-400"></div>
-                            <h3 className="text-xl font-bold flex items-center gap-3 text-slate-900 border-b border-slate-200 pb-4">
-                                <span className="flex items-center justify-center size-8 rounded-full bg-pink-900/40 text-pink-400 text-sm border border-pink-500/20">4</span>
-                                Growth Metrics
-                            </h3>
-                            <div className="grid md:grid-cols-3 gap-6">
-                                <div className="space-y-2">
-                                    <label className="text-sm font-bold text-slate-700">MAU (Monthly Active Users)</label>
-                                    <input type="number" className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-pink-500/50 text-slate-800 transition-all font-medium" value={formData.growthMetrics.mau} onChange={(e) => handleNestedChange('growthMetrics', 'mau', e.target.value)} />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-sm font-bold text-slate-700">CAC (₹)</label>
-                                    <input type="number" className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-pink-500/50 text-slate-800 transition-all font-medium" value={formData.cac} onChange={(e) => setFormData({ ...formData, cac: e.target.value })} />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-sm font-bold text-slate-700">LTV (₹)</label>
-                                    <input type="number" className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-pink-500/50 text-slate-800 transition-all font-medium" value={formData.ltv} onChange={(e) => setFormData({ ...formData, ltv: e.target.value })} />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-sm font-bold text-slate-700">Churn Rate (%)</label>
-                                    <input type="number" className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-pink-500/50 text-slate-800 transition-all font-medium" value={formData.growthMetrics.churnRate} onChange={(e) => handleNestedChange('growthMetrics', 'churnRate', e.target.value)} />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-sm font-bold text-slate-700">Repeat Customers (%)</label>
-                                    <input type="number" className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-pink-500/50 text-slate-800 transition-all font-medium" value={formData.growthMetrics.repeatCustomers} onChange={(e) => handleNestedChange('growthMetrics', 'repeatCustomers', e.target.value)} />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-sm font-bold text-slate-700">Projected ROI (%)</label>
-                                    <input type="number" className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-pink-500/50 text-slate-800 transition-all font-medium" value={formData.projectedROI} onChange={(e) => setFormData({ ...formData, projectedROI: e.target.value })} />
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* SECTION 5: OPERATIONAL METRICS */}
-                        <div className="space-y-6 bg-slate-50 border border-slate-200 p-6 sm:p-8 rounded-2xl relative overflow-hidden group">
-                            <div className="absolute top-0 left-0 w-2 h-full bg-teal-400"></div>
-                            <h3 className="text-xl font-bold flex items-center gap-3 text-slate-900 border-b border-slate-200 pb-4">
-                                <span className="flex items-center justify-center size-8 rounded-full bg-teal-900/40 text-teal-400 text-sm border border-teal-500/20">5</span>
-                                Operational Metrics
-                            </h3>
-                            <div className="grid md:grid-cols-2 gap-6">
-                                <div className="space-y-2">
-                                    <label className="text-sm font-bold text-slate-700">Number of SKUs (if applicable)</label>
-                                    <input type="number" className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-teal-500/50 text-slate-800 transition-all font-medium" value={formData.operationalMetrics.skus} onChange={(e) => handleNestedChange('operationalMetrics', 'skus', e.target.value)} />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-sm font-bold text-slate-700">Avg Delivery / Fulfillment Time</label>
-                                    <input type="text" className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-teal-500/50 text-slate-800 transition-all font-medium" placeholder="e.g. 2 Days" value={formData.operationalMetrics.deliveryTime} onChange={(e) => handleNestedChange('operationalMetrics', 'deliveryTime', e.target.value)} />
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* SECTION 6: CREDIBILITY & TRUST */}
-                        <div className="space-y-6 bg-blue-900/20 p-6 sm:p-8 rounded-2xl border border-blue-500/30">
-                            <h3 className="text-xl font-bold flex items-center gap-3 text-slate-900 border-b border-blue-500/30 pb-4">
-                                <span className="flex items-center justify-center size-8 rounded-full bg-blue-900/40 text-blue-400 text-sm border border-blue-500/20">6</span>
-                                Credibility & Trust Inputs
-                            </h3>
-                            <p className="text-sm text-slate-500">Marking these fields as true simulates having provided verified documentation in the Data Room.</p>
-
-                            <div className="grid md:grid-cols-3 gap-4">
-                                <label className="flex items-center gap-3 p-4 bg-white border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-50 transition-colors">
-                                    <input type="checkbox" className="size-5 accent-blue-500" checked={formData.credibility.gstRegistered} onChange={(e) => handleNestedChange('credibility', 'gstRegistered', e.target.checked)} />
-                                    <span className="text-sm font-bold text-slate-700">GST Registered</span>
-                                </label>
-                                <label className="flex items-center gap-3 p-4 bg-white border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-50 transition-colors">
-                                    <input type="checkbox" className="size-5 accent-blue-500" checked={formData.credibility.panVerified} onChange={(e) => handleNestedChange('credibility', 'panVerified', e.target.checked)} />
-                                    <span className="text-sm font-bold text-slate-700">Company PAN Verified</span>
-                                </label>
-                                <label className="flex items-center gap-3 p-4 bg-white border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-50 transition-colors">
-                                    <input type="checkbox" className="size-5 accent-blue-500" checked={formData.credibility.bankVerified} onChange={(e) => handleNestedChange('credibility', 'bankVerified', e.target.checked)} />
-                                    <span className="text-sm font-bold text-slate-700">Bank Account Verified</span>
-                                </label>
-                                <label className="flex items-center gap-3 p-4 bg-white border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-50 transition-colors">
-                                    <input type="checkbox" className="size-5 accent-blue-500" checked={formData.credibility.incubatorBacked} onChange={(e) => handleNestedChange('credibility', 'incubatorBacked', e.target.checked)} />
-                                    <span className="text-sm font-bold text-slate-700">Incubator / VC Backed</span>
-                                </label>
-                            </div>
-                        </div>
-
-                        {/* SECTION 7: RISK DISCLOSURE */}
-                        <div className="space-y-6 bg-red-900/10 p-6 sm:p-8 rounded-2xl border border-red-500/20">
-                            <h3 className="text-xl font-bold flex items-center gap-3 text-slate-900 border-b border-red-500/20 pb-4">
-                                <span className="flex items-center justify-center size-8 rounded-full bg-red-900/40 text-red-500 text-sm border border-red-500/20">7</span>
-                                Risk Disclosure Section
-                            </h3>
-
-                            <div className="grid md:grid-cols-2 gap-4">
-                                <label className="flex flex-col gap-2 p-4 bg-white border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-50 transition-colors">
-                                    <div className="flex items-center gap-3">
-                                        <input type="checkbox" className="size-5 accent-red-500" checked={formData.riskDisclosure.legalCases} onChange={(e) => handleNestedChange('riskDisclosure', 'legalCases', e.target.checked)} />
-                                        <span className="text-sm font-bold text-red-400">Any Pending Legal Cases?</span>
-                                    </div>
-                                    <p className="text-xs text-slate-9000 pl-8">Check if there are active litigations against the entity or founders.</p>
-                                </label>
-                                <label className="flex flex-col gap-2 p-4 bg-white border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-50 transition-colors">
-                                    <div className="flex items-center gap-3">
-                                        <input type="checkbox" className="size-5 accent-red-500" checked={formData.riskDisclosure.criminalRecord} onChange={(e) => handleNestedChange('riskDisclosure', 'criminalRecord', e.target.checked)} />
-                                        <span className="text-sm font-bold text-red-400">Any Founder Criminal Record?</span>
-                                    </div>
-                                </label>
-                                <div className="space-y-2 col-span-2 mt-2">
-                                    <label className="text-sm font-bold text-slate-700">Revenue Fluctuation Explanation (If any extreme drops occurred)</label>
-                                    <textarea rows={2} className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-red-500/50 text-slate-800 transition-all font-medium" placeholder="Optional disclosure..." value={formData.riskDisclosure.revenueFluctuationExplanation} onChange={(e) => handleNestedChange('riskDisclosure', 'revenueFluctuationExplanation', e.target.value)} />
-                                </div>
-                            </div>
-                        </div>
-                            </>
-                        )}
-
-                        {/* PITCH MEDIA GALLERY */}
-                        <div className="space-y-6 bg-slate-50 border border-slate-200 p-6 sm:p-8 rounded-2xl relative overflow-hidden group">
-                            <div className="absolute top-0 left-0 w-2 h-full bg-purple-400"></div>
-                            <h3 className="text-xl font-bold flex items-center gap-2 text-purple-400 border-b border-slate-200 pb-4">
-                                <Presentation className="size-5" /> Pitch Media Gallery
-                            </h3>
-
-                            <div className="space-y-4">
-                                <label className="text-sm font-bold block text-slate-700">Unlisted Pitch Video Links (YouTube/Vimeo)</label>
-                                {formData.videos.map((vid: string, index: number) => (
-                                    <div key={index} className="flex gap-3">
-                                        <input type="url"
-                                            className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-purple-500/50 text-slate-800 transition-all font-medium"
-                                            placeholder="https://youtube.com/watch?v=..."
-                                            value={vid} onChange={(e) => updateVideoField(index, e.target.value)}
-                                        />
-                                        {formData.videos.length > 1 && (
-                                            <button type="button" onClick={() => {
-                                                const newVids = formData.videos.filter((_: string, i: number) => i !== index);
-                                                setFormData({ ...formData, videos: newVids });
-                                            }}
-                                                className="px-4 py-2 bg-red-900/30 text-red-400 rounded-xl hover:bg-red-900/50 border border-red-500/20"
-                                            >Remove</button>
-                                        )}
-                                    </div>
-                                ))}
-
-                                <button type="button" onClick={addVideoField} className="text-sm text-purple-400 font-bold hover:text-purple-300 transition-colors">
-                                    + Add another video
-                                </button>
-                            </div>
-                        </div>
-
-                        <div className="pt-8 flex flex-col md:flex-row items-center justify-between gap-6 sticky bottom-6 bg-slate-50/90 backdrop-blur-xl p-6 rounded-2xl border border-slate-200 shadow-2xl z-50">
-                            <div className="text-sm text-slate-500 flex items-center gap-2">
-                                <ShieldCheck className="size-5 text-emerald-600" /> All data is encrypted and NDA-protected.
-                            </div>
-                            <button
-                                type="submit"
-                                disabled={saving || isAuditing}
-                                className="w-full md:w-auto px-10 py-4 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700 transition-all flex items-center justify-center gap-2 disabled:opacity-70 shadow-[0_0_20px_-5px_rgba(163,230,53,0.4)]"
-                            >
-                                {isAuditing ? <><Loader2 className="size-5 animate-spin" /> System Validating...</> : saving ? "Encrypting & Publishing..." : "Publish Verified Profile"}
-                            </button>
-                        </div>
-                    </form>
-                )}
-            </div>
+                    </label>
+                    <button type="submit" disabled={saving || !formData.confirmed} className="w-full md:w-auto px-10 py-4 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg whitespace-nowrap">
+                        {saving ? <><Loader2 className="size-5 animate-spin" /> Publishing...</> : "Publish Startup Profile"}
+                    </button>
+                </div>
+            </form>
         </div>
     );
 }
