@@ -1,0 +1,31 @@
+-- Create InvestorProfiles Table
+CREATE TABLE public.investor_profiles (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    email TEXT UNIQUE NOT NULL,
+    full_name TEXT NOT NULL,
+    phone_number TEXT NOT NULL,
+    country TEXT NOT NULL,
+    city TEXT NOT NULL,
+    occupation TEXT NOT NULL,
+    linkedin_profile TEXT,
+    investor_type TEXT NOT NULL,
+    years_of_experience TEXT NOT NULL,
+    startups_invested_in INTEGER NOT NULL,
+    portfolio_website TEXT,
+    investment_thesis TEXT NOT NULL,
+    investment_budget TEXT NOT NULL,
+    source_of_funds TEXT NOT NULL,
+    company_name TEXT NOT NULL,
+    designation TEXT NOT NULL,
+    official_website TEXT,
+    business_email TEXT,
+    x_twitter TEXT,
+    personal_website TEXT,
+    supporting_documents JSONB DEFAULT '[]'::jsonb,
+    photo_url TEXT,
+    status TEXT DEFAULT 'Pending Verification' CHECK (status IN ('Pending Verification', 'Verified', 'Rejected', 'Request More Information')),
+    admin_remarks TEXT,
+    
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now()
+);

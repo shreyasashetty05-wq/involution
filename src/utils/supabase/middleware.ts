@@ -74,9 +74,10 @@ export async function updateSession(request: NextRequest) {
     let kycDone = false;
     let kycStatus = "None";
     let dbRole = null;
+    let investorProfileStatus = "None";
 
     if (user.email) {
-        const [kycRes, roleRes] = await Promise.all([
+        const [kycRes, roleRes, investorProfileRes] = await Promise.all([
             supabase
                 .from("kyc_documents")
                 .select("status")
@@ -88,6 +89,11 @@ export async function updateSession(request: NextRequest) {
                 .from("user_roles")
                 .select("role")
                 .eq("email", user.email)
+                .maybeSingle(),
+            supabase
+                .from("investor_profiles")
+                .select("status")
+                .eq("email", user.email)
                 .maybeSingle()
         ]);
 
@@ -97,6 +103,9 @@ export async function updateSession(request: NextRequest) {
         }
         if (roleRes.data) {
             dbRole = roleRes.data.role;
+        }
+        if (investorProfileRes.data) {
+            investorProfileStatus = investorProfileRes.data.status;
         }
     }
 
@@ -161,6 +170,31 @@ export async function updateSession(request: NextRequest) {
             const url = request.nextUrl.clone();
             url.pathname = role === "investor" ? "/investors/dashboard" : "/startups/dashboard";
             return NextResponse.redirect(url);
+        }
+
+        // Investor Profile Verification Check
+        if (kycDone && role === "investor") {
+            const isVerificationRoute = path === "/investors/verification";
+            const isPendingVerificationRoute = path === "/investors/verification/pending";
+            const isApiRoute = path.startsWith("/api/");
+            
+            if (!isApiRoute) {
+                if (investorProfileStatus === "Pending Verification" && !isPendingVerificationRoute) {
+                    const url = request.nextUrl.clone();
+                    url.pathname = "/investors/verification/pending";
+                    return NextResponse.redirect(url);
+                }
+                if ((investorProfileStatus === "None" || investorProfileStatus === "Rejected" || investorProfileStatus === "Request More Information") && !isVerificationRoute) {
+                    const url = request.nextUrl.clone();
+                    url.pathname = "/investors/verification";
+                    return NextResponse.redirect(url);
+                }
+                if (investorProfileStatus === "Verified" && (isVerificationRoute || isPendingVerificationRoute)) {
+                    const url = request.nextUrl.clone();
+                    url.pathname = "/investors/dashboard";
+                    return NextResponse.redirect(url);
+                }
+            }
         }
 
         // Role-based protection for regular users

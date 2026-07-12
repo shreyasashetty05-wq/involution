@@ -6,7 +6,7 @@ import { Send, FileSignature, CheckCircle2, ShieldCheck, User, FileText, Chevron
 import { createClient } from "@/utils/supabase/client";
 import FileAttachment from "@/components/FileAttachment";
 import { useToast } from "@/components/ui/ToastProvider";
-
+import InvestorProfileModal from "@/components/InvestorProfileModal";
 
 /* ─── PII Masker ──────────────────────────────────────── */
 const maskPII = (text: string, isSigned: boolean) => {
@@ -98,6 +98,9 @@ function DealWorkspace() {
     const [activeTab, setActiveTab] = useState<"chat" | "trust" | "diligence" | "agreement">("chat");
     const [currentPhase, setCurrentPhase] = useState(3);
     const [bubbleTrigger, setBubbleTrigger] = useState(0);
+    const [showInvestorModal, setShowInvestorModal] = useState(false);
+    const [investorProfile, setInvestorProfile] = useState<any>(null);
+    const toast = useToast();
 
     const [messages, setMessages] = useState<any[]>([]);
     const [inputMessage, setInputMessage] = useState("");
@@ -161,6 +164,22 @@ function DealWorkspace() {
         };
         fetchUser();
     }, []);
+
+    useEffect(() => {
+        const fetchInvestorProfile = async () => {
+            if (!investorId) return;
+            try {
+                const res = await fetch(`/api/investors/public/${investorId}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.profile) setInvestorProfile(data.profile);
+                }
+            } catch (err) {
+                console.error("Failed to fetch investor profile:", err);
+            }
+        };
+        fetchInvestorProfile();
+    }, [investorId]);
 
     const fetchMessages = async () => {
         if (!startupId) return;
@@ -296,7 +315,7 @@ function DealWorkspace() {
             console.error("Failed to advance phase", err);
         }
 
-        setBubbleTrigger(t => t + 1);
+        setBubbleTrigger((t: number) => t + 1);
         setTimeout(() => setCurrentPhase(nextPhase), 200);
     };
 
@@ -755,18 +774,44 @@ function DealWorkspace() {
                                         return (
                                             <div 
                                                 key={msg.id} 
-                                                className={`flex ${msg.sender === 'me' ? 'justify-end' : 'justify-start'} cursor-pointer px-5 py-1.5 transition-all duration-200 ${isSelected ? 'bg-emerald-50/80' : 'hover:bg-slate-50/50'}`}
-                                                onClick={() => handleMessageClick(msg.id)}
-                                                onContextMenu={(e) => handleMessageRightClick(e, msg.id)}
-                                                onTouchStart={() => handleTouchStart(msg.id)}
-                                                onTouchEnd={handleTouchEnd}
+                                                className={`flex gap-3 ${msg.sender === 'me' ? 'justify-end' : 'justify-start'} px-5 py-1.5 transition-all duration-200 ${isSelected ? 'bg-emerald-50/80' : 'hover:bg-slate-50/50'}`}
                                             >
-                                                <div className={`max-w-[72%] rounded-2xl px-4 py-2.5 text-[15px] leading-relaxed shadow-sm transition-transform duration-200 animate-in fade-in slide-in-from-bottom-2
+                                                {msg.sender === 'them' && (
+                                                    <div className="shrink-0 flex flex-col items-center cursor-pointer pt-1" onClick={() => setShowInvestorModal(true)}>
+                                                        {investorProfile ? (
+                                                            // eslint-disable-next-line @next/next/no-img-element
+                                                            <img 
+                                                                src={investorProfile.photo_url || `https://ui-avatars.com/api/?name=${investorProfile.full_name}`} 
+                                                                alt={investorProfile.full_name} 
+                                                                className="w-8 h-8 rounded-full object-cover shadow-sm ring-2 ring-white hover:ring-emerald-200 transition-all"
+                                                                title="View Investor Profile"
+                                                            />
+                                                        ) : (
+                                                            <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-500 shadow-sm ring-2 ring-white hover:ring-indigo-200 transition-all" title="View Profile">
+                                                                <User className="size-4" />
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )}
+
+                                                <div 
+                                                    className={`max-w-[72%] rounded-2xl px-4 py-2.5 text-[15px] leading-relaxed shadow-sm transition-transform duration-200 animate-in fade-in slide-in-from-bottom-2 cursor-pointer
                                                     ${isSelected ? 'scale-[0.99] shadow-md ring-1 ring-emerald-200/50' : ''}
                                                     ${msg.sender === 'me'
                                                         ? 'bg-[#10b981] text-white rounded-tr-sm'
-                                                        : 'bg-white text-slate-800 rounded-tl-sm border border-slate-200'}`}>
+                                                        : 'bg-white text-slate-800 rounded-tl-sm border border-slate-200'}`}
+                                                    onClick={() => handleMessageClick(msg.id)}
+                                                    onContextMenu={(e) => handleMessageRightClick(e, msg.id)}
+                                                    onTouchStart={() => handleTouchStart(msg.id)}
+                                                    onTouchEnd={handleTouchEnd}
+                                                >
                                                     
+                                                    {msg.sender === 'them' && investorProfile && (
+                                                        <div className="text-xs font-bold text-emerald-600 mb-1 cursor-pointer hover:underline flex items-center gap-1" onClick={(e) => { e.stopPropagation(); setShowInvestorModal(true); }}>
+                                                            {investorProfile.full_name} <ShieldCheck className="size-3" />
+                                                        </div>
+                                                    )}
+
                                                     {msg.file && <FileAttachment file={msg.file} />}
                                                     
                                                     {msg.text && <p className={msg.file ? "mt-2" : ""}>{maskPII(msg.text, agreementSigned)}</p>}
@@ -1116,6 +1161,10 @@ function DealWorkspace() {
                         </div>
                     </div>
                 </div>
+            )}
+            
+            {showInvestorModal && investorId && (
+                <InvestorProfileModal investorId={investorId} onClose={() => setShowInvestorModal(false)} />
             )}
         </div>
     );
