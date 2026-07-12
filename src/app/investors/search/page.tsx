@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Search, BrainCircuit, Activity, LineChart, ChevronRight, SlidersHorizontal, ArrowUpDown, ShieldCheck, Building2, Users, CheckCircle2, Bookmark, Share2, Rss, Clock, MapPin, TrendingUp, AlertTriangle, HeartPulse, Factory, Briefcase, Scale, Bell, X, Copy, Mail, MessageCircle, Linkedin, FileText } from "lucide-react";
+import { Search, BrainCircuit, Activity, LineChart, ChevronRight, SlidersHorizontal, ArrowUpDown, ShieldCheck, Building2, Users, CheckCircle2, Bookmark, Share2, Rss, Clock, MapPin, TrendingUp, AlertTriangle, HeartPulse, Factory, Briefcase, Scale, Bell, X, Copy, Mail, MessageCircle, Linkedin, FileText, Calendar, Banknote } from "lucide-react";
 import { formatRelativeTime } from "@/utils/timeHelper";
 import { useToast } from "@/components/ui/ToastProvider";
 
@@ -439,119 +439,134 @@ export default function AISearchEngine() {
 
                                 return (
                                     <div key={startupId}
-                                        className="bg-white border border-slate-200 rounded-3xl shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 p-6 flex flex-col gap-6 group relative animate-in fade-in slide-in-from-bottom-4"
+                                        className="bg-white border border-slate-200 rounded-3xl shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 p-6 flex flex-col gap-8 group relative animate-in fade-in slide-in-from-bottom-4"
                                         style={{ animationDelay: `${Math.min(idx * 50, 500)}ms` }}
                                     >
-                                        {/* Header Info */}
-                                        <div className="flex gap-4 items-start">
-                                            <div className="relative shrink-0">
-                                                <div className="size-16 rounded-full bg-gradient-to-br from-slate-50 to-slate-100 border-2 border-white shadow-md flex items-center justify-center overflow-hidden">
-                                                    <span className="text-2xl font-bold font-outfit text-slate-400">{startup?.name?.charAt(0) || 'S'}</span>
-                                                </div>
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <div className="flex flex-wrap items-center gap-2 mb-1.5">
-                                                    <h3 className="text-xl font-bold text-slate-900 font-outfit truncate group-hover:text-emerald-600 transition-colors">{startup.name}</h3>
-                                                    {/* Smart Badges */}
-                                                    {startup.isStudent && <span className="px-2 py-0.5 bg-blue-50 text-blue-600 rounded-md text-[10px] font-bold flex items-center gap-1"><CheckCircle2 className="size-3"/> Student Startup</span>}
-                                                    {(startup.credibility?.gstRegistered || startup.credibility?.panVerified) && <span className="px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded-md text-[10px] font-bold flex items-center gap-1"><CheckCircle2 className="size-3"/> KYC Verified</span>}
-                                                    {approvedUpdates.length > 0 && <span className="px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded-md text-[10px] font-bold flex items-center gap-1"><ShieldCheck className="size-3"/> Financial Verified</span>}
-                                                    {startup.score > 0 && <span className="px-2 py-0.5 bg-purple-50 text-purple-600 rounded-md text-[10px] font-bold flex items-center gap-1"><BrainCircuit className="size-3"/> AI Reviewed</span>}
-                                                    {revGrowth > 20 && <span className="px-2 py-0.5 bg-orange-50 text-orange-600 rounded-md text-[10px] font-bold flex items-center gap-1"><TrendingUp className="size-3"/> Fast Growing</span>}
-                                                </div>
-                                                <div className="flex flex-wrap gap-2 text-xs font-medium text-slate-500 mb-3">
-                                                    <span className="flex items-center gap-1"><Factory className="size-3 text-slate-400"/> {startup.sector || 'Various'}</span>
-                                                    <span className="text-slate-300">•</span>
-                                                    <span>{startup.businessModel || 'Any'}</span>
-                                                    <span className="text-slate-300">•</span>
-                                                    <span className="bg-slate-100 px-1.5 py-0.5 rounded text-slate-600">{startup.stage || 'Seed'}</span>
-                                                    {startup.location && (
-                                                        <>
-                                                            <span className="text-slate-300">•</span>
-                                                            <span className="flex items-center gap-1"><MapPin className="size-3 text-slate-400"/> {startup.location}</span>
-                                                        </>
+                                        {/* Row 1: Header */}
+                                        <div className="flex gap-4 items-center justify-between">
+                                            <div className="flex items-center gap-4">
+                                                <div className="size-16 rounded-2xl bg-gradient-to-br from-slate-50 to-slate-100 border border-slate-200 shadow-sm flex items-center justify-center overflow-hidden shrink-0">
+                                                    {startup.basic_info?.logoUrl ? (
+                                                        <img src={startup.basic_info.logoUrl} alt="Logo" className="w-full h-full object-cover" />
+                                                    ) : (
+                                                        <span className="text-2xl font-black font-outfit text-slate-400">{startup?.name?.charAt(0) || 'S'}</span>
                                                     )}
                                                 </div>
-                                                <p className="text-slate-600 text-sm line-clamp-2 leading-relaxed pr-8">{startup.desc}</p>
-                                                {startup.desc?.length > 120 && <Link href={`/startups/${startupId}`} className="text-emerald-600 text-xs font-bold hover:underline mt-1 inline-block">Read More</Link>}
-                                            </div>
-                                            
-                                            {/* AI Match Circle (Top Right) */}
-                                            <div className="shrink-0 flex flex-col items-center group-hover:scale-110 transition-transform duration-500 ml-auto">
-                                                 <div className="relative size-16">
-                                                    <svg className="size-full -rotate-90">
-                                                        <circle cx="32" cy="32" r="28" stroke="currentColor" strokeWidth="4" fill="transparent" className="text-slate-100" />
-                                                        <circle cx="32" cy="32" r="28" stroke="currentColor" strokeWidth="4" fill="transparent" strokeDasharray="175" strokeDashoffset={175 - (175 * Math.min(100, startup.score)) / 100} className="text-emerald-500 drop-shadow-sm transition-all duration-1000" />
-                                                    </svg>
-                                                    <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                                        <span className="text-lg font-bold text-slate-900">{startup.score}</span>
+                                                <div>
+                                                    <h3 className="text-2xl font-black text-slate-900 font-outfit truncate">{startup.name}</h3>
+                                                    {/* Row 2: Metadata */}
+                                                    <div className="flex flex-wrap items-center gap-2 text-sm font-bold text-slate-500 mt-1">
+                                                        <span>{startup.sector || 'Various'}</span>
+                                                        <span className="text-slate-300">•</span>
+                                                        <span>{startup.businessModel || 'Any Model'}</span>
+                                                        <span className="text-slate-300">•</span>
+                                                        <span>{startup.stage || 'Seed'}</span>
                                                     </div>
                                                 </div>
-                                                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-1">Match</span>
+                                            </div>
+                                            
+                                            {/* Badges Right */}
+                                            <div className="flex items-center gap-2 self-start mt-2">
+                                                {approvedUpdates.length > 0 && <span className="px-2.5 py-1 bg-blue-50 border border-blue-100 text-blue-700 rounded-md text-[10px] font-bold flex items-center gap-1 shadow-sm"><ShieldCheck className="size-3"/> Financial Verified</span>}
+                                                {startup.score > 0 && <span className="px-2.5 py-1 bg-purple-50 border border-purple-100 text-purple-700 rounded-md text-[10px] font-bold flex items-center gap-1 shadow-sm"><BrainCircuit className="size-3"/> AI Reviewed</span>}
+                                                {(startup.credibility?.gstRegistered || startup.credibility?.panVerified) && <span className="px-2.5 py-1 bg-emerald-50 border border-emerald-100 text-emerald-700 rounded-md text-[10px] font-bold flex items-center gap-1 shadow-sm"><CheckCircle2 className="size-3"/> KYC Verified</span>}
                                             </div>
                                         </div>
 
-                                        {/* Grid Metrics */}
-                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 bg-slate-50/50 rounded-2xl p-5 border border-slate-100">
-                                            {/* Funding */}
-                                            <div className="space-y-3">
-                                                <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-200 pb-2">Funding Ask</h4>
-                                                <div className="flex justify-between items-center"><span className="text-sm text-slate-500 font-medium">Asking Amount</span><span className="text-sm font-mono font-bold text-slate-900">{formatCurrency(startup.requested)}</span></div>
-                                                <div className="flex justify-between items-center"><span className="text-sm text-slate-500 font-medium">Equity Offered</span><span className="text-sm font-bold text-emerald-600">{startup.equity}%</span></div>
-                                                <div className="flex justify-between items-center"><span className="text-sm text-slate-500 font-medium">Valuation</span><span className="text-sm font-mono font-bold text-slate-900">{formatCurrency(impliedValuation)}</span></div>
+                                        {/* Row 3: Stats */}
+                                        <div className="flex flex-wrap items-center gap-6 text-sm font-bold text-slate-600">
+                                            <span className="flex items-center gap-1.5"><MapPin className="size-4 text-slate-400"/> {startup.location || '—'}</span>
+                                            <span className="flex items-center gap-1.5"><Calendar className="size-4 text-slate-400"/> Founded {startup.business_info?.yearFounded || '—'}</span>
+                                            <span className="flex items-center gap-1.5"><Users className="size-4 text-slate-400"/> Team Size: {(startup.basic_info?.teamMembersData?.length || 0) + 1}</span>
+                                        </div>
+
+                                        {/* Main Content Split */}
+                                        <div className="flex gap-8 relative">
+                                            {/* Left Column */}
+                                            <div className="flex-1 space-y-6">
+                                                {/* Founder Section */}
+                                                <div className="flex items-center gap-4">
+                                                    <div className="size-12 rounded-full bg-slate-100 overflow-hidden shrink-0">
+                                                        {startup.basic_info?.founderPhotoUrl ? (
+                                                            <img src={startup.basic_info.founderPhotoUrl} alt="Founder" className="w-full h-full object-cover" />
+                                                        ) : (
+                                                            <div className="size-full flex items-center justify-center bg-slate-200"><Users className="size-6 text-slate-400" /></div>
+                                                        )}
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Founded by</p>
+                                                        <p className="font-bold text-slate-900">{startup.basic_info?.founderName || '—'}</p>
+                                                        <p className="text-xs font-bold text-slate-500">{startup.basic_info?.founderRole || 'Founder & CEO'}</p>
+                                                    </div>
+                                                </div>
+
+                                                {/* Company Description */}
+                                                <div>
+                                                    <p className="text-slate-600 text-sm line-clamp-3 leading-relaxed font-medium pr-12">{startup.desc}</p>
+                                                    {startup.desc?.length > 150 && <Link href={`/startups/${startupId}`} className="text-emerald-600 text-xs font-bold hover:underline mt-1.5 inline-block">Read More</Link>}
+                                                </div>
+                                            </div>
+
+                                            {/* AI Match Circle */}
+                                            <div className="w-32 shrink-0 flex flex-col items-center justify-center border-l border-slate-100 pl-8">
+                                                <div className="relative size-20">
+                                                    <svg className="size-full -rotate-90">
+                                                        <circle cx="40" cy="40" r="36" stroke="currentColor" strokeWidth="6" fill="transparent" className="text-slate-100" />
+                                                        <circle cx="40" cy="40" r="36" stroke="currentColor" strokeWidth="6" fill="transparent" strokeDasharray="226" strokeDashoffset={226 - (226 * Math.min(100, startup.score)) / 100} className="text-emerald-500 transition-all duration-1000" />
+                                                    </svg>
+                                                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                                                        <span className="text-2xl font-black text-slate-900">{startup.score}</span>
+                                                    </div>
+                                                </div>
+                                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-3">AI Match</span>
+                                                <span className="text-xs font-bold text-emerald-600 mt-0.5">{startup.score >= 80 ? 'High Match' : startup.score >= 50 ? 'Medium Match' : 'Low Match'}</span>
+                                            </div>
+                                        </div>
+
+                                        {/* Data Grids */}
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-0 bg-slate-50 rounded-2xl border border-slate-100 divide-y md:divide-y-0 md:divide-x divide-slate-200">
+                                            {/* Funding Overview */}
+                                            <div className="p-5 space-y-3">
+                                                <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Funding Overview</h4>
+                                                <div className="flex justify-between items-center"><span className="text-xs text-slate-500 font-bold">Investment Required</span><span className="text-sm font-mono font-bold text-slate-900">{startup.requested ? formatCurrency(startup.requested) : '—'}</span></div>
+                                                <div className="flex justify-between items-center"><span className="text-xs text-slate-500 font-bold">Equity Offered</span><span className="text-sm font-bold text-emerald-600">{startup.equity ? `${startup.equity}%` : '—'}</span></div>
+                                                <div className="flex justify-between items-center"><span className="text-xs text-slate-500 font-bold">Current Valuation</span><span className="text-sm font-mono font-bold text-slate-900">{impliedValuation ? formatCurrency(impliedValuation) : '—'}</span></div>
+                                                <div className="flex justify-between items-center"><span className="text-xs text-slate-500 font-bold">Min. Investment Ticket</span><span className="text-sm font-mono font-bold text-slate-900">{startup.investment_details?.minimumInvestment ? formatCurrency(startup.investment_details.minimumInvestment) : '—'}</span></div>
                                             </div>
                                             
                                             {/* Financial Snapshot */}
-                                            <div className="space-y-3 border-t md:border-t-0 md:border-l border-slate-200 pt-4 md:pt-0 md:pl-6">
-                                                <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-200 pb-2 flex justify-between items-center">
-                                                    Financial Snapshot
-                                                    {sparklinePath && (
-                                                        <div className="relative h-4 w-12 group/spark">
-                                                            <svg viewBox="0 0 40 20" className="size-full overflow-visible">
-                                                                <path d={sparklinePath} fill="none" stroke="#10b981" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                                                            </svg>
-                                                            <div className="absolute hidden group-hover/spark:block bottom-full mb-1 right-0 bg-slate-800 text-white text-[10px] py-1 px-2 rounded whitespace-nowrap z-10 shadow-lg">
-                                                                Recent MRR Trend
-                                                            </div>
-                                                        </div>
-                                                    )}
-                                                </h4>
-                                                {latestUpdate ? (
-                                                    <>
-                                                        <div className="flex justify-between items-center"><span className="text-sm text-slate-500 font-medium">Monthly Rev</span><span className="text-sm font-mono font-bold text-emerald-600">{formatCurrency(latestUpdate.revenue)}</span></div>
-                                                        <div className="flex justify-between items-center"><span className="text-sm text-slate-500 font-medium">Monthly Profit</span><span className={`text-sm font-mono font-bold ${latestUpdate.profit >= 0 ? 'text-blue-600' : 'text-red-500'}`}>{formatCurrency(latestUpdate.profit)}</span></div>
-                                                        {latestUpdate.netLoss > 0 && <div className="flex justify-between items-center"><span className="text-sm text-slate-500 font-medium">Monthly Loss</span><span className="text-sm font-mono font-bold text-red-500">{formatCurrency(latestUpdate.netLoss)}</span></div>}
-                                                        <div className="flex justify-between items-center">
-                                                            <span className="text-sm text-slate-500 font-medium">Revenue Growth</span>
-                                                            {revGrowth !== 0 ? <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${revGrowth > 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>{revGrowth > 0 ? '↑' : '↓'} {Math.abs(revGrowth).toFixed(1)}%</span> : <span className="text-sm text-slate-400 font-medium">N/A</span>}
-                                                        </div>
-                                                    </>
-                                                ) : (
-                                                    <div className="py-4 text-center"><span className="text-xs font-medium text-slate-400 bg-slate-100 px-3 py-1.5 rounded-lg">No approved financial data yet.</span></div>
-                                                )}
+                                            <div className="p-5 space-y-3">
+                                                <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Financial Snapshot (Monthly)</h4>
+                                                <div className="flex justify-between items-center"><span className="text-xs text-slate-500 font-bold">Monthly Revenue</span><span className="text-sm font-mono font-bold text-emerald-600">{latestUpdate?.revenue ? formatCurrency(latestUpdate.revenue) : (startup.revenue ? formatCurrency(startup.revenue) : '—')}</span></div>
+                                                <div className="flex justify-between items-center"><span className="text-xs text-slate-500 font-bold">Monthly Profit / Loss</span><span className={`text-sm font-mono font-bold ${latestUpdate?.profit ? (latestUpdate.profit >= 0 ? 'text-emerald-600' : 'text-red-500') : 'text-slate-400'}`}>{latestUpdate?.profit ? formatCurrency(latestUpdate.profit) : '—'}</span></div>
+                                                <div className="flex justify-between items-center"><span className="text-xs text-slate-500 font-bold">Monthly Growth</span><span className={`text-sm font-bold ${revGrowth !== 0 ? (revGrowth > 0 ? 'text-emerald-600' : 'text-red-500') : 'text-slate-400'}`}>{revGrowth !== 0 ? `${revGrowth.toFixed(1)}%` : '—'}</span></div>
                                             </div>
 
-                                            {/* AI & Health */}
-                                            <div className="space-y-3 border-t md:border-t-0 md:border-l border-slate-200 pt-4 md:pt-0 md:pl-6">
-                                                <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-200 pb-2">Business Health</h4>
+                                            {/* Business Health */}
+                                            <div className="p-5 space-y-3">
+                                                <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Business Health</h4>
                                                 <div className="flex justify-between items-center">
-                                                    <span className="text-sm text-slate-500 font-medium">Health Score</span>
-                                                    <div className="text-right">
-                                                        <span className="text-sm font-bold text-slate-800 flex items-center justify-end gap-1"><HeartPulse className={`size-3 ${healthStatus.color}`}/> {healthScore}/100</span>
-                                                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${healthStatus.bg} ${healthStatus.color}`}>{healthStatus.text}</span>
-                                                    </div>
+                                                    <span className="text-xs text-slate-500 font-bold">Health Score</span>
+                                                    <span className="text-sm font-bold text-slate-800 flex items-center gap-1.5"><HeartPulse className="size-3 text-emerald-500"/> {healthScore ? `${healthScore}/100` : '—'} <span className="text-[10px] text-emerald-600 ml-1">Good</span></span>
                                                 </div>
-                                                <div className="flex justify-between items-center mt-2"><span className="text-sm text-slate-500 font-medium">Trust Score</span><span className="text-sm font-bold text-slate-800 flex items-center gap-1"><ShieldCheck className="size-3 text-blue-500"/> {getTrust(startup)}/100</span></div>
-                                                <div className="flex justify-between items-center"><span className="text-sm text-slate-500 font-medium">Confidence</span><span className="text-sm font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-md">High</span></div>
+                                                <div className="flex justify-between items-center">
+                                                    <span className="text-xs text-slate-500 font-bold">Trust Score</span>
+                                                    <span className="text-sm font-bold text-slate-800 flex items-center gap-1.5"><ShieldCheck className="size-3 text-blue-500"/> {getTrust(startup) ? `${getTrust(startup)}/100` : '—'} <span className="text-[10px] text-blue-600 ml-1">Very Good</span></span>
+                                                </div>
+                                                <div className="flex justify-between items-center">
+                                                    <span className="text-xs text-slate-500 font-bold">AI Confidence</span>
+                                                    <span className="text-sm font-bold text-emerald-600">High</span>
+                                                </div>
                                             </div>
                                         </div>
 
                                         {/* Bottom Actions Row */}
-                                        <div className="flex flex-col sm:flex-row items-center justify-between border-t border-slate-100 pt-6 mt-1">
-                                            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs font-medium text-slate-500 w-full sm:w-auto mb-4 sm:mb-0">
-                                                <span className="flex items-center gap-1.5"><Users className="size-3.5 text-slate-400" /> Team: {startup.teamSize || 'N/A'}</span>
-                                                <span className="flex items-center gap-1.5"><Briefcase className="size-3.5 text-slate-400" /> Investors: {startup.investorCount || 0}</span>
-                                                <span className="flex items-center gap-1.5"><Clock className="size-3.5 text-slate-400" /> Updated: {latestUpdate ? formatRelativeTime(latestUpdate.dateSubmitted) : formatRelativeTime(startup.createdAt || new Date())}</span>
+                                        <div className="flex flex-col sm:flex-row items-center justify-between border-t border-slate-100 pt-6">
+                                            <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs font-bold text-slate-500 w-full sm:w-auto mb-4 sm:mb-0">
+                                                <span className="flex items-center gap-1.5"><Briefcase className="size-3.5 text-slate-400" /> Investors<br/><span className="text-slate-900">{startup.investorCount || 0}</span></span>
+                                                <span className="flex items-center gap-1.5"><Banknote className="size-3.5 text-slate-400" /> Previous Funding<br/><span className="text-slate-900">{startup.risk_disclosure?.fundingAmount ? formatCurrency(startup.risk_disclosure.fundingAmount) : '—'}</span></span>
+                                                <span className="flex items-center gap-1.5"><Users className="size-3.5 text-slate-400" /> Total Customers<br/><span className="text-slate-900">{startup.growth_metrics?.totalCustomers ? `${startup.growth_metrics.totalCustomers}+` : '—'}</span></span>
+                                                <span className="flex items-center gap-1.5"><Clock className="size-3.5 text-slate-400" /> Last Updated<br/><span className="text-slate-900">{latestUpdate ? formatRelativeTime(latestUpdate.dateSubmitted) : formatRelativeTime(startup.createdAt || new Date())}</span></span>
                                             </div>
                                             
                                             <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end">
@@ -560,26 +575,14 @@ export default function AISearchEngine() {
                                                         <button onClick={() => toggleSave(startupId)} className={`p-2 rounded-xl transition-all ${savedStartups.includes(startupId) ? 'bg-emerald-100 text-emerald-600' : 'text-slate-400 hover:text-emerald-600 hover:bg-emerald-50'}`}>
                                                             <Bookmark className={`size-4 ${savedStartups.includes(startupId) ? 'fill-current' : ''}`}/>
                                                         </button>
-                                                        <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-800 text-white text-[10px] font-bold rounded opacity-0 group-hover/tt:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10 shadow-md">Save Startup</span>
                                                     </div>
-                                                    
                                                     <div className="relative group/tt">
                                                         <button onClick={() => setShareModalData(startup)} className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all"><Share2 className="size-4"/></button>
-                                                        <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-800 text-white text-[10px] font-bold rounded opacity-0 group-hover/tt:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10 shadow-md">Share Startup</span>
                                                     </div>
-
                                                     <div className="relative group/tt">
-                                                        <button onClick={() => toggleCompare(startupId)} className={`p-2 rounded-xl transition-all ${compareList.includes(startupId) ? 'bg-purple-100 text-purple-600' : 'text-slate-400 hover:text-purple-600 hover:bg-purple-50'}`}>
-                                                            <Scale className="size-4"/>
+                                                        <button className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all">
+                                                            <AlertTriangle className="size-4"/>
                                                         </button>
-                                                        <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-800 text-white text-[10px] font-bold rounded opacity-0 group-hover/tt:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10 shadow-md">Compare Startups</span>
-                                                    </div>
-
-                                                    <div className="relative group/tt">
-                                                        <button onClick={() => toggleFollow(startupId)} className={`p-2 rounded-xl transition-all ${followedStartups.includes(startupId) ? 'bg-indigo-100 text-indigo-600' : 'text-slate-400 hover:text-indigo-600 hover:bg-indigo-50'}`}>
-                                                            <Bell className={`size-4 ${followedStartups.includes(startupId) ? 'fill-current' : ''}`}/>
-                                                        </button>
-                                                        <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-800 text-white text-[10px] font-bold rounded opacity-0 group-hover/tt:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10 shadow-md">Follow Startup</span>
                                                     </div>
                                                 </div>
                                                 <Link href={`/startups/${startupId}`} className="flex items-center gap-1.5 px-6 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-sm font-bold transition-all shadow-md hover:shadow-lg ml-2 group/btn">

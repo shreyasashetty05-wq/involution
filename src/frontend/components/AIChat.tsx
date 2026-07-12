@@ -20,18 +20,14 @@ interface Message {
     time?: string;
 }
 
-const QUICK_PROMPTS = ["Market Size", "Funding", "SWOT", "Competitors", "Risks", "Business Model", "Growth Strategy"];
+const QUICK_PROMPTS = ["Market Size", "Funding Analysis", "Financial Health", "SWOT Analysis", "Investment Recommendation", "Growth Strategy", "Founder Analysis", "Competitor Analysis", "Target Market", "Revenue Model", "Business Model", "Risk Assessment", "Valuation Analysis", "Due Diligence"];
 
-const INITIAL_MESSAGE = `### NexaFlow AI Setup Complete
-I've analyzed the startup's profile. Here's what I can help you discover:
+const INITIAL_MESSAGE = `👋 Welcome to InVolution AI
 
-* **Market Opportunity:** Sizing and trends
-* **Revenue Model:** Pricing strategy and unit economics
-* **Risks:** Market, execution, and competitive threats
-* **Competitors:** Direct and indirect alternatives
-* **Growth Potential:** Scalability and GTM
+I can analyze this startup using its published profile, financials, growth metrics, AI analysis, and verification data.
 
-Feel free to ask a specific question or use one of the quick prompts below!`;
+Ask me about:
+• Investment potential • SWOT analysis • Market opportunity • Financial health • Funding • Valuation • Competitors • Risks • Growth strategy • Due diligence • Revenue model`;
 
 export default function AIChat({ startupId }: AIChatProps) {
     const [messages, setMessages] = useState<Message[]>([

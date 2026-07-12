@@ -18,7 +18,7 @@ export function ChatHeader({ onNewChat, onClearChat, onExport }: ChatHeaderProps
                 </div>
                 <div>
                     <h2 className="font-bold text-[#F8FAFC] flex items-center gap-2">
-                        NexaFlow AI
+                        InVolution AI
                         <span className="flex items-center gap-1.5 px-2 py-0.5 bg-[#111827] rounded-full border border-[#334155]">
                             <span className="size-1.5 rounded-full bg-[#10B981] animate-pulse"></span>
                             <span className="text-[10px] font-medium text-[#94A3B8]">Online</span>

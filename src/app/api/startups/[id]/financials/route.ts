@@ -41,13 +41,26 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         const reqReportingType = body.reportingType;
         const reqReportingDate = body.reportingDate;
         const reqRevenue = Number(body.revenue);
+        const reqExpenses = Number(body.expenses);
         const reqProfit = Number(body.profit);
         const reqNetLoss = body.netLoss ? Number(body.netLoss) : null;
-        const reqNotes = body.notes || "";
-        const reqDocUrl = body.documentUrl || "";
-        const reqAiScore = Number(body.aiConfidenceScore);
+        
+        const reqCashInBank = Number(body.cashInBank);
+        const reqBurnRate = Number(body.burnRate);
+        
+        const reqNewCustomers = Number(body.newCustomers);
+        const reqTotalCustomers = Number(body.totalCustomers);
+        const reqNewPartnerships = Number(body.newPartnerships);
+        const reqFounderUpdate = body.founderUpdate || "";
+        
+        const reqGstFiling = body.gstFiling || "";
+        const reqBankStatement = body.bankStatement || "";
+        const reqProfitAndLoss = body.profitAndLoss || "";
+        const reqBalanceSheet = body.balanceSheet || "";
+        const reqInvoiceReport = body.invoiceReport || "";
+        const reqSalesReport = body.salesReport || "";
 
-        if (!reqReportingType || !reqReportingDate || isNaN(reqRevenue) || isNaN(reqProfit) || isNaN(reqAiScore)) {
+        if (!reqReportingType || !reqReportingDate || isNaN(reqRevenue) || isNaN(reqExpenses)) {
             return NextResponse.json({ success: false, error: 'Invalid financial data payload.' }, { status: 400 });
         }
 
@@ -59,6 +72,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
             return NextResponse.json({ success: false, error: `An update for ${reqReportingDate} already exists.` }, { status: 400 });
         }
 
+        const hasAnyDoc = reqGstFiling || reqBankStatement || reqProfitAndLoss || reqBalanceSheet || reqInvoiceReport || reqSalesReport;
+
         // 4. Push the new update
         const newUpdate = {
             id: crypto.randomUUID(),
@@ -67,13 +82,25 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
             reportingType: reqReportingType,
             reportingDate: reqReportingDate,
             revenue: reqRevenue,
+            expenses: reqExpenses,
             profit: reqProfit,
             netLoss: reqNetLoss,
-            notes: reqNotes,
-            documentUrl: reqDocUrl,
-            aiConfidenceScore: reqAiScore,
+            cashInBank: reqCashInBank,
+            burnRate: reqBurnRate,
+            newCustomers: reqNewCustomers,
+            totalCustomers: reqTotalCustomers,
+            newPartnerships: reqNewPartnerships,
+            founderUpdate: reqFounderUpdate,
+            documents: {
+                gstFiling: reqGstFiling,
+                bankStatement: reqBankStatement,
+                profitAndLoss: reqProfitAndLoss,
+                balanceSheet: reqBalanceSheet,
+                invoiceReport: reqInvoiceReport,
+                salesReport: reqSalesReport
+            },
             status: "Pending",
-            documentStatus: reqDocUrl ? "Pending" : null,
+            documentStatus: hasAnyDoc ? "Pending" : null,
             dateSubmitted: new Date().toISOString(),
             verifiedAt: null,
             verifiedBy: null,

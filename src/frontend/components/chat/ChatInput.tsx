@@ -150,7 +150,7 @@ export function ChatInput({ onSubmit, isLoading, quickPrompts }: ChatInputProps)
                     </form>
                 </div>
                 <div className="text-center mt-3 text-xs text-[#94A3B8]">
-                    NexaFlow AI can make mistakes. Verify important information.
+                    InVolution AI can make mistakes. Verify important information.
                 </div>
             </div>
         </div>
