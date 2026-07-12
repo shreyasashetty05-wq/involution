@@ -11,7 +11,7 @@ interface RoleToggleProps {
 export function RoleToggle({ role, setRole }: RoleToggleProps) {
     const roles = [
         { value: "investor", label: "Investor" },
-        { value: "startup", label: "Founder" },
+        { value: "startup", label: "Startup" },
         { value: "incubation", label: "Student" },
     ];
 
