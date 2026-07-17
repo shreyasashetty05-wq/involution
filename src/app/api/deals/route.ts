@@ -70,7 +70,6 @@ export async function GET(req: NextRequest) {
 
         if (deal && deal.messages) {
             deal.messages = deal.messages.filter((msg: any) => {
-                if (msg.deletedForEveryone) return false;
                 if (msg.deletedFor && msg.deletedFor.includes(sessionUserId)) return false;
                 return true;
             });
@@ -102,7 +101,7 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
         }
         const sessionUserId = user.email || user.id;
-        const { startupId, startupName, text, file, investorId: requestedInvestorId, id } = await req.json();
+        const { startupId, startupName, text, file, investorId: requestedInvestorId, id, replyTo } = await req.json();
 
         // If the frontend passed an investorId, the sender is likely the startup. 
         // If not, the sender is the investor themselves.
@@ -130,10 +129,14 @@ export async function POST(req: NextRequest) {
                 id: id || crypto.randomUUID(), // Save stable ID
                 senderId: sessionUserId, // Whoever is logged in is the sender
                 text: text || "",
-                time: timeString
+                time: timeString,
+                createdAt: new Date().toISOString()
             };
             if (file) {
                 newMessage.file = file;
+            }
+            if (replyTo) {
+                newMessage.replyTo = replyTo;
             }
 
             const updatedMessages = [...(deal.messages || []), newMessage];
@@ -153,10 +156,14 @@ export async function POST(req: NextRequest) {
                 id: id || crypto.randomUUID(), // Save stable ID
                 senderId: investorId,
                 text: text || "",
-                time: timeString
+                time: timeString,
+                createdAt: new Date().toISOString()
             };
             if (file) {
                 newMessage.file = file;
+            }
+            if (replyTo) {
+                newMessage.replyTo = replyTo;
             }
 
             const { data: newDeal, error: createError } = await supabase
@@ -282,7 +289,20 @@ export async function PUT(req: NextRequest) {
                     } else if (mode === 'everyone') {
                         // Only the sender can delete for everyone
                         if (msg.senderId === sessionUserId) {
-                            return { ...msg, deletedForEveryone: true, text: "", file: null };
+                            const msgTime = msg.createdAt ? new Date(msg.createdAt).getTime() : 0;
+                            const isWithinTime = (Date.now() - msgTime) < 15 * 60 * 1000;
+                            if (!isWithinTime) {
+                                // Optionally throw an error or just ignore. We'll ignore and not delete.
+                                return msg;
+                            }
+                            return { 
+                                ...msg, 
+                                deletedForEveryone: true, 
+                                isDeletedForEveryone: true, 
+                                deletedAt: new Date().toISOString(),
+                                text: "", 
+                                file: null 
+                            };
                         }
                     }
                 }

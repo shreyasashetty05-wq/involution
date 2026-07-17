@@ -2,7 +2,7 @@
 
 import { useState, Suspense, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Send, FileSignature, CheckCircle2, ShieldCheck, User, FileText, ChevronRight, Video, Calendar, Clock, AlertTriangle, PlayCircle, CheckSquare, Search, Lock, Sparkles, Paperclip, Loader2, ArrowLeft, Trash2 } from "lucide-react";
+import { Send, FileSignature, CheckCircle2, ShieldCheck, User, FileText, ChevronRight, Video, Calendar, Clock, AlertTriangle, PlayCircle, CheckSquare, Search, Lock, Sparkles, Paperclip, Loader2, ArrowLeft, Trash2, MoreVertical, Smile, Check, CheckCheck, Reply, Copy, Edit2, X, ChevronDown, Ban } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 import FileAttachment from "@/components/FileAttachment";
 import { useToast } from "@/components/ui/ToastProvider";
@@ -115,6 +115,15 @@ function DealWorkspace() {
     const isSelectionMode = selectedMessageIds.length > 0;
     const pressTimer = useRef<NodeJS.Timeout | null>(null);
 
+    // Context Menu & WhatsApp States
+    const [hoverMessageId, setHoverMessageId] = useState<string | null>(null);
+    const [contextMenu, setContextMenu] = useState<{ msgId: string, x: number, y: number } | null>(null);
+    const [typingUser, setTypingUser] = useState<string | null>(null);
+    const [replyingTo, setReplyingTo] = useState<any | null>(null);
+    const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+    
+    const COMMON_EMOJIS = ['👍', '❤️', '😂', '🔥', '🚀', '🎉', '😊', '🙌', '💯', '👏'];
+
     const [meetings, setMeetings] = useState<any[]>([]);
     const [meetingDate, setMeetingDate] = useState("");
     const [meetingTime, setMeetingTime] = useState("");
@@ -142,7 +151,9 @@ function DealWorkspace() {
 
     useEffect(() => {
         scrollToBottom();
-    }, [messages]);
+    }, [messages, typingUser]);
+
+    // Removed window.addEventListener('click') for context menu to prevent race conditions
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -202,7 +213,10 @@ function DealWorkspace() {
                         sender: m.senderId === currentUser ? 'me' : 'them',
                         text: m.text,
                         time: m.time,
-                        file: m.file
+                        file: m.file,
+                        replyTo: m.replyTo,
+                        isDeletedForEveryone: m.isDeletedForEveryone,
+                        createdAt: m.createdAt
                     };
                 });
 
@@ -218,7 +232,9 @@ function DealWorkspace() {
                             const prevMsg = prevMessages[i];
                             return prevMsg.id !== msg.id || 
                                    prevMsg.text !== msg.text || 
-                                   JSON.stringify(prevMsg.file) !== JSON.stringify(msg.file);
+                                   JSON.stringify(prevMsg.file) !== JSON.stringify(msg.file) ||
+                                   prevMsg.replyTo !== msg.replyTo ||
+                                   prevMsg.isDeletedForEveryone !== msg.isDeletedForEveryone;
                         });
                         return hasChanges ? merged : prevMessages;
                     }
@@ -344,9 +360,7 @@ function DealWorkspace() {
     };
 
     const handleMessageClick = (msgId: any) => {
-        if (isSelectionMode) {
-            toggleMessageSelection(msgId);
-        }
+        toggleMessageSelection(msgId);
     };
 
     const handleDeleteMessages = async (mode: 'me' | 'everyone') => {
@@ -409,6 +423,37 @@ function DealWorkspace() {
         }
     };
 
+    const handleDeleteSingleMessage = async (msgId: string, mode: 'me' | 'everyone') => {
+        setContextMenu(null);
+        if (!startupId) return;
+        const previousMessages = [...messages];
+        // Optimistically remove from UI
+        setMessages(m => m.filter(msg => msg.id !== msgId));
+        try {
+            const res = await fetch('/api/deals', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'deleteMessages',
+                    startupId,
+                    investorId: investorId, // only if acting as startup
+                    messageIds: [msgId],
+                    mode
+                }),
+            });
+            const data = await res.json();
+            if (data.success && data.deal) {
+                toast.success(mode === 'me' ? "Message deleted for you" : "Message deleted for everyone");
+            } else {
+                setMessages(previousMessages);
+                toast.error("Failed to delete message");
+            }
+        } catch (error) {
+            setMessages(previousMessages);
+            toast.error("Error deleting message");
+        }
+    };
+
     const sendMessage = async (e: React.FormEvent) => {
         e.preventDefault();
         if ((!inputMessage.trim() && !selectedFile) || !startupId || isUploading) return;
@@ -447,6 +492,8 @@ function DealWorkspace() {
         setInputMessage("");
         const fileToUpload = selectedFile;
         setSelectedFile(null);
+        const currentReplyingTo = replyingTo;
+        setReplyingTo(null);
         if (fileInputRef.current) {
             fileInputRef.current.value = "";
         }
@@ -456,7 +503,8 @@ function DealWorkspace() {
             sender: "me", 
             text: messageText, 
             time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            isPending: true
+            isPending: true,
+            replyTo: currentReplyingTo ? currentReplyingTo.id : undefined
         };
         if (optimisticFileData) {
             newMsg.file = optimisticFileData;
@@ -464,6 +512,12 @@ function DealWorkspace() {
 
         // Optimistic UI update
         setMessages(m => [...m, newMsg]);
+
+        // Fake typing indicator for 3 seconds
+        setTimeout(() => {
+            setTypingUser(startupName);
+            setTimeout(() => setTypingUser(null), 3000);
+        }, 1000);
 
         let finalFileData: any = null;
         if (fileToUpload && filePath) {
@@ -503,6 +557,9 @@ function DealWorkspace() {
             }
             if (investorId) {
                 bodyPayload.investorId = investorId;
+            }
+            if (currentReplyingTo) {
+                bodyPayload.replyTo = currentReplyingTo.id;
             }
 
             await fetch('/api/deals', {
@@ -730,6 +787,37 @@ function DealWorkspace() {
                                             <p className="font-semibold text-emerald-800 text-sm">{selectedMessageIds.length} selected</p>
                                         </div>
                                         <div className="flex items-center gap-2">
+                                            {selectedMessageIds.length === 1 && (
+                                                <>
+                                                    <button 
+                                                        onClick={() => {
+                                                            const msg = messages.find(m => m.id === selectedMessageIds[0]);
+                                                            if (msg && !msg.isDeletedForEveryone) {
+                                                                setReplyingTo(msg);
+                                                                setSelectedMessageIds([]);
+                                                            }
+                                                        }}
+                                                        className="px-3 py-1.5 text-xs font-medium bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg shadow-sm transition-all flex items-center gap-1.5"
+                                                    >
+                                                        <Reply className="size-3.5" />
+                                                        Reply
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => {
+                                                            const msg = messages.find(m => m.id === selectedMessageIds[0]);
+                                                            if (msg && msg.text && !msg.isDeletedForEveryone) {
+                                                                navigator.clipboard.writeText(msg.text);
+                                                                toast.success("Copied to clipboard");
+                                                                setSelectedMessageIds([]);
+                                                            }
+                                                        }}
+                                                        className="px-3 py-1.5 text-xs font-medium bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg shadow-sm transition-all flex items-center gap-1.5"
+                                                    >
+                                                        <Copy className="size-3.5" />
+                                                        Copy
+                                                    </button>
+                                                </>
+                                            )}
                                             <button 
                                                 onClick={() => handleDeleteMessages('me')}
                                                 disabled={isDeleting}
@@ -751,99 +839,261 @@ function DealWorkspace() {
                                         </div>
                                     </div>
                                 ) : (
-                                    <div className="px-5 py-3 border-b border-slate-100 bg-slate-50 flex items-center gap-3 shrink-0">
-                                        <div className="size-9 rounded-full bg-indigo-100 flex items-center justify-center">
-                                            <User className="text-indigo-600 size-4" />
+                                    <div className="px-5 py-3 border-b border-slate-100 bg-slate-50 flex items-center justify-between shrink-0">
+                                        <div className="flex items-center gap-3 cursor-pointer hover:bg-slate-200/50 p-1.5 -ml-1.5 rounded-lg transition-colors" onClick={() => setShowInvestorModal(true)}>
+                                            <div className="size-10 rounded-full bg-indigo-100 flex items-center justify-center overflow-hidden shrink-0">
+                                                {investorProfile ? (
+                                                    <img src={investorProfile.photo_url || `https://ui-avatars.com/api/?name=${investorProfile.full_name}`} alt={investorProfile.full_name} className="w-full h-full object-cover" />
+                                                ) : (
+                                                    <User className="text-indigo-600 size-5" />
+                                                )}
+                                            </div>
+                                            <div>
+                                                <p className="font-semibold text-slate-800 text-[15px] leading-tight">{startupName}</p>
+                                                <p className="text-[12px] text-emerald-600 flex items-center gap-1 mt-0.5">
+                                                    <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse inline-block" /> Encrypted P2P
+                                                </p>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <p className="font-semibold text-slate-800 text-sm">{startupName}</p>
-                                            <p className="text-[11px] text-emerald-600 flex items-center gap-1">
-                                                <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse inline-block" /> Encrypted P2P Connection
-                                            </p>
+                                        <div className="flex items-center gap-1">
+                                            <button className="p-2 hover:bg-slate-200 text-slate-500 rounded-full transition-colors" title="Options">
+                                                <MoreVertical className="size-5" />
+                                            </button>
                                         </div>
                                     </div>
                                 )}
 
                                 {/* Messages */}
-                                <div className="flex-1 overflow-y-auto py-5">
-                                    <div className="bg-amber-50 border border-amber-200 text-amber-700 p-3 rounded-xl text-xs text-center max-w-md mx-auto mb-4">
+                                <div className="flex-1 overflow-y-auto py-5 bg-chat-pattern relative" onScroll={() => setContextMenu(null)}>
+                                    <div className="bg-amber-50 border border-amber-200 text-amber-700 p-3 rounded-xl text-xs text-center max-w-md mx-auto mb-4 shadow-sm z-10 relative">
                                         PII (phones, emails) are masked until Phase 5 (Agreement Execution).
                                     </div>
-                                    {messages.map(msg => {
-                                        const isSelected = selectedMessageIds.includes(msg.id);
-                                        return (
-                                            <div 
-                                                key={msg.id} 
-                                                className={`flex gap-3 ${msg.sender === 'me' ? 'justify-end' : 'justify-start'} px-5 py-1.5 transition-all duration-200 ${isSelected ? 'bg-emerald-50/80' : 'hover:bg-slate-50/50'}`}
-                                            >
-                                                {msg.sender === 'them' && (
-                                                    <div className="shrink-0 flex flex-col items-center cursor-pointer pt-1" onClick={() => setShowInvestorModal(true)}>
-                                                        {investorProfile ? (
-                                                            // eslint-disable-next-line @next/next/no-img-element
-                                                            <img 
-                                                                src={investorProfile.photo_url || `https://ui-avatars.com/api/?name=${investorProfile.full_name}`} 
-                                                                alt={investorProfile.full_name} 
-                                                                className="w-8 h-8 rounded-full object-cover shadow-sm ring-2 ring-white hover:ring-emerald-200 transition-all"
-                                                                title="View Investor Profile"
-                                                            />
-                                                        ) : (
-                                                            <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-500 shadow-sm ring-2 ring-white hover:ring-indigo-200 transition-all" title="View Profile">
-                                                                <User className="size-4" />
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                )}
-
-                                                <div 
-                                                    className={`max-w-[72%] rounded-2xl px-4 py-2.5 text-[15px] leading-relaxed shadow-sm transition-transform duration-200 animate-in fade-in slide-in-from-bottom-2 cursor-pointer
-                                                    ${isSelected ? 'scale-[0.99] shadow-md ring-1 ring-emerald-200/50' : ''}
-                                                    ${msg.sender === 'me'
-                                                        ? 'bg-[#10b981] text-white rounded-tr-sm'
-                                                        : 'bg-white text-slate-800 rounded-tl-sm border border-slate-200'}`}
-                                                    onClick={() => handleMessageClick(msg.id)}
-                                                    onContextMenu={(e) => handleMessageRightClick(e, msg.id)}
-                                                    onTouchStart={() => handleTouchStart(msg.id)}
-                                                    onTouchEnd={handleTouchEnd}
-                                                >
-                                                    
-                                                    {msg.sender === 'them' && investorProfile && (
-                                                        <div className="text-xs font-bold text-emerald-600 mb-1 cursor-pointer hover:underline flex items-center gap-1" onClick={(e) => { e.stopPropagation(); setShowInvestorModal(true); }}>
-                                                            {investorProfile.full_name} <ShieldCheck className="size-3" />
-                                                        </div>
-                                                    )}
-
-                                                    {msg.file && <FileAttachment file={msg.file} />}
-                                                    
-                                                    {msg.text && <p className={msg.file ? "mt-2" : ""}>{maskPII(msg.text, agreementSigned)}</p>}
-                                                    
-                                                    <p className={`text-[10px] mt-1 text-right ${msg.sender === 'me' ? 'text-emerald-100' : 'text-slate-400'}`}>{msg.time}</p>
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
-                                    {messages.length === 0 && (
-                                        <div className="text-center py-16 opacity-40">
-                                            <Lock className="size-10 mx-auto mb-2 text-slate-400" />
-                                            <p className="text-sm text-slate-400">Secure channel open – send your first message</p>
+                                    
+                                    {messages.length > 0 && (
+                                        <div className="flex justify-center mb-6 sticky top-2 z-10 pointer-events-none">
+                                            <span className="date-pill bg-[#f1f2f6]/90 backdrop-blur-sm shadow-sm pointer-events-auto">Today</span>
                                         </div>
                                     )}
-                                    <div ref={messagesEndRef} />
+
+                                    <div className="flex flex-col px-2 md:px-5 pb-2">
+                                        {messages.map(msg => {
+                                            const isSelected = selectedMessageIds.includes(msg.id) || contextMenu?.msgId === msg.id || replyingTo?.id === msg.id;
+                                            const isMe = msg.sender === 'me';
+                                            const isHovered = hoverMessageId === msg.id;
+
+                                            return (
+                                                <div 
+                                                    key={msg.id} 
+                                                    className={`flex flex-col gap-1 ${isMe ? 'items-end' : 'items-start'} mb-1 relative group transition-colors duration-200 -mx-2 md:-mx-5 px-2 md:px-5 py-1
+                                                    ${isSelected ? 'bg-emerald-500/15' : ''}`}
+                                                    onMouseEnter={() => setHoverMessageId(msg.id)}
+                                                    onMouseLeave={() => setHoverMessageId(null)}
+                                                >
+                                                    {/* Context Menu Dropdown */}
+                                                    {contextMenu?.msgId === msg.id && (
+                                                        <>
+                                                            <div className="fixed inset-0 z-40" onClick={(e) => { e.stopPropagation(); setContextMenu(null); }} onContextMenu={(e) => { e.preventDefault(); setContextMenu(null); }} />
+                                                            <div 
+                                                                className="fixed z-50 bg-white rounded-xl shadow-lg border border-slate-100 py-1.5 min-w-[160px] animate-in zoom-in-95 duration-100"
+                                                                style={{ 
+                                                                    top: `${Math.min(contextMenu.y, (typeof window !== 'undefined' ? window.innerHeight : 800) - 250)}px`, 
+                                                                    left: `${Math.min(contextMenu.x, (typeof window !== 'undefined' ? window.innerWidth : 800) - 180)}px`
+                                                                }}
+                                                            >
+                                                            <div className="flex justify-between px-3 py-2 border-b border-slate-50 mb-1">
+                                                                {['👍', '❤️', '🚀', '🎉', '😂'].map(emoji => (
+                                                                    <button key={emoji} className="hover:scale-125 transition-transform text-lg" onClick={(e) => { e.stopPropagation(); setContextMenu(null); }}>{emoji}</button>
+                                                                ))}
+                                                            </div>
+                                                            <button className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2" onClick={(e) => { e.stopPropagation(); setReplyingTo(msg); setContextMenu(null); }}><Reply className="size-4" /> Reply</button>
+                                                            <button className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2" onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(msg.text); setContextMenu(null); toast.success("Copied to clipboard"); }}><Copy className="size-4" /> Copy</button>
+                                                            {isMe && <button className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2" onClick={(e) => { e.stopPropagation(); setContextMenu(null); }}><Edit2 className="size-4" /> Edit</button>}
+                                                            <button className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2" onClick={(e) => { e.stopPropagation(); handleDeleteSingleMessage(msg.id, 'me'); }}><Trash2 className="size-4" /> Delete for me</button>
+                                                            {isMe && <button className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2" onClick={(e) => { e.stopPropagation(); handleDeleteSingleMessage(msg.id, 'everyone'); }}><Trash2 className="size-4" /> Delete for everyone</button>}
+                                                            </div>
+                                                        </>
+                                                    )}
+
+                                                    <div className="flex items-end gap-2 max-w-[85%] md:max-w-[70%]">
+                                                        {!isMe && (
+                                                            <div className="shrink-0 cursor-pointer mb-1" onClick={() => setShowInvestorModal(true)}>
+                                                                {investorProfile ? (
+                                                                    <img src={investorProfile.photo_url || `https://ui-avatars.com/api/?name=${investorProfile.full_name}`} alt={investorProfile.full_name} className="w-7 h-7 rounded-full object-cover shadow-sm ring-1 ring-white/50" />
+                                                                ) : (
+                                                                    <div className="w-7 h-7 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-500 shadow-sm"><User className="size-3.5" /></div>
+                                                                )}
+                                                            </div>
+                                                        )}
+
+                                                        <div 
+                                                            id={'msg-' + msg.id}
+                                                            className={`relative px-3 py-2 text-[15px] leading-relaxed animate-in fade-in slide-in-from-bottom-2 transition-all duration-300
+                                                            ${isMe ? 'chat-bubble-sent text-[#111b21]' : 'chat-bubble-received text-[#111b21]'}`}
+                                                            onClick={() => handleMessageClick(msg.id)}
+                                                            onContextMenu={(e) => {
+                                                                e.preventDefault();
+                                                                setContextMenu({ msgId: msg.id, x: e.clientX, y: e.clientY });
+                                                            }}
+                                                            onTouchStart={() => handleTouchStart(msg.id)}
+                                                            onTouchEnd={handleTouchEnd}
+                                                        >
+                                                            {/* Desktop Hover Chevron */}
+                                                            {!msg.isDeletedForEveryone && (
+                                                                <button 
+                                                                    onClick={(e) => { 
+                                                                        e.stopPropagation(); 
+                                                                        const rect = e.currentTarget.getBoundingClientRect();
+                                                                        setContextMenu({ msgId: msg.id, x: rect.left - 160, y: rect.bottom }); 
+                                                                    }}
+                                                                    className="absolute top-1 right-1 bg-gradient-to-l from-white/90 to-transparent p-1 rounded-full text-slate-500 hover:text-slate-700 hidden group-hover:block"
+                                                                >
+                                                                    <ChevronDown className="size-4" />
+                                                                </button>
+                                                            )}
+
+                                                            {!isMe && investorProfile && (
+                                                                <div className="text-[13px] font-semibold text-emerald-600 mb-1 cursor-pointer hover:underline flex items-center gap-1 leading-none" onClick={(e) => { e.stopPropagation(); setShowInvestorModal(true); }}>
+                                                                    {investorProfile.full_name}
+                                                                </div>
+                                                            )}
+
+                                                            {msg.isDeletedForEveryone ? (
+                                                                <div className="flex items-center gap-1.5 text-slate-500 italic text-[14px]">
+                                                                    <Ban className="size-3.5" />
+                                                                    {isMe ? "You deleted this message" : "This message was deleted"}
+                                                                </div>
+                                                            ) : (
+                                                                <>
+                                                                    {msg.replyTo && (() => {
+                                                                        const repliedMsg = messages.find(m => m.id === msg.replyTo);
+                                                                        if (!repliedMsg) return null;
+                                                                        return (
+                                                                            <div className="bg-black/5 border-l-4 border-emerald-500 rounded p-1.5 mb-1.5 text-xs flex flex-col cursor-pointer hover:bg-black/10 transition-colors"
+                                                                                onClick={(e) => {
+                                                                                    e.stopPropagation();
+                                                                                    const el = document.getElementById('msg-' + msg.replyTo);
+                                                                                    if (el) {
+                                                                                        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                                                                        el.classList.add('ring-2', 'ring-emerald-400', 'bg-emerald-100');
+                                                                                        setTimeout(() => {
+                                                                                            el.classList.remove('ring-2', 'ring-emerald-400', 'bg-emerald-100');
+                                                                                        }, 1500);
+                                                                                    }
+                                                                                }}>
+                                                                                <span className="font-semibold text-emerald-600 mb-0.5">{repliedMsg.sender === 'me' ? 'You' : investorProfile?.full_name || 'Them'}</span>
+                                                                                <span className="text-slate-600 truncate max-w-[200px]">
+                                                                                    {repliedMsg.isDeletedForEveryone ? "This message was deleted" : (repliedMsg.text || 'Attachment')}
+                                                                                </span>
+                                                                            </div>
+                                                                        );
+                                                                    })()}
+
+                                                                    {msg.file && <FileAttachment file={msg.file} />}
+                                                                    
+                                                                    {msg.text && (
+                                                                        <div className={`break-words ${msg.file ? "mt-1.5" : ""}`}>
+                                                                            {maskPII(msg.text, agreementSigned)}
+                                                                        </div>
+                                                                    )}
+                                                                </>
+                                                            )}
+                                                            
+                                                            {/* Timestamp & Ticks aligned to bottom right corner WhatsApp style */}
+                                                            <div className={`flex items-center justify-end gap-1 text-[10.5px] mt-1 -mb-1 float-right clear-both ml-4 text-[#667781]`}>
+                                                                {msg.time}
+                                                                {isMe && !msg.isDeletedForEveryone && (
+                                                                    <span className="ml-0.5">
+                                                                        {msg.isPending ? (
+                                                                            <Check className="size-3.5 text-slate-400" />
+                                                                        ) : (
+                                                                            <CheckCheck className="size-3.5 text-blue-500" />
+                                                                        )}
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Hover Action Trigger Desktop */}
+                                                        {isHovered && !contextMenu && (
+                                                            <button 
+                                                                className="hidden md:flex p-1.5 bg-white/80 hover:bg-white text-slate-500 rounded-full shadow-sm backdrop-blur-sm transition-all"
+                                                                onClick={(e) => { e.stopPropagation(); setContextMenu({ msgId: msg.id, x: e.clientX, y: e.clientY }); }}
+                                                            >
+                                                                <ChevronRight className="size-4" />
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                        
+                                        {/* Typing Indicator */}
+                                        {typingUser && (
+                                            <div className="flex gap-2 items-end mb-3 animate-in fade-in slide-in-from-bottom-2">
+                                                <div className="w-7 h-7 rounded-full bg-slate-200 shrink-0 mb-1 animate-pulse" />
+                                                <div className="chat-bubble-received px-4 py-3 text-slate-500 flex gap-1 items-center shadow-sm">
+                                                    <span className="size-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                                                    <span className="size-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                                                    <span className="size-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {messages.length === 0 && !typingUser && (
+                                            <div className="text-center py-20 px-6 max-w-sm mx-auto animate-in fade-in duration-500">
+                                                <div className="size-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
+                                                    <Lock className="size-7 text-emerald-500" />
+                                                </div>
+                                                <p className="text-sm font-medium text-slate-700 bg-white/90 backdrop-blur-sm px-4 py-3 rounded-xl shadow-sm border border-slate-100">
+                                                    Start your first conversation professionally. Introduce yourself and begin discussing the investment opportunity.
+                                                </p>
+                                            </div>
+                                        )}
+                                        <div ref={messagesEndRef} className="h-2" />
+                                    </div>
                                 </div>
 
                                 {/* Input */}
-                                <form onSubmit={sendMessage} className="p-4 border-t border-slate-100 bg-slate-50 flex gap-3 shrink-0 items-end">
-                                    <div className="flex flex-col grow gap-2">
-                                        {selectedFile && (
-                                            <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-2 text-xs flex justify-between items-center w-max max-w-full">
-                                                <span className="truncate mr-4 text-emerald-800">{selectedFile.name}</span>
-                                                <button type="button" onClick={() => { setSelectedFile(null); if(fileInputRef.current) fileInputRef.current.value = ""; }} className="text-emerald-600 hover:text-red-500 shrink-0 font-bold">X</button>
+                                <form onSubmit={sendMessage} className="p-3 border-t border-slate-100 bg-[#f0f2f5] flex gap-2 shrink-0 items-end z-20">
+                                    <div className="flex flex-col grow gap-2 relative">
+                                        {replyingTo && (
+                                            <div className="bg-slate-100 border-l-4 border-emerald-500 rounded-lg p-2 text-sm flex justify-between items-start mb-1 relative mx-2 mt-1">
+                                                <div className="flex flex-col overflow-hidden">
+                                                    <span className="text-emerald-600 font-semibold text-xs mb-0.5">{replyingTo.sender === 'me' ? 'You' : investorProfile?.full_name || 'Them'}</span>
+                                                    <span className="truncate text-slate-600 text-xs">{replyingTo.text || 'File attachment'}</span>
+                                                </div>
+                                                <button type="button" onClick={() => setReplyingTo(null)} className="text-slate-400 hover:text-slate-600 shrink-0 p-1 -mt-1 -mr-1"><X className="size-4" /></button>
                                             </div>
                                         )}
-                                        <div className="flex gap-2">
+                                        {selectedFile && (
+                                            <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-2 text-xs flex justify-between items-center w-max max-w-full shadow-sm ml-12">
+                                                <span className="truncate mr-4 text-emerald-800">{selectedFile.name}</span>
+                                                <button type="button" onClick={() => { setSelectedFile(null); if(fileInputRef.current) fileInputRef.current.value = ""; }} className="text-emerald-600 hover:text-red-500 shrink-0 font-bold p-1">X</button>
+                                            </div>
+                                        )}
+                                        {showEmojiPicker && (
+                                            <div className="absolute bottom-14 left-2 bg-white border border-slate-200 rounded-xl shadow-lg p-2 z-50 animate-in fade-in zoom-in-95 flex flex-wrap max-w-[280px] gap-2">
+                                                {COMMON_EMOJIS.map(emoji => (
+                                                    <button key={emoji} type="button" onClick={() => { setInputMessage(prev => prev + emoji); setShowEmojiPicker(false); }} className="hover:bg-slate-100 p-1.5 rounded-lg text-xl transition-colors">
+                                                        {emoji}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        )}
+                                        <div className="flex gap-2 items-center bg-white border border-slate-200 rounded-2xl px-2 py-1 shadow-sm">
+                                            <button 
+                                                type="button" 
+                                                className="size-9 shrink-0 hover:bg-slate-100 rounded-full flex items-center justify-center text-slate-500 transition-colors"
+                                                title="Emojis"
+                                                disabled={isUploading}
+                                                onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                                            >
+                                                <Smile className="size-6" />
+                                            </button>
                                             <button 
                                                 type="button" 
                                                 onClick={() => fileInputRef.current?.click()}
-                                                className="size-11 shrink-0 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl flex items-center justify-center text-slate-500 transition-all"
+                                                className="size-9 shrink-0 hover:bg-slate-100 rounded-full flex items-center justify-center text-slate-500 transition-colors"
                                                 title="Attach a file"
                                                 disabled={isUploading}
                                             >
@@ -858,18 +1108,20 @@ function DealWorkspace() {
                                             />
                                             <input
                                                 type="text"
-                                                placeholder="Type your secure message..."
-                                                className="grow bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-400 transition-all disabled:opacity-50"
+                                                placeholder="Type a message"
+                                                className="grow bg-transparent px-2 py-2.5 text-[15px] text-slate-800 placeholder:text-slate-500 focus:outline-none disabled:opacity-50"
                                                 value={inputMessage}
                                                 onChange={e => setInputMessage(e.target.value)}
                                                 disabled={isUploading}
                                             />
                                         </div>
                                     </div>
-                                    <button type="submit" disabled={(!inputMessage.trim() && !selectedFile) || isUploading}
-                                        className="size-11 shrink-0 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-200 disabled:cursor-not-allowed rounded-xl flex items-center justify-center text-white transition-all">
-                                        {isUploading ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
-                                    </button>
+                                    <div className="pb-1 shrink-0">
+                                        <button type="submit" disabled={(!inputMessage.trim() && !selectedFile) || isUploading}
+                                            className="size-11 bg-[#00a884] hover:bg-[#008f6f] disabled:bg-slate-300 disabled:text-white disabled:cursor-not-allowed rounded-full flex items-center justify-center text-white transition-all shadow-sm">
+                                            {isUploading ? <Loader2 className="size-5 animate-spin" /> : <Send className="size-5 ml-1" />}
+                                        </button>
+                                    </div>
                                 </form>
                             </>
                         )}
