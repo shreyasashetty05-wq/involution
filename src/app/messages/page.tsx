@@ -2,7 +2,8 @@
 
 import { useState, Suspense, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Send, FileSignature, CheckCircle2, ShieldCheck, User, FileText, ChevronRight, Video, Calendar, Clock, AlertTriangle, PlayCircle, CheckSquare, Search, Lock, Sparkles, Paperclip, Loader2, ArrowLeft, Trash2, MoreVertical, Smile, Check, CheckCheck, Reply, Copy, Edit2, X, ChevronDown, Ban } from "lucide-react";
+import { Send, FileSignature, CheckCircle2, ShieldCheck, User, FileText, ChevronRight, Video, Calendar, Clock, AlertTriangle, PlayCircle, CheckSquare, Search, Lock, Sparkles, Paperclip, Loader2, ArrowLeft, Trash2, MoreVertical, Smile, Check, CheckCheck, Reply, Copy, Edit2, X, ChevronDown, Ban, Handshake } from "lucide-react";
+import { NegotiationTab } from "@/frontend/components/negotiation/NegotiationTab";
 import { createClient } from "@/utils/supabase/client";
 import FileAttachment from "@/components/FileAttachment";
 import { useToast } from "@/components/ui/ToastProvider";
@@ -95,8 +96,9 @@ function DealWorkspace() {
     const startupId = searchParams.get('startupId');
     const investorId = searchParams.get('investorId');
 
-    const [activeTab, setActiveTab] = useState<"chat" | "trust" | "diligence" | "agreement">("chat");
+    const [activeTab, setActiveTab] = useState<"chat" | "trust" | "diligence" | "negotiation" | "agreement">("chat");
     const [currentPhase, setCurrentPhase] = useState(3);
+    const [dealId, setDealId] = useState<string | null>(null);
     const [bubbleTrigger, setBubbleTrigger] = useState(0);
     const [showInvestorModal, setShowInvestorModal] = useState(false);
     const [investorProfile, setInvestorProfile] = useState<any>(null);
@@ -203,6 +205,7 @@ function DealWorkspace() {
             }
             const data = await res.json();
             if (data.success && data.deal) {
+                setDealId(data.deal.id);
                 const {currentUser} = data;
 
                 // Map DB messages to UI format with correct sides and ensure stable IDs
@@ -668,8 +671,8 @@ function DealWorkspace() {
     const phases = [
         { num: 1, title: "Identity & Verification", desc: "Profile & KYC Verified", icon: ShieldCheck },
         { num: 2, title: "Pitch & Initial Interest", desc: "Startup Discovery", icon: Search },
-        { num: 3, title: "Secure Meetings", desc: "Trust Building", icon: Video },
-        { num: 4, title: "Due Diligence", desc: "Financial Audit & AI", icon: CheckSquare },
+        { num: 3, title: "Meetings", desc: "Trust Building", icon: Video },
+        { num: 4, title: "Negotiation", desc: "Deal Terms & Discussion", icon: Handshake },
         { num: 5, title: "Agreement & Funding", desc: "Term Sheet Executed", icon: FileSignature },
     ];
 
@@ -745,8 +748,9 @@ function DealWorkspace() {
                     <div className="bg-white border-b border-slate-200 px-4 pt-3 pb-0 flex gap-1 overflow-x-auto shrink-0">
                         {[
                             { key: 'chat', label: 'Message Room', phase: 1, color: 'emerald' },
-                            { key: 'trust', label: 'Trust Building', phase: 3, color: 'indigo' },
-                            { key: 'diligence', label: 'Due Diligence', phase: 4, color: 'amber' },
+                            { key: 'trust', label: 'Meetings', phase: 2, color: 'indigo' },
+                            { key: 'diligence', label: 'Due Diligence', phase: 3, color: 'amber' },
+                            { key: 'negotiation', label: 'Negotiation', phase: 4, color: 'blue' },
                             { key: 'agreement', label: 'Smart Agreement', phase: 5, color: 'pink' },
                         ].map(t => {
                             const locked = currentPhase < t.phase;
@@ -896,8 +900,8 @@ function DealWorkspace() {
                                                             <div 
                                                                 className="fixed z-50 bg-white rounded-xl shadow-lg border border-slate-100 py-1.5 min-w-[160px] animate-in zoom-in-95 duration-100"
                                                                 style={{ 
-                                                                    top: `${Math.min(contextMenu.y, (typeof window !== 'undefined' ? window.innerHeight : 800) - 250)}px`, 
-                                                                    left: `${Math.min(contextMenu.x, (typeof window !== 'undefined' ? window.innerWidth : 800) - 180)}px`
+                                                                    top: `${Math.min(contextMenu?.y ?? 0, (typeof window !== 'undefined' ? window.innerHeight : 800) - 250)}px`, 
+                                                                    left: `${Math.min(contextMenu?.x ?? 0, (typeof window !== 'undefined' ? window.innerWidth : 800) - 180)}px`
                                                                 }}
                                                             >
                                                             <div className="flex justify-between px-3 py-2 border-b border-slate-50 mb-1">
@@ -1127,7 +1131,7 @@ function DealWorkspace() {
                         )}
 
                         {/* ── TRUST BUILDING ── */}
-                        {activeTab === 'trust' && currentPhase >= 3 && (
+                        {activeTab === 'trust' && currentPhase >= 2 && (
                             <div className="p-6 flex flex-col md:flex-row gap-8 overflow-y-auto">
                                 <div className="md:w-1/2 space-y-5">
                                     <div>
@@ -1200,10 +1204,10 @@ function DealWorkspace() {
                                 </div>
                             </div>
                         )}
-                        {activeTab === 'trust' && currentPhase < 3 && <PhaseLock phase={3} />}
+                        {activeTab === 'trust' && currentPhase < 2 && <PhaseLock phase={2} />}
 
                         {/* ── DUE DILIGENCE ── */}
-                        {activeTab === 'diligence' && currentPhase >= 4 && (
+                        {activeTab === 'diligence' && currentPhase >= 3 && (
                             <div className="p-6 overflow-y-auto">
                                 <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2 mb-5"><CheckSquare className="text-amber-600 size-5" /> Due Diligence Portal</h2>
                                 <div className="grid md:grid-cols-2 gap-5">
@@ -1237,7 +1241,19 @@ function DealWorkspace() {
                                 </div>
                             </div>
                         )}
-                        {activeTab === 'diligence' && currentPhase < 4 && <PhaseLock phase={4} />}
+                        {activeTab === 'diligence' && currentPhase < 3 && <PhaseLock phase={3} />}
+
+                        {/* ── NEGOTIATION ── */}
+                        {activeTab === 'negotiation' && currentPhase >= 4 && dealId && (
+                            <NegotiationTab 
+                                dealId={dealId} 
+                                isStartup={currentUserId === startupId}
+                                startupName={startupName}
+                                investorName={investorProfile?.full_name || "Investor"}
+                                onLock={() => advancePhase()} 
+                            />
+                        )}
+                        {activeTab === 'negotiation' && currentPhase < 4 && <PhaseLock phase={4} />}
 
                         {/* ── AGREEMENT ── */}
                         {activeTab === 'agreement' && currentPhase >= 5 && (
