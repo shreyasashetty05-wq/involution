@@ -48,7 +48,7 @@ export async function GET(req: NextRequest) {
         }
 
         // Fetch negotiation
-        const { data: negotiation, error: negError } = await supabase
+        let { data: negotiation, error: negError } = await supabase
             .from("negotiations")
             .select("*")
             .eq("deal_id", dealId)
@@ -57,7 +57,7 @@ export async function GET(req: NextRequest) {
         if (negError) throw negError;
 
         // Fetch versions
-        const { data: versions, error: verError } = await supabase
+        let { data: versions, error: verError } = await supabase
             .from("negotiation_versions")
             .select("*")
             .eq("deal_id", dealId)
