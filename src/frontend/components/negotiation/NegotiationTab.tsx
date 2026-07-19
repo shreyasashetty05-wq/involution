@@ -70,9 +70,11 @@ export function NegotiationTab({
     const [negotiation, setNegotiation] = useState<any>(null);
     const [versions, setVersions] = useState<any[]>([]);
     const [discussions, setDiscussions] = useState<any[]>([]);
+    const [resolvedRole, setResolvedRole] = useState<'startup' | 'investor'>('investor');
     
     const [messageInput, setMessageInput] = useState("");
     const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
+    const [showProceedDialog, setShowProceedDialog] = useState(false);
     
     const [isEditing, setIsEditing] = useState(false);
     
@@ -105,6 +107,9 @@ export function NegotiationTab({
                 setNegotiation(data.negotiation);
                 setVersions(data.versions);
                 setDiscussions(data.discussions);
+                if (data.userRole) {
+                    setResolvedRole(data.userRole);
+                }
 
                 // Populate form
                 if (data.versions.length > 0) {
@@ -201,6 +206,30 @@ export function NegotiationTab({
         }
     };
 
+    const handleReject = async () => {
+        if (!confirm("Are you sure you want to reject this offer? This will end the negotiation.")) return;
+        setSubmitting(true);
+        try {
+            const res = await fetch(`/api/deals/negotiation`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    dealId,
+                    action: 'reject',
+                    senderType: isStartup ? 'startup' : 'investor'
+                })
+            });
+            if (res.ok) {
+                toast.success("Offer Rejected");
+                fetchNegotiationData();
+            }
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
     const handleLock = async () => {
         setSubmitting(true);
         try {
@@ -259,7 +288,7 @@ export function NegotiationTab({
                 body: JSON.stringify({
                     dealId,
                     action: 'message',
-                    senderType: isStartup ? 'startup' : 'investor',
+                    senderType: amIStartup ? 'startup' : 'investor',
                     message: messageInput
                 })
             });
@@ -280,7 +309,7 @@ export function NegotiationTab({
                 body: JSON.stringify({
                     dealId,
                     action: 'delete_message',
-                    senderType: isStartup ? 'startup' : 'investor',
+                    senderType: resolvedRole,
                     messageId
                 })
             });
@@ -298,10 +327,24 @@ export function NegotiationTab({
         return <div className="p-8 flex justify-center"><Loader2 className="animate-spin text-emerald-500 size-8" /></div>;
     }
 
-    const isLocked = negotiation?.is_locked;
-    const isAccepted = negotiation?.status === 'Accepted';
-    const waitingForMe = negotiation?.status === (isStartup ? 'Waiting for Startup' : 'Waiting for Investor');
-    const waitingForThem = negotiation?.status === (!isStartup ? 'Waiting for Startup' : 'Waiting for Investor');
+    const isLocked = negotiation?.is_locked || negotiation?.status === 'Negotiation Locked';
+    const isAccepted = negotiation?.status === 'Negotiation Accepted' || negotiation?.status === 'Accepted';
+    const isPendingInvestorFinalApproval = negotiation?.status === 'Pending Investor Final Approval';
+    const isRejected = negotiation?.status === 'Negotiation Rejected' || negotiation?.status === 'Rejected';
+    
+    const amIStartup = resolvedRole === 'startup';
+
+    // waitingForMe handles the core logic of whether action buttons should appear
+    // Startup CANNOT act on Initial Offer (it's theirs)
+    const waitingForMe = (!amIStartup && negotiation?.status === 'Initial Offer Available') || 
+                         (amIStartup && negotiation?.status === 'Waiting for Startup Response') ||
+                         (!amIStartup && negotiation?.status === 'Waiting for Investor Response');
+                         
+    const waitingForThem = (amIStartup && negotiation?.status === 'Initial Offer Available') || 
+                           (!amIStartup && negotiation?.status === 'Waiting for Startup Response') ||
+                           (amIStartup && negotiation?.status === 'Waiting for Investor Response') ||
+                           (amIStartup && isPendingInvestorFinalApproval) ||
+                           (amIStartup && isAccepted);
     
     const needsInitialOffer = versions.length === 0;
 
@@ -433,7 +476,7 @@ export function NegotiationTab({
                                                 {field.type === "currency" ? formatCurrency(field.key === 'valuation' ? currentValuation : editTerms[field.key as TermField]) : 
                                                  field.key === "equity" ? `${editTerms.equity}%` :
                                                  editTerms[field.key as TermField]}
-                                                {!isLocked && !isAccepted && !field.readonly && (
+                                                {!isLocked && !isAccepted && !isRejected && !field.readonly && (
                                                     <button onClick={() => setIsEditing(true)} className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-blue-500 transition-opacity">
                                                         <Edit2 className="size-3" />
                                                     </button>
@@ -466,22 +509,41 @@ export function NegotiationTab({
                                 </>
                             ) : (
                                 <>
-                                    {!isLocked && !isAccepted && (
+                                    {!isLocked && !isAccepted && !isRejected && (
                                         (needsInitialOffer && isStartup) ? (
                                             <button onClick={() => setIsEditing(true)} className="flex-1 py-2.5 bg-slate-100 text-slate-700 font-semibold rounded-xl text-sm transition-colors hover:bg-slate-200 border border-slate-200 flex items-center justify-center gap-2">
                                                 <Edit2 className="size-4" /> Edit & Send Initial Offer
                                             </button>
-                                        ) : (!needsInitialOffer && (!waitingForMe || isStartup)) ? (
-                                            <button onClick={() => setIsEditing(true)} className="flex-1 py-2.5 bg-slate-100 text-slate-700 font-semibold rounded-xl text-sm transition-colors hover:bg-slate-200 border border-slate-200 flex items-center justify-center gap-2">
-                                                <Edit2 className="size-4" /> {isStartup ? "Edit Proposal" : "Create Counter Offer"}
+                                        ) : (!needsInitialOffer && waitingForMe) ? (
+                                            <button onClick={() => {
+                                                if (currentVersion) {
+                                                    setEditTerms({
+                                                        investment_amount: currentVersion.investment_amount,
+                                                        valuation: currentVersion.valuation,
+                                                        equity: currentVersion.equity,
+                                                        investment_type: currentVersion.investment_type,
+                                                        funding_round: currentVersion.funding_round,
+                                                        board_seat: currentVersion.board_seat,
+                                                        liquidation_preference: currentVersion.liquidation_preference,
+                                                        closing_date: currentVersion.closing_date
+                                                    });
+                                                }
+                                                setIsEditing(true);
+                                            }} className="flex-1 py-2.5 bg-slate-100 text-slate-700 font-semibold rounded-xl text-sm transition-colors hover:bg-slate-200 border border-slate-200 flex items-center justify-center gap-2">
+                                                <Edit2 className="size-4" /> Create Counter Offer
                                             </button>
                                         ) : null
                                     )}
                                     
                                     {waitingForMe && !isEditing && (
-                                        <button onClick={handleAccept} disabled={submitting} className="flex-1 py-2.5 bg-emerald-600 text-white font-semibold rounded-xl text-sm transition-colors hover:bg-emerald-700 shadow-sm flex items-center justify-center gap-2 disabled:opacity-50">
-                                            <CheckCircle2 className="size-4" /> Accept Proposed Terms
-                                        </button>
+                                        <>
+                                            <button onClick={handleReject} disabled={submitting} className="flex-1 py-2.5 bg-red-50 text-red-600 font-semibold rounded-xl text-sm transition-colors hover:bg-red-100 border border-red-200 shadow-sm flex items-center justify-center gap-2 disabled:opacity-50">
+                                                Reject Offer
+                                            </button>
+                                            <button onClick={handleAccept} disabled={submitting} className="flex-1 py-2.5 bg-emerald-600 text-white font-semibold rounded-xl text-sm transition-colors hover:bg-emerald-700 shadow-sm flex items-center justify-center gap-2 disabled:opacity-50">
+                                                <CheckCircle2 className="size-4" /> Accept Offer
+                                            </button>
+                                        </>
                                     )}
                                 </>
                             )}
@@ -501,16 +563,68 @@ export function NegotiationTab({
                                 </div>
                             ))}
                         </div>
-                        <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100">
-                            <p className="text-xs text-slate-500 flex items-center gap-1.5"><Lock className="size-3.5" /> All terms must be agreed to proceed to the next phase.</p>
-                            <button 
-                                onClick={handleLock}
-                                disabled={!allChecked || isLocked || submitting || !isAccepted}
-                                className="px-5 py-2 bg-blue-700 hover:bg-blue-800 text-white font-semibold rounded-lg text-sm transition-colors disabled:opacity-40 disabled:bg-slate-600 flex items-center gap-2"
-                            >
-                                <Lock className="size-4" /> Lock Negotiation & Proceed to Phase 5
-                            </button>
-                        </div>
+                        {/* Action Area */}
+                        {isAccepted && !isLocked && (
+                            <div className="bg-emerald-50 rounded-2xl p-6 border border-emerald-100 flex items-center justify-between mt-6">
+                                <div>
+                                    <h3 className="font-bold text-emerald-800 text-lg mb-1">Negotiation Successful</h3>
+                                    <p className="text-emerald-600 text-sm mb-4">Terms have been mutually agreed upon.</p>
+                                    
+                                    {amIStartup ? (
+                                        <p className="text-sm font-semibold text-emerald-700 flex items-center gap-2">
+                                            <Loader2 className="size-4 animate-spin" /> Waiting for Investor to Proceed to Phase 5...
+                                        </p>
+                                    ) : (
+                                        <button onClick={() => setShowProceedDialog(true)} className="px-5 py-2.5 bg-emerald-600 text-white font-bold rounded-xl text-sm transition-colors hover:bg-emerald-700 shadow-sm disabled:opacity-50">
+                                            Proceed to Smart Agreement
+                                        </button>
+                                    )}
+                                </div>
+                                <div className="size-12 rounded-full bg-emerald-100 flex items-center justify-center">
+                                    <CheckCircle2 className="size-6 text-emerald-600" />
+                                </div>
+                            </div>
+                        )}
+                        {isPendingInvestorFinalApproval && (
+                            <div className="bg-emerald-50 rounded-2xl p-6 border border-emerald-100 flex items-center justify-between mt-6">
+                                <div>
+                                    <h3 className="font-bold text-emerald-800 text-lg mb-1">Pending Investor Final Approval</h3>
+                                    <p className="text-emerald-600 text-sm mb-4">Startup has accepted the Counter Offer.</p>
+                                    
+                                    {amIStartup ? (
+                                        <p className="text-sm font-semibold text-emerald-700 flex items-center gap-2">
+                                            <Loader2 className="size-4 animate-spin" /> Waiting for Investor Final Approval...
+                                        </p>
+                                    ) : (
+                                        <button onClick={() => setShowProceedDialog(true)} className="px-5 py-2.5 bg-emerald-600 text-white font-bold rounded-xl text-sm transition-colors hover:bg-emerald-700 shadow-sm disabled:opacity-50">
+                                            Proceed to Smart Agreement
+                                        </button>
+                                    )}
+                                </div>
+                                <div className="size-12 rounded-full bg-emerald-100 flex items-center justify-center">
+                                    <CheckCircle2 className="size-6 text-emerald-600" />
+                                </div>
+                            </div>
+                        )}
+                        {isLocked && (
+                            <div className="bg-emerald-50 rounded-2xl p-6 border border-emerald-100 flex items-center justify-between mt-6">
+                                <div>
+                                    <h3 className="font-bold text-emerald-800 text-lg mb-1">Phase 5 Unlocked</h3>
+                                    <p className="text-emerald-600 text-sm">The negotiation has been locked and the Smart Agreement phase is now available.</p>
+                                </div>
+                                <div className="size-12 rounded-full bg-emerald-100 flex items-center justify-center">
+                                    <Lock className="size-6 text-emerald-600" />
+                                </div>
+                            </div>
+                        )}
+                        {isRejected && (
+                            <div className="bg-red-50 rounded-2xl p-6 border border-red-100 flex items-center justify-between mt-6">
+                                <div>
+                                    <h3 className="font-bold text-red-800 text-lg mb-1">Negotiation Rejected</h3>
+                                    <p className="text-red-600 text-sm">The negotiation has ended and the Deal Room is closed.</p>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -526,7 +640,7 @@ export function NegotiationTab({
                         </div>
                         <div className="flex-1 overflow-y-auto p-4 space-y-4">
                             {discussions.map((msg) => {
-                                const amISender = (isStartup && msg.sender_type === 'startup') || (!isStartup && msg.sender_type === 'investor');
+                                const amISender = (amIStartup && msg.sender_type === 'startup') || (!amIStartup && msg.sender_type === 'investor');
                                 return (
                                     <div key={msg.id} className="flex gap-2 text-sm group">
                                         <div className="size-7 rounded-full bg-slate-200 flex items-center justify-center text-xs font-bold text-slate-600 shrink-0">
@@ -535,7 +649,7 @@ export function NegotiationTab({
                                         <div className="flex-1">
                                             <div className="flex justify-between items-center mb-1">
                                                 <div className="flex items-center gap-2">
-                                                    <span className="font-semibold text-slate-800">{amISender ? "You" : (msg.sender_type === 'startup' ? "Founder" : "Investor")}</span>
+                                                    <span className="font-semibold text-slate-800">{amISender ? "You" : (msg.sender_type === 'startup' ? "Startup" : "Investor")}</span>
                                                     <span className="text-[10px] text-slate-400">{new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                                                     {msg.is_edited && <span className="text-[9px] text-slate-400 italic">(edited)</span>}
                                                 </div>
@@ -582,7 +696,13 @@ export function NegotiationTab({
                                         v{v.version_number}
                                     </div>
                                     <div className="flex-1">
-                                        <p className="text-sm font-semibold text-slate-800">{v.status === 'Current' ? (v.proposed_by_type === 'startup' ? "Offer by Founder" : "Counter Offer by Investor") : (v.proposed_by_type === 'startup' ? "Counter Offer by Founder" : "Counter Offer by Investor")}</p>
+                                        <p className="text-sm font-semibold text-slate-800">
+                                            {v.action === 'Initial Offer' ? 'Startup Initial Offer' : 
+                                             v.action === 'Counter Offer' ? `Counter Offer by ${v.proposed_by_type === 'startup' ? 'Startup' : 'Investor'}` :
+                                             v.action === 'Accepted' ? `Accepted by ${v.proposed_by_type === 'startup' ? 'Startup' : 'Investor'}` :
+                                             v.action === 'Rejected' ? `Rejected by ${v.proposed_by_type === 'startup' ? 'Startup' : 'Investor'}` :
+                                             (v.proposed_by_type === 'startup' ? "Counter Offer by Founder" : "Counter Offer by Investor")}
+                                        </p>
                                         <p className="text-xs text-slate-400">{new Date(v.created_at).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</p>
                                     </div>
                                     {v.status === 'Current' && (
@@ -639,6 +759,41 @@ export function NegotiationTab({
                     </div>
                 </div>
             </div>
+
+            {/* Proceed to Smart Agreement Dialog */}
+            {showProceedDialog && (
+                <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="size-10 rounded-full bg-blue-100 flex items-center justify-center">
+                                <Lock className="size-5 text-blue-600" />
+                            </div>
+                            <h3 className="text-xl font-bold text-slate-800">Proceed to Smart Agreement</h3>
+                        </div>
+                        <p className="text-slate-600 mb-6">
+                            Do you want to lock the negotiation and proceed to the Smart Agreement phase?
+                        </p>
+                        <div className="flex gap-3">
+                            <button 
+                                onClick={() => setShowProceedDialog(false)}
+                                className="flex-1 py-2.5 bg-slate-100 text-slate-700 font-bold rounded-xl text-sm hover:bg-slate-200 transition-colors"
+                            >
+                                No
+                            </button>
+                            <button 
+                                onClick={() => {
+                                    setShowProceedDialog(false);
+                                    handleLock();
+                                }}
+                                disabled={submitting}
+                                className="flex-1 py-2.5 bg-blue-600 text-white font-bold rounded-xl text-sm hover:bg-blue-700 transition-colors disabled:opacity-50"
+                            >
+                                Yes
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

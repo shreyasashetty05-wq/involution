@@ -17,6 +17,36 @@ export async function GET(req: NextRequest) {
             return NextResponse.json({ success: false, error: 'dealId is required' }, { status: 400 });
         }
 
+        // Fetch deal to determine roles securely
+        const { data: deal, error: dealError } = await supabase
+            .from("deals")
+            .select("startup_id, investor_id")
+            .eq("id", dealId)
+            .single();
+            
+        if (dealError || !deal) {
+            return NextResponse.json({ success: false, error: 'Deal not found' }, { status: 404 });
+        }
+
+        const sessionUserId = user.email || user.id;
+        
+        const { data: startupData } = await supabase
+            .from("startups")
+            .select("owner_email")
+            .eq("id", deal.startup_id)
+            .single();
+            
+        const { data: investorData } = await supabase
+            .from("investor_profiles")
+            .select("email")
+            .eq("id", deal.investor_id)
+            .single();
+
+        let backendUserRole = 'investor';
+        if (startupData?.owner_email === sessionUserId || deal.startup_id === sessionUserId) {
+            backendUserRole = 'startup';
+        }
+
         // Fetch negotiation
         const { data: negotiation, error: negError } = await supabase
             .from("negotiations")
@@ -51,16 +81,58 @@ export async function GET(req: NextRequest) {
                     .single();
                     
                 if (startup) {
-                    initialTemplate = {
-                        investment_amount: startup.requested || 0,
-                        valuation: (startup.requested && startup.equity) ? (startup.requested / (startup.equity / 100)) : 0,
-                        equity: startup.equity || 0,
-                        investment_type: "Equity",
-                        funding_round: startup.stage || "Seed",
-                        board_seat: "1",
-                        liquidation_preference: "1x Non-Participating",
-                        closing_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-                    };
+                    // Create negotiation if not exists
+                    if (!negotiation) {
+                        const { data: newNeg, error: negErr } = await supabase
+                            .from("negotiations")
+                            .insert({
+                                deal_id: dealId,
+                                status: 'Initial Offer Available'
+                            })
+                            .select()
+                            .single();
+                        if (!negErr) {
+                            negotiation = newNeg;
+                        }
+                    } else if (negotiation.status !== 'Initial Offer Available' && versions.length === 0) {
+                         await supabase
+                            .from("negotiations")
+                            .update({ status: 'Initial Offer Available' })
+                            .eq("id", negotiation.id);
+                         negotiation.status = 'Initial Offer Available';
+                    }
+
+                    // Extract user email if needed, but we can just use user_id if auth allows.
+                    // For now, let's get the startup owner's user_id. We know deals.startup_id maps to startups.id, but we didn't fetch startups.user_id. Let's fetch it.
+                    
+                    const { data: stData } = await supabase.from("startups").select("user_id").eq("id", deal.startup_id).single();
+                    
+                    // Automatically create Version 1
+                    const calcValuation = (startup.requested && startup.equity) ? (startup.requested / (startup.equity / 100)) : 0;
+                    const { data: newVersion, error: vErr } = await supabase
+                        .from("negotiation_versions")
+                        .insert({
+                            deal_id: dealId,
+                            version_number: 1,
+                            proposed_by_type: 'startup',
+                            proposed_by_id: stData?.user_id || user.id, // Fallback to current user
+                            investment_amount: startup.requested || 0,
+                            valuation: calcValuation,
+                            equity: startup.equity || 0,
+                            investment_type: "Equity",
+                            funding_round: startup.stage || "Seed",
+                            board_seat: "1",
+                            liquidation_preference: "1x Non-Participating",
+                            closing_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                            status: 'Current',
+                            action: 'Initial Offer'
+                        })
+                        .select()
+                        .single();
+                        
+                    if (!vErr) {
+                        versions = [newVersion];
+                    }
                 }
             }
         }
@@ -79,7 +151,8 @@ export async function GET(req: NextRequest) {
             negotiation: negotiation || null,
             versions: versions || [],
             discussions: discussions || [],
-            initialTemplate
+            initialTemplate,
+            userRole: backendUserRole
         });
 
     } catch (error: any) {
@@ -106,6 +179,20 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ success: false, error: 'dealId, action, and senderType are required' }, { status: 400 });
         }
 
+        // Strictly determine role from backend to prevent frontend sync issues
+        let backendSenderType = senderType; // fallback
+        const { data: dealCheck } = await supabase.from("deals").select("startup_id, investor_id").eq("id", dealId).maybeSingle();
+        if (dealCheck && user.email) {
+            const { data: startupData } = await supabase.from("startups").select("owner_email").eq("id", dealCheck.startup_id).maybeSingle();
+            const { data: investorData } = await supabase.from("investor_profiles").select("email").eq("id", dealCheck.investor_id).maybeSingle();
+            
+            if (startupData?.owner_email === user.email) {
+                backendSenderType = 'startup';
+            } else if (investorData?.email === user.email) {
+                backendSenderType = 'investor';
+            }
+        }
+
         let { data: negotiation, error: negError } = await supabase
             .from("negotiations")
             .select("*")
@@ -127,17 +214,18 @@ export async function POST(req: NextRequest) {
                     .from("negotiations")
                     .insert({
                         deal_id: dealId,
-                        status: senderType === 'startup' ? 'Waiting for Investor' : 'Waiting for Startup'
+                        status: backendSenderType === 'startup' ? 'Waiting for Investor Response' : 'Waiting for Startup Response'
                     })
                     .select()
                     .single();
                 if (error) throw error;
                 negotiation = newNeg;
             } else {
-                // Update status to Counter Offer Sent
+                // Update status to Counter Offer Sent effectively waiting for other
+                const newStatus = backendSenderType === 'startup' ? 'Waiting for Investor Response' : 'Waiting for Startup Response';
                 await supabase
                     .from("negotiations")
-                    .update({ status: 'Counter Offer Sent' })
+                    .update({ status: newStatus })
                     .eq("id", negotiation.id);
             }
 
@@ -161,7 +249,7 @@ export async function POST(req: NextRequest) {
                     .eq("status", "Current");
             }
 
-            if (senderType === 'investor' && nextVersionNumber === 1) {
+            if (backendSenderType === 'investor' && nextVersionNumber === 1) {
                 return NextResponse.json({ success: false, error: 'Investor cannot create initial offer' }, { status: 403 });
             }
 
@@ -170,7 +258,7 @@ export async function POST(req: NextRequest) {
                 .insert({
                     deal_id: dealId,
                     version_number: nextVersionNumber,
-                    proposed_by_type: senderType,
+                    proposed_by_type: backendSenderType,
                     proposed_by_id: sessionUserId,
                     investment_amount: terms.investment_amount,
                     valuation: terms.valuation,
@@ -180,27 +268,127 @@ export async function POST(req: NextRequest) {
                     board_seat: terms.board_seat,
                     liquidation_preference: terms.liquidation_preference,
                     closing_date: terms.closing_date,
-                    status: 'Current'
+                    status: 'Current',
+                    action: 'Counter Offer'
                 })
                 .select()
                 .single();
             if (nvError) throw nvError;
+            
+            // Notify counterparty
+            await supabase.from("notifications").insert({
+                user_email: null, // Broadcast via role or specific mapping if possible. Let's rely on role for now.
+                role: backendSenderType === 'startup' ? 'investor' : 'startup',
+                type: 'negotiation',
+                title: 'New Counter Offer',
+                description: `A new counter offer (v${nextVersionNumber}) has been proposed.`,
+                link: `/messages?tab=negotiation&deal=${dealId}`
+            });
             
             return NextResponse.json({ success: true, version: newVersion });
 
         } else if (action === 'accept') {
             if (!negotiation) return NextResponse.json({ success: false, error: 'No active negotiation' }, { status: 400 });
             
+            // Get current version
+            const { data: currentVersion, error: cvError } = await supabase
+                .from("negotiation_versions")
+                .select("*")
+                .eq("deal_id", dealId)
+                .eq("status", "Current")
+                .single();
+                
+            if (cvError || !currentVersion) return NextResponse.json({ success: false, error: 'No current version' }, { status: 400 });
+            
+            // update old current version to Countered
+            await supabase
+                .from("negotiation_versions")
+                .update({ status: 'Countered' })
+                .eq("deal_id", dealId)
+                .eq("status", "Current");
+                
+            // Role-based Accept Logic
+            const newStatus = backendSenderType === 'startup' ? 'Pending Investor Final Approval' : 'Negotiation Accepted';
             await supabase
                 .from("negotiations")
-                .update({ status: 'Accepted' })
+                .update({ status: newStatus })
                 .eq("id", negotiation.id);
                 
             await supabase
                 .from("negotiation_versions")
-                .update({ status: 'Accepted' })
+                .insert({
+                    ...currentVersion,
+                    id: undefined,
+                    created_at: undefined,
+                    version_number: currentVersion.version_number + 1,
+                    proposed_by_type: backendSenderType,
+                    proposed_by_id: sessionUserId,
+                    status: 'Current',
+                    action: 'Accepted'
+                });
+                
+            await supabase.from("notifications").insert({
+                user_email: null,
+                role: backendSenderType === 'startup' ? 'investor' : 'startup',
+                type: 'negotiation',
+                title: backendSenderType === 'startup' ? 'Offer Accepted by Startup' : 'Offer Accepted',
+                description: backendSenderType === 'startup' 
+                    ? 'The Startup has accepted your Counter Offer! Please proceed to Smart Agreement.' 
+                    : 'The proposed investment terms have been accepted! Waiting for Investor to proceed to Phase 5.',
+                link: `/messages?tab=negotiation&deal=${dealId}`
+            });
+                
+            return NextResponse.json({ success: true });
+            
+        } else if (action === 'reject') {
+            if (!negotiation) return NextResponse.json({ success: false, error: 'No active negotiation' }, { status: 400 });
+            
+            // Get current version
+            const { data: currentVersion } = await supabase
+                .from("negotiation_versions")
+                .select("*")
                 .eq("deal_id", dealId)
-                .eq("status", "Current");
+                .eq("status", "Current")
+                .maybeSingle();
+                
+            await supabase
+                .from("negotiations")
+                .update({ status: 'Negotiation Rejected' })
+                .eq("id", negotiation.id);
+                
+            if (currentVersion) {
+                await supabase
+                    .from("negotiation_versions")
+                    .update({ status: 'Countered' })
+                    .eq("id", currentVersion.id);
+                    
+                await supabase
+                    .from("negotiation_versions")
+                    .insert({
+                        ...currentVersion,
+                        id: undefined,
+                        created_at: undefined,
+                        version_number: currentVersion.version_number + 1,
+                        proposed_by_type: backendSenderType,
+                        proposed_by_id: sessionUserId,
+                        status: 'Current',
+                        action: 'Rejected'
+                    });
+            }
+                
+            await supabase
+                .from("deals")
+                .update({ status: 'Closed' })
+                .eq("id", dealId);
+                
+            await supabase.from("notifications").insert({
+                user_email: null,
+                role: backendSenderType === 'startup' ? 'investor' : 'startup',
+                type: 'negotiation',
+                title: 'Offer Rejected',
+                description: 'Your proposed investment terms have been rejected. The negotiation has ended.',
+                link: `/messages?tab=negotiation&deal=${dealId}`
+            });
                 
             return NextResponse.json({ success: true });
             
@@ -209,7 +397,7 @@ export async function POST(req: NextRequest) {
             
             await supabase
                 .from("negotiations")
-                .update({ status: 'Locked', is_locked: true })
+                .update({ status: 'Negotiation Locked', is_locked: true })
                 .eq("id", negotiation.id);
                 
             // Update deal phase to 5
@@ -217,6 +405,14 @@ export async function POST(req: NextRequest) {
                 .from("deals")
                 .update({ current_phase: 5 })
                 .eq("id", dealId);
+                
+            await supabase.from("notifications").insert({
+                role: backendSenderType === 'startup' ? 'investor' : 'startup',
+                type: 'negotiation',
+                title: 'Negotiation Locked',
+                description: 'The negotiation has been locked and moved to Phase 5.',
+                link: `/messages?tab=negotiation&deal=${dealId}`
+            });
                 
             return NextResponse.json({ success: true });
             
@@ -226,7 +422,7 @@ export async function POST(req: NextRequest) {
                 .from("negotiation_discussions")
                 .insert({
                     deal_id: dealId,
-                    sender_type: senderType,
+                    sender_type: backendSenderType,
                     sender_id: sessionUserId,
                     message,
                     referenced_term: referencedTerm
