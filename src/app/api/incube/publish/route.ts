@@ -63,8 +63,19 @@ export async function POST(req: Request) {
             .single();
 
         if (error) {
-            console.error("Supabase insert error (incubation_applications):", error);
-            return NextResponse.json({ success: false, error: 'Database error while saving application.' }, { status: 500 });
+            console.error("Supabase Insert Error:", {
+                message: error.message,
+                details: error.details,
+                hint: error.hint,
+                code: error.code,
+                fullError: error
+            });
+            return NextResponse.json({ 
+                success: false, 
+                error: 'Database error while saving application.', 
+                supabaseError: error.message,
+                supabaseCode: error.code
+            }, { status: 500 });
         }
 
         // Notify Admins
