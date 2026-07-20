@@ -26,7 +26,7 @@ export async function POST(req: Request) {
         const requiredFields = [
             'fullName', 'email', 'institutionName', 'educationLevel',
             'projectName', 'problemStatement', 'solutionDescription',
-            'currentStage', 'equityOffered'
+            'currentStage', 'equityOffered', 'askAmount'
         ];
 
         for (const field of requiredFields) {
@@ -38,6 +38,8 @@ export async function POST(req: Request) {
         const applicationPayload = {
             owner_email: user.email,
             full_name: body.fullName,
+            founder_photo_url: body.founderPhotoUrl || "",
+            team_members: body.teamMembersData || [],
             short_bio: body.shortBio || "",
             email: body.email,
             phone_number: body.phoneNumber || "",
@@ -48,6 +50,7 @@ export async function POST(req: Request) {
             solution_description: body.solutionDescription,
             current_stage: body.currentStage,
             equity_offered: Number(body.equityOffered),
+            ask_amount: Number(body.askAmount),
             pitch_videos: body.pitchVideos || [],
             additional_notes: body.additionalNotes || "",
             status: 'pending'
