@@ -109,8 +109,33 @@ export async function updateSession(request: NextRequest) {
         }
     }
 
-    // Strict role takes precedence, fallback to user_metadata if not defined in DB
-    const role = (dbRole || user.user_metadata?.role || "investor").toLowerCase();
+    // Admin dashboard isolation
+    if (dbRole === "admin" && (path.startsWith("/investors") || path.startsWith("/startups") || path.startsWith("/kyc") || path.startsWith("/incube") || path.startsWith("/mentors"))) {
+        const url = request.nextUrl.clone();
+        url.pathname = "/admin/kyc";
+        return NextResponse.redirect(url);
+    }
+
+    // Role resolution: prioritize user_metadata for regular users to prevent DB triggers from defaulting to 'investor'.
+    // Admin role always takes precedence.
+    let rawRole = user.user_metadata?.role;
+    if (dbRole === "admin") {
+        rawRole = "admin";
+    } else if (!rawRole && dbRole) {
+        rawRole = dbRole;
+    }
+    const role = (rawRole || "investor").toLowerCase();
+
+    const getDashboardUrl = (r: string) => {
+        switch(r) {
+            case "startup": return "/startups/dashboard";
+            case "incubation": return "/incube";
+            case "mentor": return "/mentors/dashboard";
+            case "admin": return "/admin/kyc";
+            case "investor":
+            default: return "/investors/dashboard";
+        }
+    };
 
     // Enforce Admin RBAC
     if (isAdminRoute || isAdminApi) {
@@ -127,30 +152,27 @@ export async function updateSession(request: NextRequest) {
         }
     }
 
-    // User is logged in
+    // User is logged in, redirect away from auth pages
     if (path === "/login" || path === "/register") {
-        if (role === "admin") {
-            const url = request.nextUrl.clone();
-            url.pathname = "/admin/kyc";
-            return NextResponse.redirect(url);
-        }
         const url = request.nextUrl.clone();
-        url.pathname = role === "investor" ? "/investors/dashboard" : "/startups/dashboard";
+        url.pathname = getDashboardUrl(role);
         return NextResponse.redirect(url);
     }
 
     // Admin Dashboard Isolation
     if (role === "admin") {
-        if (path.startsWith("/investors") || path.startsWith("/startups") || path.startsWith("/kyc")) {
+        if (path.startsWith("/investors") || path.startsWith("/startups") || path.startsWith("/kyc") || path.startsWith("/incube") || path.startsWith("/mentors")) {
             const url = request.nextUrl.clone();
             url.pathname = "/admin/kyc";
             return NextResponse.redirect(url);
         }
     }
 
-    // KYC Check applies to investors and startups, but not admins
+    // KYC Check applies to all non-admin roles
     if (role !== "admin") {
-        if (!kycDone && (path.startsWith("/investors") || path.startsWith("/startups"))) {
+        const isProtectedAppRoute = path.startsWith("/investors") || path.startsWith("/startups") || path.startsWith("/incube") || path.startsWith("/mentors");
+        
+        if (!kycDone && isProtectedAppRoute) {
             const url = request.nextUrl.clone();
             if (kycStatus === "Pending") {
                 url.pathname = "/kyc/pending";
@@ -168,7 +190,7 @@ export async function updateSession(request: NextRequest) {
 
         if (path === "/kyc/pending" && kycStatus === "Approved") {
             const url = request.nextUrl.clone();
-            url.pathname = role === "investor" ? "/investors/dashboard" : "/startups/dashboard";
+            url.pathname = getDashboardUrl(role);
             return NextResponse.redirect(url);
         }
 
@@ -200,18 +222,31 @@ export async function updateSession(request: NextRequest) {
         // Role-based protection for regular users
         if (path.startsWith("/investors") && role !== "investor") {
             const url = request.nextUrl.clone();
-            url.pathname = "/startups/dashboard";
+            url.pathname = getDashboardUrl(role);
             return NextResponse.redirect(url);
         }
+        
         const isStartupMgmt = 
             path === "/startups" || 
             path === "/startups/" || 
             path.startsWith("/startups/dashboard") || 
             path.startsWith("/startups/publish");
 
-        if (isStartupMgmt && role === "investor") {
+        if (isStartupMgmt && role !== "startup") {
             const url = request.nextUrl.clone();
-            url.pathname = "/investors/dashboard";
+            url.pathname = getDashboardUrl(role);
+            return NextResponse.redirect(url);
+        }
+
+        if (path.startsWith("/incube") && role !== "incubation") {
+            const url = request.nextUrl.clone();
+            url.pathname = getDashboardUrl(role);
+            return NextResponse.redirect(url);
+        }
+
+        if (path.startsWith("/mentors") && role !== "mentor") {
+            const url = request.nextUrl.clone();
+            url.pathname = getDashboardUrl(role);
             return NextResponse.redirect(url);
         }
     }

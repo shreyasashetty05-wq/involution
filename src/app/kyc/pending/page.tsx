@@ -92,7 +92,13 @@ export default function KYCPendingPage() {
                     <p className="text-slate-600 font-inter mb-8 text-lg max-w-lg mx-auto">
                         Your KYC has been approved successfully. You now have full access to the InVolution platform.
                     </p>
-                    <button onClick={() => router.push(kycRecord.type === 'Investor' ? '/investors/dashboard' : '/startups/dashboard')} className="px-8 py-3 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 mx-auto">
+                    <button onClick={() => {
+                        let dashUrl = '/investors/dashboard';
+                        if (kycRecord.type === 'Startup Founder') dashUrl = '/startups/dashboard';
+                        if (kycRecord.type === 'Incubation Founder') dashUrl = '/incube';
+                        if (kycRecord.type === 'Mentor') dashUrl = '/mentors/dashboard';
+                        router.push(dashUrl);
+                    }} className="px-8 py-3 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 mx-auto">
                         Continue to Dashboard <ChevronRight className="size-4" />
                     </button>
                 </div>
