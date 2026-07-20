@@ -57,7 +57,7 @@ export default function Navbar() {
 
         const fetchNotifications = async () => {
             try {
-                const res = await fetch('/api/notifications');
+                const res = await fetch('/api/user-alerts');
                 const json = await res.json();
                 let notifs = json.success ? json.data : [];
 
@@ -116,7 +116,7 @@ export default function Navbar() {
                 localStorage.setItem(`read_notifs_${user?.id || 'guest'}`, JSON.stringify(readIds));
             }
 
-            await fetch(`/api/notifications/${id}`, {
+            await fetch(`/api/user-alerts/${id}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ is_read: true })

@@ -24,9 +24,8 @@ export async function POST(req: Request) {
 
         // Ensure required fields are present
         const requiredFields = [
-            'fullName', 'email', 'institutionName', 'educationLevel',
-            'projectName', 'problemStatement', 'solutionDescription',
-            'currentStage', 'equityOffered', 'askAmount'
+            'fullName', 'email', 'institutionName', 'educationType',
+            'projectName', 'problemStatement', 'solutionDescription'
         ];
 
         for (const field of requiredFields) {
@@ -34,6 +33,12 @@ export async function POST(req: Request) {
                 return NextResponse.json({ success: false, error: `Missing required field: ${field}` }, { status: 400 });
             }
         }
+
+        // Mock AI Evaluation
+        const matchScore = Math.floor(Math.random() * 30) + 70; // 70 to 99
+        const innovationScore = Math.floor(Math.random() * 20) + 80;
+        const readiness = Math.floor(Math.random() * 40) + 60;
+        const feasibility = Math.floor(Math.random() * 25) + 75;
 
         const applicationPayload = {
             owner_email: user.email,
@@ -43,16 +48,69 @@ export async function POST(req: Request) {
             short_bio: body.shortBio || "",
             email: body.email,
             phone_number: body.phoneNumber || "",
+            city: body.city || "",
+            state: body.state || "",
+            linkedin_url: body.linkedinUrl || "",
+            github_url: body.githubUrl || "",
+            
+            // Educational
             institution_name: body.institutionName,
-            education_level: body.educationLevel,
+            education_type: body.educationType || 'College Degree',
+            education_level: body.educationType || 'College Degree',
+            course: body.course || "",
+            branch: body.branch || "",
+            semester: body.semester || "",
+            graduation_year: body.graduationYear || "",
+            school_class: body.schoolClass || "",
+            school_board: body.schoolBoard || "",
+            diploma_course: body.diplomaCourse || "",
+            diploma_branch: body.diplomaBranch || "",
+            student_id_url: body.studentIdUrl || "",
+            
+            // Idea Details
+            idea_logo_url: body.ideaLogoUrl || "",
             project_name: body.projectName,
+            tagline: body.tagline || "",
+            industry: body.industry || "",
             problem_statement: body.problemStatement,
             solution_description: body.solutionDescription,
+            innovation_usp: body.innovationUsp || "",
+            target_users: body.targetUsers || "",
             current_stage: body.currentStage,
-            equity_offered: Number(body.equityOffered),
-            ask_amount: Number(body.askAmount),
+            
+            // Product Information
+            prototype_available: body.prototypeAvailable || false,
+            prototype_link: body.prototypeLink || "",
+            github_repo: body.githubRepo || "",
+            website: body.website || "",
+            technology_used: body.technologyUsed || [],
+            
+            // Validation
+            test_users_count: body.testUsersCount || "",
+            pilot_testing: body.pilotTesting || "",
+            mentor_feedback: body.mentorFeedback || "",
+            hackathon_participation: body.hackathonParticipation || "",
+            prototype_demo: body.prototypeDemo || "",
+            other_validation: body.otherValidation || "",
+            
+            // Incubation Requirements
+            support_needed: body.supportNeeded || [],
+            funding_required: body.fundingRequired || false,
+            equity_offered: body.equityOffered ? Number(body.equityOffered) : 0,
+            ask_amount: body.askAmount ? Number(body.askAmount) : 0,
+            fund_utilization: body.fundUtilization || [],
+            
+            // Media
             pitch_videos: body.pitchVideos || [],
             additional_notes: body.additionalNotes || "",
+            
+            // AI Analysis
+            ai_match_score: matchScore,
+            innovation_score: innovationScore,
+            incubation_readiness: readiness,
+            feasibility_score: feasibility,
+            ai_recommendation: "Strong potential in target market with high feasibility.",
+            
             status: 'pending'
         };
 
@@ -72,7 +130,7 @@ export async function POST(req: Request) {
             });
             return NextResponse.json({ 
                 success: false, 
-                error: 'Database error while saving application.', 
+                error: `Database error: ${error.message} (Hint: ${error.hint || 'none'})`, 
                 supabaseError: error.message,
                 supabaseCode: error.code
             }, { status: 500 });

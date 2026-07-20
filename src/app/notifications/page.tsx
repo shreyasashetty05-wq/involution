@@ -28,7 +28,7 @@ export default function NotificationsPage() {
 
     const fetchNotifications = async () => {
         try {
-            const res = await fetch('/api/notifications');
+            const res = await fetch('/api/user-alerts');
             const json = await res.json();
             if (json.success) {
                 let notifs = json.data;
@@ -63,7 +63,7 @@ export default function NotificationsPage() {
                 localStorage.setItem(`read_notifs_${userId}`, JSON.stringify(readIds));
             }
 
-            await fetch(`/api/notifications/${id}`, {
+            await fetch(`/api/user-alerts/${id}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ is_read: true })
@@ -88,7 +88,7 @@ export default function NotificationsPage() {
             setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
             
             for (const id of unreadIds) {
-                fetch(`/api/notifications/${id}`, {
+                fetch(`/api/user-alerts/${id}`, {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ is_read: true })
@@ -108,7 +108,7 @@ export default function NotificationsPage() {
                 localStorage.setItem(`deleted_notifs_${userId}`, JSON.stringify(deletedIds));
             }
 
-            await fetch(`/api/notifications/${id}`, { method: 'DELETE' });
+            await fetch(`/api/user-alerts/${id}`, { method: 'DELETE' });
             setNotifications(prev => prev.filter(n => n.id !== id));
             setSelectedIds(prev => {
                 const next = new Set(prev);
@@ -143,7 +143,7 @@ export default function NotificationsPage() {
             setSelectedIds(new Set());
 
             for (const id of idsToDelete) {
-                fetch(`/api/notifications/${id}`, { method: 'DELETE' }).catch(console.error);
+                fetch(`/api/user-alerts/${id}`, { method: 'DELETE' }).catch(console.error);
             }
             toast.success("✅ Notification deleted.");
         } catch (e) {
@@ -169,7 +169,7 @@ export default function NotificationsPage() {
             });
             localStorage.setItem(`deleted_notifs_${userId}`, JSON.stringify(deletedIds));
 
-            await fetch(`/api/notifications?action=clear_all`, { method: 'DELETE' });
+            await fetch(`/api/user-alerts?action=clear_all`, { method: 'DELETE' });
             setNotifications([]);
             setSelectedIds(new Set());
             toast.success("✅ Notifications cleared.");

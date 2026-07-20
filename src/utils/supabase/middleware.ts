@@ -238,7 +238,13 @@ export async function updateSession(request: NextRequest) {
             return NextResponse.redirect(url);
         }
 
-        if (path.startsWith("/incube") && role !== "incubation") {
+        const isIncubationMgmt = 
+            path === "/incube" || 
+            path === "/incube/" || 
+            path.startsWith("/incube/dashboard") || 
+            path.startsWith("/incube/publish");
+
+        if (isIncubationMgmt && role !== "incubation") {
             const url = request.nextUrl.clone();
             url.pathname = getDashboardUrl(role);
             return NextResponse.redirect(url);

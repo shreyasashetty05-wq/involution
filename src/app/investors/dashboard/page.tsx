@@ -79,7 +79,7 @@ export default function InvestorDashboard() {
                     setRecommendedStartups(recommended);
 
                     // Fetch Real Recent Activity from Notifications
-                    const resNotifs = await fetch('/api/notifications');
+                    const resNotifs = await fetch('/api/user-alerts');
                     const jsonNotifs = await resNotifs.json();
                     let activity: any[] = [];
                     

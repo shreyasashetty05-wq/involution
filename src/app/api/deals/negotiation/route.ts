@@ -30,11 +30,20 @@ export async function GET(req: NextRequest) {
 
         const sessionUserId = user.email || user.id;
         
-        const { data: startupData } = await supabase
+        let { data: startupData } = await supabase
             .from("startups")
             .select("owner_email")
             .eq("id", deal.startup_id)
-            .single();
+            .maybeSingle();
+            
+        if (!startupData) {
+            const { data: incubeData } = await supabase
+                .from("incubation_applications")
+                .select("owner_email")
+                .eq("id", deal.startup_id)
+                .maybeSingle();
+            if (incubeData) startupData = incubeData;
+        }
             
         const { data: investorData } = await supabase
             .from("investor_profiles")
@@ -74,11 +83,22 @@ export async function GET(req: NextRequest) {
                 .single();
                 
             if (deal?.startup_id) {
-                const { data: startup } = await supabase
+                let { data: startup } = await supabase
                     .from("startups")
                     .select("requested, equity, stage")
                     .eq("id", deal.startup_id)
-                    .single();
+                    .maybeSingle();
+                    
+                if (!startup) {
+                    const { data: incube } = await supabase
+                        .from("incubation_applications")
+                        .select("ask_amount, equity_offered, current_stage")
+                        .eq("id", deal.startup_id)
+                        .maybeSingle();
+                    if (incube) {
+                        startup = { requested: incube.ask_amount, equity: incube.equity_offered, stage: incube.current_stage };
+                    }
+                }
                     
                 if (startup) {
                     // Create negotiation if not exists
@@ -105,7 +125,7 @@ export async function GET(req: NextRequest) {
                     // Extract user email if needed, but we can just use user_id if auth allows.
                     // For now, let's get the startup owner's user_id. We know deals.startup_id maps to startups.id, but we didn't fetch startups.user_id. Let's fetch it.
                     
-                    const { data: stData } = await supabase.from("startups").select("user_id").eq("id", deal.startup_id).single();
+                    const { data: stData } = await supabase.from("startups").select("user_id").eq("id", deal.startup_id).maybeSingle();
                     
                     // Automatically create Version 1
                     const calcValuation = (startup.requested && startup.equity) ? (startup.requested / (startup.equity / 100)) : 0;
@@ -183,7 +203,11 @@ export async function POST(req: NextRequest) {
         let backendSenderType = senderType; // fallback
         const { data: dealCheck } = await supabase.from("deals").select("startup_id, investor_id").eq("id", dealId).maybeSingle();
         if (dealCheck && user.email) {
-            const { data: startupData } = await supabase.from("startups").select("owner_email").eq("id", dealCheck.startup_id).maybeSingle();
+            let { data: startupData } = await supabase.from("startups").select("owner_email").eq("id", dealCheck.startup_id).maybeSingle();
+            if (!startupData) {
+                const { data: incubeData } = await supabase.from("incubation_applications").select("owner_email").eq("id", dealCheck.startup_id).maybeSingle();
+                if (incubeData) startupData = incubeData;
+            }
             const { data: investorData } = await supabase.from("investor_profiles").select("email").eq("id", dealCheck.investor_id).maybeSingle();
             
             if (startupData?.owner_email === user.email) {
