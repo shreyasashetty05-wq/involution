@@ -110,7 +110,7 @@ export async function updateSession(request: NextRequest) {
     }
 
     // Strict role takes precedence, fallback to user_metadata if not defined in DB
-    const role = dbRole || user.user_metadata?.role || "investor";
+    const role = (dbRole || user.user_metadata?.role || "investor").toLowerCase();
 
     // Enforce Admin RBAC
     if (isAdminRoute || isAdminApi) {

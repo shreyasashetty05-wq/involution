@@ -6,6 +6,7 @@ export async function GET(request: Request) {
     try {
         const { searchParams, origin } = new URL(request.url);
         const code = searchParams.get("code");
+        const queryRole = searchParams.get("role");
 
         if (code) {
             const cookieStore = await cookies();
@@ -13,9 +14,9 @@ export async function GET(request: Request) {
             const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
             if (!error && data?.user) {
-                // Get role from cookie
+                // Get role from URL query or cookie
                 const roleCookie = cookieStore.get("involution_role");
-                let role = roleCookie?.value || "investor";
+                let role = queryRole || roleCookie?.value || "investor";
 
                 // Update user metadata to save role if not already set
                 let currentRole = data.user.user_metadata?.role;

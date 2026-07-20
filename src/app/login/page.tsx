@@ -31,7 +31,7 @@ export default function LoginPage() {
         setIsEmailLoading(true);
         setError(null);
         
-        document.cookie = `involution_role=${role}; path=/; max-age=3600`;
+        document.cookie = `involution_role=${role}; path=/; max-age=3600; Secure; SameSite=Lax`;
 
         try {
             const res = await fetch("/api/auth/login", {

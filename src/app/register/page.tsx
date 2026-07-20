@@ -34,7 +34,7 @@ export default function RegisterPage() {
         setError(null);
         setSuccessMsg(null);
         
-        document.cookie = `involution_role=${role}; path=/; max-age=3600`;
+        document.cookie = `involution_role=${role}; path=/; max-age=3600; Secure; SameSite=Lax`;
 
         try {
             const res = await fetch("/api/auth/signup", {
