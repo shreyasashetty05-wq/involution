@@ -175,7 +175,9 @@ export default function IncubePublishForm() {
 
             if (!res.ok) {
                 const data = await res.json();
-                throw new Error(data.error || 'Failed to submit application');
+                let errMsg = data.error || 'Failed to submit application';
+                if (data.supabaseError) errMsg += ` (Supabase: ${data.supabaseError} - Code: ${data.supabaseCode})`;
+                throw new Error(errMsg);
             }
             setSuccess(true);
         } catch (err: any) {

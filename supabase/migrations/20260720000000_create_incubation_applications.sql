@@ -28,7 +28,8 @@ ALTER TABLE public.incubation_applications ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users can manage their own incubation apps"
     ON public.incubation_applications
     FOR ALL
-    USING (owner_email = (select email from auth.users where id = auth.uid()));
+    USING (owner_email = (auth.jwt() ->> 'email'))
+    WITH CHECK (owner_email = (auth.jwt() ->> 'email'));
 
 -- Admins can view all applications
 CREATE POLICY "Admins can view all incubation apps"
