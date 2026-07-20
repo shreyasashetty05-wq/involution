@@ -50,7 +50,7 @@ export default function LoginPage() {
 
             // Redirect based on role
             const dashUrl = role === "startup" ? "/startups/dashboard" : 
-                            role === "incubation" ? "/incube" : 
+                            role === "incubation" ? "/incube/dashboard" : 
                             role === "mentor" ? "/mentors/dashboard" : 
                             "/investors/dashboard";
             router.push(dashUrl);

@@ -129,7 +129,7 @@ export async function updateSession(request: NextRequest) {
     const getDashboardUrl = (r: string) => {
         switch(r) {
             case "startup": return "/startups/dashboard";
-            case "incubation": return "/incube";
+            case "incubation": return "/incube/dashboard";
             case "mentor": return "/mentors/dashboard";
             case "admin": return "/admin/kyc";
             case "investor":

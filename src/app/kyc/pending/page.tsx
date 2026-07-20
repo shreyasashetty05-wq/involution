@@ -95,7 +95,7 @@ export default function KYCPendingPage() {
                     <button onClick={() => {
                         let dashUrl = '/investors/dashboard';
                         if (kycRecord.type === 'Startup Founder') dashUrl = '/startups/dashboard';
-                        if (kycRecord.type === 'Incubation Founder') dashUrl = '/incube';
+                        if (kycRecord.type === 'Incubation Founder') dashUrl = '/incube/dashboard';
                         if (kycRecord.type === 'Mentor') dashUrl = '/mentors/dashboard';
                         router.push(dashUrl);
                     }} className="px-8 py-3 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 mx-auto">
