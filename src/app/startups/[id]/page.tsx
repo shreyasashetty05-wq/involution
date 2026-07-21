@@ -611,11 +611,7 @@ export default function StartupProfile() {
                                             Approved
                                         </span>
                                         <p className="text-[10px] text-slate-500 font-medium">Verified on<br/>{new Date(update.verifiedAt || update.dateSubmitted).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}<br/>by Admin</p>
-                                        {(update.documents || update.documentUrl) && (
-                                            <button className="mt-3 px-3 py-1.5 bg-slate-50 border border-slate-200 hover:bg-slate-100 text-xs font-bold text-indigo-600 rounded-lg w-full transition-colors">
-                                                View Documents
-                                            </button>
-                                        )}
+
                                     </div>
                                 </div>
                             ))}
@@ -648,7 +644,7 @@ export default function StartupProfile() {
                         >
                             <X className="size-4" />
                         </button>
-                        <div className="h-[700px] max-h-[75vh]">
+                        <div className="h-[700px] max-h-[calc(100dvh-120px-env(safe-area-inset-top))]">
                             <AIChat startupId={idValue as string} />
                         </div>
                     </div>
