@@ -45,6 +45,18 @@ export async function GET(req: Request) {
             return acc;
         }, {});
 
+        const ownerEmails = startupsList.map((doc: any) => doc.owner_email);
+        
+        const { data: kycDocs } = await supabase
+            .from("kyc_documents")
+            .select("email, status")
+            .in("email", ownerEmails);
+            
+        const kycMap = (kycDocs || []).reduce((acc: any, doc: any) => {
+            acc[doc.email] = doc.status;
+            return acc;
+        }, {});
+
         // Map fields to camelCase and add investorCount
         const serializedStartups = startupsList.map((doc: any) => ({
             ...doc,
@@ -63,7 +75,8 @@ export async function GET(req: Request) {
             credibility: doc.credibility,
             riskDisclosure: doc.risk_disclosure,
             aiReady: doc.ai_ready,
-            investorCount: dealCountMap[doc.id] || 0
+            investorCount: dealCountMap[doc.id] || 0,
+            kyc_status: kycMap[doc.owner_email] || 'Pending'
         }));
 
         return NextResponse.json({ success: true, data: serializedStartups });

@@ -24,6 +24,14 @@ export default async function StartupDashboard() {
             .eq("owner_email", user.email);
 
         if (!error && docs && docs.length > 0) {
+            const { data: kycDoc } = await supabase
+                .from("kyc_documents")
+                .select("status")
+                .eq("email", user.email)
+                .maybeSingle();
+                
+            const kycStatus = kycDoc?.status || 'Pending';
+
             // Map fields to camelCase for full frontend compatibility
             myStartups = docs.map((doc: any) => ({
                 ...doc,
@@ -41,7 +49,8 @@ export default async function StartupDashboard() {
                 operationalMetrics: doc.operational_metrics,
                 credibility: doc.credibility,
                 riskDisclosure: doc.risk_disclosure,
-                aiReady: doc.ai_ready
+                aiReady: doc.ai_ready,
+                kyc_status: kycStatus
             }));
         }
     }

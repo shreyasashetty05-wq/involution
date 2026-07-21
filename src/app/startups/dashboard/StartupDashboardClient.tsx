@@ -59,7 +59,7 @@ export default function StartupDashboardClient({ myStartups }: StartupDashboardC
             actions.push("Submit a Financial Update to verify your revenue and get a 'Verified' badge.");
         }
 
-        if (startup.credibility?.gstRegistered || startup.credibility?.panVerified) score += 10;
+        if (startup.kyc_status === 'Approved') score += 10;
         else actions.push("Complete KYC Verification to build investor trust.");
 
         if (actions.length === 0) actions.push("Your profile is fully optimized. Keep updating financials regularly!");
@@ -300,7 +300,7 @@ export default function StartupDashboardClient({ myStartups }: StartupDashboardC
                                         <div className="space-y-4 relative z-10">
                                             <div className="flex justify-between items-center p-3 bg-slate-50 rounded-xl border border-slate-100">
                                                 <span className="text-sm font-medium text-slate-600">KYC Status</span>
-                                                {(myStartup.credibility?.gstRegistered || myStartup.credibility?.panVerified) 
+                                                {myStartup.kyc_status === 'Approved'
                                                     ? <span className="bg-emerald-100 text-emerald-700 px-2 py-1 rounded-lg text-xs font-bold flex items-center gap-1"><CheckCircle2 className="size-3"/> Approved</span>
                                                     : <span className="bg-yellow-100 text-yellow-700 px-2 py-1 rounded-lg text-xs font-bold flex items-center gap-1"><AlertTriangle className="size-3"/> Pending</span>
                                                 }
