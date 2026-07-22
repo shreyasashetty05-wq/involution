@@ -4,6 +4,7 @@ import { useState, Suspense, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Send, FileSignature, CheckCircle2, ShieldCheck, User, FileText, ChevronRight, Video, Calendar, Clock, AlertTriangle, PlayCircle, CheckSquare, Search, Lock, Sparkles, Paperclip, Loader2, ArrowLeft, Trash2, MoreVertical, Smile, Check, CheckCheck, Reply, Copy, Edit2, X, ChevronDown, Ban, Handshake } from "lucide-react";
 import { NegotiationTab } from "@/frontend/components/negotiation/NegotiationTab";
+import MeetingsTab from "@/frontend/components/meetings/MeetingsTab";
 import { createClient } from "@/utils/supabase/client";
 import FileAttachment from "@/components/FileAttachment";
 import { useToast } from "@/components/ui/ToastProvider";
@@ -127,10 +128,6 @@ function DealWorkspace() {
     const COMMON_EMOJIS = ['👍', '❤️', '😂', '🔥', '🚀', '🎉', '😊', '🙌', '💯', '👏'];
 
     const [meetings, setMeetings] = useState<any[]>([]);
-    const [meetingDate, setMeetingDate] = useState("");
-    const [meetingTime, setMeetingTime] = useState("");
-    const [meetingType, setMeetingType] = useState("Intro Meeting");
-    const [isScheduling, setIsScheduling] = useState(false);
 
     const [negotiationPhase, setNegotiationPhase] = useState<"startup_drafting" | "investor_review" | "executed">("startup_drafting");
     const [termAmount, setTermAmount] = useState("₹ 50,00,000");
@@ -253,33 +250,24 @@ function DealWorkspace() {
                 }
 
                 if (data.deal.meetings) {
-                    const now = new Date();
-                    const newMeetings = data.deal.meetings.map((m: any) => {
-                        let meetingStatus = m.status === 'scheduled' ? 'Scheduled' : m.status;
-                        const meetingDateObj = new Date(`${m.date}T${m.time}:00`);
-                        if (meetingStatus === 'Scheduled' && meetingDateObj < now) {
-                            meetingStatus = 'expired';
-                        }
-                        return {
-                            id: m._id || Math.random(),
-                            title: m.title,
-                            date: m.date,
-                            time: m.time,
-                            link: m.meetLink,
-                            status: meetingStatus
-                        };
-                    });
+                    const newMeetings = data.deal.meetings.map((m: any) => ({
+                        id: m._id || m.id || crypto.randomUUID(),
+                        title: m.title,
+                        date: m.date,
+                        time: m.time,
+                        durationMinutes: m.durationMinutes || 20,
+                        link: m.meetLink,
+                        status: m.status || 'scheduled',
+                        startTime: m.startTime,
+                        endTime: m.endTime,
+                        cancellationReason: m.cancellationReason,
+                        rescheduledAt: m.rescheduledAt
+                    }));
 
                     setMeetings(prevMeetings => {
-                        if (prevMeetings.length !== newMeetings.length) {
-                            return newMeetings;
-                        }
-                        const prevLast = prevMeetings[prevMeetings.length - 1];
-                        const newLast = newMeetings[newMeetings.length - 1];
-                        if (prevLast?.id !== newLast?.id || prevLast?.status !== newLast?.status) {
-                            return newMeetings;
-                        }
-                        return prevMeetings;
+                        const prevJSON = JSON.stringify(prevMeetings);
+                        const newJSON = JSON.stringify(newMeetings);
+                        return prevJSON !== newJSON ? newMeetings : prevMeetings;
                     });
                 }
             }
@@ -609,64 +597,7 @@ function DealWorkspace() {
         }
     };
 
-    const deleteMeeting = async (id: string) => {
-        try {
-            setMeetings(prev => prev.map(m => m.id === id ? { ...m, status: 'cancelled' } : m));
-            await fetch(`/api/meetings/${id}`, { method: 'DELETE' });
-            await fetchMessages();
-        } catch (err) {
-            console.error("Failed to cancel meeting", err);
-        }
-    };
 
-    const scheduleMeeting = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!meetingDate || !meetingTime || !startupId) return;
-
-        // Check if an active meeting already exists to prevent duplicates
-        const existingMeeting = meetings.find(m => m.status === 'Scheduled' || m.status === 'active');
-        if (existingMeeting) {
-            toast.warning("A Trust Meeting is already scheduled. Please use the existing meeting link.");
-            return;
-        }
-
-        setIsScheduling(true);
-
-        try {
-            const res = await fetch('/api/deals', {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    startupId,
-                    investorId,
-                    action: 'scheduleMeeting',
-                    meeting: {
-                        title: meetingType,
-                        date: meetingDate,
-                        time: meetingTime,
-                        durationMinutes: 10,
-                        status: 'scheduled'
-                    }
-                })
-            });
-            
-            if (!res.ok) {
-                const errData = await res.json();
-                toast.warning(errData.error || "Failed to generate meeting link.");
-                setIsScheduling(false);
-                return;
-            }
-
-            await fetchMessages();
-            setMeetingDate("");
-            setMeetingTime("");
-        } catch (err) {
-            console.error("Failed to schedule meeting", err);
-            toast.warning("Failed to schedule meeting. Please try again.");
-        } finally {
-            setIsScheduling(false);
-        }
-    };
 
     const phases = [
         { num: 1, title: "Identity & Verification", desc: "Profile & KYC Verified", icon: ShieldCheck },
@@ -1132,77 +1063,17 @@ function DealWorkspace() {
 
                         {/* ── TRUST BUILDING ── */}
                         {activeTab === 'trust' && currentPhase >= 2 && (
-                            <div className="p-6 flex flex-col md:flex-row gap-8 overflow-y-auto">
-                                <div className="md:w-1/2 space-y-5">
-                                    <div>
-                                        <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2"><Video className="text-indigo-600 size-5" /> Trust Building Meetings</h2>
-                                        <p className="text-sm text-slate-500 mt-2 leading-relaxed">Short, structured 10-minute Google Meet sessions for mutual alignment.</p>
-                                    </div>
-                                    <form onSubmit={scheduleMeeting} className="bg-slate-50 border border-slate-200 p-5 rounded-2xl space-y-4">
-                                        <h3 className="text-sm font-semibold text-slate-700">Propose a 10-Min Session</h3>
-                                        <div>
-                                            <label className="text-[10px] text-slate-400 uppercase tracking-wider font-bold">Session Type</label>
-                                            <select className="w-full mt-1.5 bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 focus:ring-2 focus:ring-indigo-400 outline-none"
-                                                value={meetingType} onChange={e => setMeetingType(e.target.value)}>
-                                                <option>Intro Meeting</option>
-                                                <option>Deep-Dive Discussion</option>
-                                            </select>
-                                        </div>
-                                        <div className="grid grid-cols-2 gap-3">
-                                            <div>
-                                                <label className="text-[10px] text-slate-400 uppercase tracking-wider font-bold">Date</label>
-                                                <input type="date" className="w-full mt-1.5 bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 focus:ring-2 focus:ring-indigo-400 outline-none"
-                                                    value={meetingDate} onChange={e => setMeetingDate(e.target.value)} required />
-                                            </div>
-                                            <div>
-                                                <label className="text-[10px] text-slate-400 uppercase tracking-wider font-bold">Time</label>
-                                                <input type="time" className="w-full mt-1.5 bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 focus:ring-2 focus:ring-indigo-400 outline-none"
-                                                    value={meetingTime} onChange={e => setMeetingTime(e.target.value)} required />
-                                            </div>
-                                        </div>
-                                        <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-3 flex gap-2">
-                                            <Clock className="size-4 text-indigo-600 shrink-0 mt-0.5" />
-                                            <p className="text-xs text-indigo-700 leading-snug">A secure Video Session link will be auto-generated. Both parties must honor the 10-minute hard stop.</p>
-                                        </div>
-                                        <button type="submit" disabled={isScheduling} className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg text-sm transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
-                                            {isScheduling ? "Generating Secure Meeting..." : "Schedule Session"}
-                                        </button>
-                                    </form>
-                                </div>
-                                <div className="md:w-1/2 space-y-3">
-                                    <h3 className="text-sm font-semibold text-slate-700 border-b border-slate-200 pb-3">Scheduled Sessions</h3>
-                                    {meetings.length === 0 || meetings.filter(m => m.status !== 'cancelled').length === 0 ? (
-                                        <div className="py-12 text-center border border-dashed border-slate-300 rounded-2xl">
-                                            <Calendar className="size-10 text-slate-300 mx-auto mb-2" />
-                                            <p className="text-sm text-slate-400">No active trust sessions scheduled.</p>
-                                        </div>
-                                    ) : meetings.filter(m => m.status !== 'cancelled').map(m => (
-                                        <div key={m.id} className="bg-slate-50 border border-slate-200 rounded-xl p-4 flex justify-between items-center gap-4 hover:border-indigo-300 transition-colors">
-                                            <div>
-                                                <div className="flex items-center gap-2 mb-1">
-                                                    <span className={`size-2 rounded-full ${m.status === 'Scheduled' ? 'bg-emerald-500' : 'bg-slate-400'}`}></span>
-                                                    <h4 className="text-sm font-bold text-slate-800">{m.title}</h4>
-                                                    <span className="text-[10px] bg-slate-200 text-slate-500 px-2 py-0.5 rounded-full capitalize">{m.status}</span>
-                                                </div>
-                                                <p className="text-xs text-slate-500">{m.date} at {m.time}</p>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                {m.status === 'Scheduled' && (
-                                                    <button onClick={() => deleteMeeting(m.id)} className="px-3 py-1.5 bg-white border border-red-200 hover:bg-red-50 hover:border-red-300 text-red-600 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors whitespace-nowrap">
-                                                        Cancel
-                                                    </button>
-                                                )}
-                                                <button onClick={() => {
-                                                    if (!m.link) { toast.warning("Invalid Meeting URL."); return; }
-                                                    window.open(m.link, '_blank');
-                                                }} className="px-3 py-1.5 bg-white border border-slate-200 hover:bg-indigo-50 hover:border-indigo-300 text-indigo-600 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors whitespace-nowrap">
-                                                    <PlayCircle className="size-3.5" /> Join Meet
-                                                </button>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
+                            <MeetingsTab
+                                meetings={meetings}
+                                setMeetings={setMeetings}
+                                startupId={startupId}
+                                investorId={investorId}
+                                startupName={startupName}
+                                currentUserId={currentUserId}
+                                dealId={dealId}
+                                fetchMessages={fetchMessages}
+                                toast={toast}
+                            />
                         )}
                         {activeTab === 'trust' && currentPhase < 2 && <PhaseLock phase={2} />}
 

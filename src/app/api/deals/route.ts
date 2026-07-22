@@ -251,11 +251,26 @@ export async function PUT(req: NextRequest) {
             updateData.board = body.board;
         } else if (action === 'scheduleMeeting') {
             const { meeting } = body;
+
+            // Server-side validation: reject past dates/times
+            const meetingStartStr = `${meeting.date}T${meeting.time}:00`;
+            const meetingStart = new Date(meetingStartStr);
+            const now = new Date();
+
+            if (isNaN(meetingStart.getTime())) {
+                return NextResponse.json({ success: false, error: 'Invalid date or time format' }, { status: 400 });
+            }
+            if (meetingStart <= now) {
+                return NextResponse.json({ success: false, error: 'Cannot schedule a meeting in the past' }, { status: 400 });
+            }
             
-            // Jitsi meeting room URL link logic
+            // Jitsi meeting room URL link logic — unique per meeting
             const jitsiRoomId = `InVolution-Deal-${deal.id}-${Date.now()}`;
             const finalMeetLink = `https://meet.jit.si/${jitsiRoomId}`;
             const meetingId = crypto.randomUUID();
+
+            // Compute end time (start + 20 minutes)
+            const meetingEnd = new Date(meetingStart.getTime() + 20 * 60 * 1000);
 
             const updatedMeetings = [...(deal.meetings || []), {
                 id: meetingId,
@@ -263,11 +278,184 @@ export async function PUT(req: NextRequest) {
                 title: meeting.title,
                 date: meeting.date,
                 time: meeting.time,
-                durationMinutes: meeting.durationMinutes || 10,
+                durationMinutes: 20,
                 meetLink: finalMeetLink,
-                status: meeting.status || 'scheduled'
+                status: 'scheduled',
+                scheduledAt: now.toISOString(),
+                startTime: meetingStart.toISOString(),
+                endTime: meetingEnd.toISOString()
             }];
             updateData.meetings = updatedMeetings;
+
+            // Send notifications to both participants
+            try {
+                const notifBase = {
+                    type: 'meeting',
+                    title: 'Meeting Scheduled',
+                    description: `${meeting.title} scheduled for ${meeting.date} at ${meeting.time} (20 min)`,
+                    link: `/messages?startupId=${startupId}&investorId=${investorId}&tab=trust`
+                };
+                // Notify investor
+                await supabase.from("notifications").insert({ ...notifBase, user_email: investorId });
+                // Notify startup owner
+                const { data: startupData } = await supabase.from("startups").select("owner_email").eq("id", startupId).maybeSingle();
+                const startupEmail = startupData?.owner_email;
+                if (!startupEmail) {
+                    const { data: incubeData } = await supabase.from("incubation_applications").select("owner_email").eq("id", startupId).maybeSingle();
+                    if (incubeData?.owner_email) {
+                        await supabase.from("notifications").insert({ ...notifBase, user_email: incubeData.owner_email });
+                    }
+                } else {
+                    await supabase.from("notifications").insert({ ...notifBase, user_email: startupEmail });
+                }
+            } catch (notifErr) {
+                console.error("Meeting notification error (non-blocking):", notifErr);
+            }
+        } else if (action === 'rescheduleMeeting') {
+            const { meetingId: reschMeetingId, newDate, newTime } = body;
+
+            // Validate new date/time
+            const newStartStr = `${newDate}T${newTime}:00`;
+            const newStart = new Date(newStartStr);
+            const now2 = new Date();
+
+            if (isNaN(newStart.getTime())) {
+                return NextResponse.json({ success: false, error: 'Invalid date or time format' }, { status: 400 });
+            }
+            if (newStart <= now2) {
+                return NextResponse.json({ success: false, error: 'Cannot reschedule to a past time' }, { status: 400 });
+            }
+
+            const newEnd = new Date(newStart.getTime() + 20 * 60 * 1000);
+
+            const updatedMeetings2 = (deal.meetings || []).map((m: any) => {
+                if ((m.id === reschMeetingId || m._id === reschMeetingId) && m.status === 'scheduled') {
+                    return {
+                        ...m,
+                        date: newDate,
+                        time: newTime,
+                        startTime: newStart.toISOString(),
+                        endTime: newEnd.toISOString(),
+                        rescheduledAt: now2.toISOString()
+                    };
+                }
+                return m;
+            });
+            updateData.meetings = updatedMeetings2;
+
+            // Send reschedule notifications
+            try {
+                const targetMeeting = (deal.meetings || []).find((m: any) => m.id === reschMeetingId || m._id === reschMeetingId);
+                const notifBase = {
+                    type: 'meeting',
+                    title: 'Meeting Rescheduled',
+                    description: `${targetMeeting?.title || 'Meeting'} rescheduled to ${newDate} at ${newTime}`,
+                    link: `/messages?startupId=${startupId}&investorId=${investorId}&tab=trust`
+                };
+                await supabase.from("notifications").insert({ ...notifBase, user_email: investorId });
+                const { data: startupData2 } = await supabase.from("startups").select("owner_email").eq("id", startupId).maybeSingle();
+                const sEmail = startupData2?.owner_email;
+                if (!sEmail) {
+                    const { data: incubeData2 } = await supabase.from("incubation_applications").select("owner_email").eq("id", startupId).maybeSingle();
+                    if (incubeData2?.owner_email) await supabase.from("notifications").insert({ ...notifBase, user_email: incubeData2.owner_email });
+                } else {
+                    await supabase.from("notifications").insert({ ...notifBase, user_email: sEmail });
+                }
+            } catch (notifErr) {
+                console.error("Reschedule notification error (non-blocking):", notifErr);
+            }
+        } else if (action === 'cancelMeeting') {
+            const { meetingId: cancelMeetingId, cancellationReason } = body;
+
+            if (!cancellationReason) {
+                return NextResponse.json({ success: false, error: 'Cancellation reason is required' }, { status: 400 });
+            }
+
+            const updatedMeetings3 = (deal.meetings || []).map((m: any) => {
+                if ((m.id === cancelMeetingId || m._id === cancelMeetingId) && m.status === 'scheduled') {
+                    return {
+                        ...m,
+                        status: 'cancelled',
+                        cancellationReason,
+                        cancelledAt: new Date().toISOString()
+                    };
+                }
+                return m;
+            });
+            updateData.meetings = updatedMeetings3;
+
+            // Send cancel notifications
+            try {
+                const cancelTarget = (deal.meetings || []).find((m: any) => m.id === cancelMeetingId || m._id === cancelMeetingId);
+                const notifBase = {
+                    type: 'meeting',
+                    title: 'Meeting Cancelled',
+                    description: `${cancelTarget?.title || 'Meeting'} has been cancelled. Reason: ${cancellationReason}`,
+                    link: `/messages?startupId=${startupId}&investorId=${investorId}&tab=trust`
+                };
+                await supabase.from("notifications").insert({ ...notifBase, user_email: investorId });
+                const { data: startupData3 } = await supabase.from("startups").select("owner_email").eq("id", startupId).maybeSingle();
+                const sEmail3 = startupData3?.owner_email;
+                if (!sEmail3) {
+                    const { data: incubeData3 } = await supabase.from("incubation_applications").select("owner_email").eq("id", startupId).maybeSingle();
+                    if (incubeData3?.owner_email) await supabase.from("notifications").insert({ ...notifBase, user_email: incubeData3.owner_email });
+                } else {
+                    await supabase.from("notifications").insert({ ...notifBase, user_email: sEmail3 });
+                }
+            } catch (notifErr) {
+                console.error("Cancel notification error (non-blocking):", notifErr);
+            }
+        } else if (action === 'updateMeetingStatus') {
+            const { meetingId: statusMeetingId, newStatus } = body;
+
+            const validStatuses = ['scheduled', 'live', 'completed', 'expired'];
+            if (!validStatuses.includes(newStatus)) {
+                return NextResponse.json({ success: false, error: 'Invalid meeting status' }, { status: 400 });
+            }
+
+            const updatedMeetings4 = (deal.meetings || []).map((m: any) => {
+                if (m.id === statusMeetingId || m._id === statusMeetingId) {
+                    // Validate transitions
+                    const current = m.status;
+                    const allowed: Record<string, string[]> = {
+                        'scheduled': ['live', 'expired', 'cancelled'],
+                        'live': ['completed', 'expired'],
+                    };
+                    if (allowed[current]?.includes(newStatus)) {
+                        return { ...m, status: newStatus };
+                    }
+                }
+                return m;
+            });
+            updateData.meetings = updatedMeetings4;
+
+            // Send start/end notifications
+            try {
+                const statusTarget = (deal.meetings || []).find((m: any) => m.id === statusMeetingId || m._id === statusMeetingId);
+                if (newStatus === 'live') {
+                    const notifBase = {
+                        type: 'meeting',
+                        title: 'Meeting Started',
+                        description: `${statusTarget?.title || 'Meeting'} is now live! Join now.`,
+                        link: `/messages?startupId=${startupId}&investorId=${investorId}&tab=trust`
+                    };
+                    await supabase.from("notifications").insert({ ...notifBase, user_email: investorId });
+                    const { data: sd } = await supabase.from("startups").select("owner_email").eq("id", startupId).maybeSingle();
+                    if (sd?.owner_email) await supabase.from("notifications").insert({ ...notifBase, user_email: sd.owner_email });
+                } else if (newStatus === 'completed' || newStatus === 'expired') {
+                    const notifBase = {
+                        type: 'meeting',
+                        title: 'Meeting Ended',
+                        description: `${statusTarget?.title || 'Meeting'} has ended.`,
+                        link: `/messages?startupId=${startupId}&investorId=${investorId}&tab=trust`
+                    };
+                    await supabase.from("notifications").insert({ ...notifBase, user_email: investorId });
+                    const { data: sd } = await supabase.from("startups").select("owner_email").eq("id", startupId).maybeSingle();
+                    if (sd?.owner_email) await supabase.from("notifications").insert({ ...notifBase, user_email: sd.owner_email });
+                }
+            } catch (notifErr) {
+                console.error("Status notification error (non-blocking):", notifErr);
+            }
         } else if (action === 'deleteMessages') {
             const { messageIds, mode } = body; // mode can be 'me' or 'everyone'
             
