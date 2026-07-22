@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { ArrowLeft, MessageSquare, Briefcase, TrendingUp, Presentation, CheckCircle2, Factory, LineChart, AlertTriangle, Activity, BrainCircuit, ShieldCheck, Scale, HeartPulse, Clock, Calendar, Users, FileText, ChevronRight, Globe, Target, MapPin, Zap, Info, Building2, UserCircle2, Linkedin, Banknote, ShieldAlert, X, ChevronDown, Download, Share2, Play, Bot, MessageCircle } from "lucide-react";
+import { ArrowLeft, MessageSquare, Briefcase, TrendingUp, Presentation, CheckCircle2, Factory, LineChart, AlertTriangle, Activity, BrainCircuit, ShieldCheck, Scale, HeartPulse, Clock, Calendar, Users, FileText, ChevronRight, Globe, Target, MapPin, Zap, Info, Building2, UserCircle2, Linkedin, Banknote, ShieldAlert, X, ChevronDown, Download, Share2, Play, Bot, MessageCircle, Bookmark, Bell, Copy } from "lucide-react";
 import { formatRelativeTime } from "@/utils/timeHelper";
 import { LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import AIChat from "@/frontend/components/AIChat";
@@ -23,6 +23,112 @@ export default function StartupProfile() {
     const [chartTimeframe, setChartTimeframe] = useState("Monthly");
     const [showAllUpdates, setShowAllUpdates] = useState(false);
     const [showChat, setShowChat] = useState(false);
+
+    // Feature States
+    const [isFollowing, setIsFollowing] = useState(false);
+    const [isSaved, setIsSaved] = useState(false);
+    const [isCompared, setIsCompared] = useState(false);
+    const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+
+    // Initialize states from local storage/DB
+    useEffect(() => {
+        if (!idValue) return;
+        
+        const fetchFollowStatus = async () => {
+            try {
+                const res = await fetch(`/api/startups/${idValue}/follow`);
+                const json = await res.json();
+                if (json.success) setIsFollowing(json.isFollowing);
+            } catch (e) {
+                console.error(e);
+            }
+        };
+        fetchFollowStatus();
+
+        // Check local storage for Saved and Compared
+        const savedStr = localStorage.getItem('inv_saved_startups');
+        if (savedStr) {
+            const savedList = JSON.parse(savedStr);
+            if (savedList.includes(idValue)) setIsSaved(true);
+        }
+
+        const compareStr = localStorage.getItem('inv_compare_list');
+        if (compareStr) {
+            const compareList = JSON.parse(compareStr);
+            if (compareList.some((s: any) => (s._id || s.id) === idValue || s === idValue)) setIsCompared(true);
+        }
+
+        // Profile View Tracking
+        const trackView = async () => {
+            let viewerId = localStorage.getItem('inv_viewer_id');
+            if (!viewerId) {
+                viewerId = crypto.randomUUID();
+                localStorage.setItem('inv_viewer_id', viewerId);
+            }
+            try {
+                await fetch(`/api/startups/${idValue}/view`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ viewerId })
+                });
+            } catch (e) {
+                console.error("Failed to track view", e);
+            }
+        };
+        trackView();
+    }, [idValue]);
+
+    const toggleFollow = async () => {
+        const nextState = !isFollowing;
+        setIsFollowing(nextState);
+        try {
+            await fetch(`/api/startups/${idValue}/follow`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: nextState ? 'follow' : 'unfollow' })
+            });
+            // Optionally update local follower count if displayed on page
+            if (startup) {
+                setStartup(prev => prev ? { ...prev, followers_count: (prev.followers_count || 0) + (nextState ? 1 : -1) } : prev);
+            }
+        } catch (e) {
+            console.error("Failed to toggle follow", e);
+            setIsFollowing(!nextState); // revert on failure
+        }
+    };
+
+    const toggleSave = () => {
+        const nextState = !isSaved;
+        setIsSaved(nextState);
+        const savedStr = localStorage.getItem('inv_saved_startups');
+        let savedList = savedStr ? JSON.parse(savedStr) : [];
+        if (nextState) {
+            if (!savedList.includes(idValue)) savedList.push(idValue);
+        } else {
+            savedList = savedList.filter((id: string) => id !== idValue);
+        }
+        localStorage.setItem('inv_saved_startups', JSON.stringify(savedList));
+    };
+
+    const toggleCompare = () => {
+        const compareStr = localStorage.getItem('inv_compare_list');
+        let compareList = compareStr ? JSON.parse(compareStr) : [];
+        const isCurrentlyCompared = compareList.some((s: any) => (s._id || s.id) === idValue || s === idValue);
+        
+        if (!isCurrentlyCompared) {
+            if (compareList.length >= 4) {
+                alert("You can only compare up to 4 startups.");
+                return;
+            }
+            // Store the whole object or just ID? The compare page uses full objects for some things, but in search it stores full objects. Let's store full object.
+            compareList.push(startup);
+            setIsCompared(true);
+        } else {
+            compareList = compareList.filter((s: any) => (s._id || s.id) !== idValue && s !== idValue);
+            setIsCompared(false);
+        }
+        localStorage.setItem('inv_compare_list', JSON.stringify(compareList));
+    };
 
     useEffect(() => {
         const fetchStartup = async () => {
@@ -173,11 +279,23 @@ export default function StartupProfile() {
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-3 w-full md:w-auto mt-4 md:mt-0">
-                            <button className="px-6 py-3.5 bg-white border border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700 font-bold rounded-2xl transition-all duration-300 flex items-center justify-center gap-2 flex-1 md:flex-none">
-                                <Share2 className="size-4" /> Share Profile
+                        <div className="flex flex-wrap items-center gap-3 w-full md:w-auto mt-4 md:mt-0">
+                            {/* The Four Action Buttons */}
+                            <button onClick={toggleFollow} className={`px-4 py-2.5 border rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all shadow-sm ${isFollowing ? 'bg-indigo-50 border-indigo-200 text-indigo-700' : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700'}`}>
+                                <Bell className={`size-4 ${isFollowing ? 'fill-current' : ''}`} /> {isFollowing ? 'Following' : 'Follow'}
                             </button>
-                            <Link href={`/messages?startupId=${startup._id?.toString() || idValue}&name=${encodeURIComponent(startup.name || '')}`} className="px-8 py-3.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-2xl transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center gap-2 flex-1 md:flex-none">
+                            
+                            <button onClick={toggleSave} className={`px-4 py-2.5 border rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all shadow-sm ${isSaved ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700'}`}>
+                                <Bookmark className={`size-4 ${isSaved ? 'fill-current' : ''}`} /> Save
+                            </button>
+                            
+                            <button onClick={() => setIsShareModalOpen(true)} className="px-4 py-2.5 bg-white border border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700 font-bold rounded-xl transition-all flex items-center justify-center gap-2 shadow-sm">
+                                <Share2 className="size-4" /> Share
+                            </button>
+
+
+                            {/* Open Deal Room (Kept for functionality but visually distinct) */}
+                            <Link href={`/messages?startupId=${startup._id?.toString() || idValue}&name=${encodeURIComponent(startup.name || '')}`} className="px-6 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 ml-auto md:ml-2">
                                 <MessageSquare className="size-4" /> Open Deal Room
                             </Link>
                         </div>
@@ -674,6 +792,39 @@ export default function StartupProfile() {
                     )}
                 </button>
             </div>
+            {/* Share Modal */}
+            {isShareModalOpen && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center px-4">
+                    <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setIsShareModalOpen(false)}></div>
+                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm relative z-10 animate-in zoom-in-95 duration-200">
+                        <div className="p-5 border-b border-slate-100 flex items-center justify-between">
+                            <h3 className="font-bold text-xl text-slate-900">Share Startup</h3>
+                            <button onClick={() => setIsShareModalOpen(false)} className="p-2 bg-slate-50 text-slate-400 hover:text-slate-600 rounded-full transition-colors"><X className="size-4"/></button>
+                        </div>
+                        <div className="p-5 space-y-4">
+                            <div className="flex items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200">
+                                <div className="size-10 rounded-lg bg-emerald-100 flex items-center justify-center shrink-0">
+                                    {basic_info.logoUrl ? <img src={basic_info.logoUrl} alt="Logo" className="w-full h-full object-cover rounded-lg" /> : <Building2 className="size-5 text-emerald-600" />}
+                                </div>
+                                <div className="truncate">
+                                    <h4 className="font-bold text-sm text-slate-900 truncate">{basic_info.startupName || startup.name}</h4>
+                                    <p className="text-xs text-slate-500 truncate">{business_info.industry}</p>
+                                </div>
+                            </div>
+                            <div className="space-y-2">
+                                <button onClick={() => { navigator.clipboard.writeText(window.location.href); alert("Link copied!"); setIsShareModalOpen(false); }} className="w-full flex items-center justify-between p-3 hover:bg-slate-50 rounded-xl transition-colors border border-transparent hover:border-slate-200 group">
+                                    <div className="flex items-center gap-3 text-slate-700 font-bold text-sm"><Copy className="size-4 text-slate-400 group-hover:text-slate-600" /> Copy Link</div>
+                                    <ChevronRight className="size-4 text-slate-300" />
+                                </button>
+                                <a href={`mailto:?subject=${encodeURIComponent(`Check out ${startup.name}`)}&body=${encodeURIComponent(window.location.href)}`} className="w-full flex items-center justify-between p-3 hover:bg-slate-50 rounded-xl transition-colors border border-transparent hover:border-slate-200 group">
+                                    <div className="flex items-center gap-3 text-slate-700 font-bold text-sm"><MessageCircle className="size-4 text-slate-400 group-hover:text-slate-600" /> Share via Email</div>
+                                    <ChevronRight className="size-4 text-slate-300" />
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

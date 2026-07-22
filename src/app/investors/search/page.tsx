@@ -97,10 +97,10 @@ export default function AISearchEngine() {
         setFollowedStartups(next);
         localStorage.setItem('inv_followed_startups', JSON.stringify(next));
 
-        fetch(`/api/startups/${id}/metrics`, {
+        fetch(`/api/startups/${id}/follow`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'follow', delta: isFollowing ? 1 : -1 })
+            body: JSON.stringify({ action: isFollowing ? 'follow' : 'unfollow' })
         }).catch(console.error);
     };
 
@@ -110,7 +110,7 @@ export default function AISearchEngine() {
             setCompareList(next);
             localStorage.setItem('inv_compare_list', JSON.stringify(next));
         } else {
-            if (compareList.length >= 3) return; // max 3
+            if (compareList.length >= 4) return; // max 4
             const next = [...compareList, id];
             setCompareList(next);
             localStorage.setItem('inv_compare_list', JSON.stringify(next));
@@ -572,6 +572,11 @@ export default function AISearchEngine() {
                                             <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end">
                                                 <div className="flex items-center gap-1">
                                                     <div className="relative group/tt">
+                                                        <button onClick={() => toggleFollow(startupId)} className={`p-2 rounded-xl transition-all ${followedStartups.includes(startupId) ? 'bg-indigo-100 text-indigo-600' : 'text-slate-400 hover:text-indigo-600 hover:bg-indigo-50'}`}>
+                                                            <Bell className={`size-4 ${followedStartups.includes(startupId) ? 'fill-current' : ''}`}/>
+                                                        </button>
+                                                    </div>
+                                                    <div className="relative group/tt">
                                                         <button onClick={() => toggleSave(startupId)} className={`p-2 rounded-xl transition-all ${savedStartups.includes(startupId) ? 'bg-emerald-100 text-emerald-600' : 'text-slate-400 hover:text-emerald-600 hover:bg-emerald-50'}`}>
                                                             <Bookmark className={`size-4 ${savedStartups.includes(startupId) ? 'fill-current' : ''}`}/>
                                                         </button>
@@ -580,8 +585,8 @@ export default function AISearchEngine() {
                                                         <button onClick={() => setShareModalData(startup)} className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all"><Share2 className="size-4"/></button>
                                                     </div>
                                                     <div className="relative group/tt">
-                                                        <button className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all">
-                                                            <AlertTriangle className="size-4"/>
+                                                        <button onClick={() => toggleCompare(startupId)} className={`p-2 rounded-xl transition-all ${compareList.includes(startupId) ? 'bg-amber-100 text-amber-600' : 'text-slate-400 hover:text-amber-600 hover:bg-amber-50'}`}>
+                                                            <Scale className={`size-4 ${compareList.includes(startupId) ? 'fill-current' : ''}`}/>
                                                         </button>
                                                     </div>
                                                 </div>

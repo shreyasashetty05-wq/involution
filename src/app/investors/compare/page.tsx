@@ -77,7 +77,7 @@ export default function CompareStartups() {
             <div className="container mx-auto px-6 py-24 max-w-7xl min-h-[calc(100vh-80px)] text-center">
                 <Scale className="size-16 text-slate-300 mx-auto mb-6" />
                 <h1 className="text-3xl font-bold font-outfit text-slate-900 mb-4">No Startups Selected</h1>
-                <p className="text-slate-500 mb-8 max-w-md mx-auto">You haven't selected any startups to compare. Head over to the Discover page and select up to 3 startups.</p>
+                <p className="text-slate-500 mb-8 max-w-md mx-auto">You haven't selected any startups to compare. Head over to the Discover page and select up to 4 startups.</p>
                 <Link href="/investors/search" className="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition-colors inline-flex items-center gap-2">
                     <ArrowLeft className="size-4" /> Go to Discover
                 </Link>
@@ -160,7 +160,7 @@ export default function CompareStartups() {
                                         </Link>
                                     </th>
                                 ))}
-                                {compareList.length < 3 && Array.from({ length: 3 - compareList.length }).map((_, i) => (
+                                {compareList.length < 4 && Array.from({ length: 4 - compareList.length }).map((_, i) => (
                                     <th key={`empty-${i}`} className="p-6 border-b border-slate-200 bg-slate-50/50 min-w-[280px]">
                                         <div className="h-full border-2 border-dashed border-slate-200 rounded-xl flex flex-col items-center justify-center p-8 text-center bg-slate-50/50">
                                             <div className="size-12 rounded-full bg-slate-100 flex items-center justify-center mb-3">
@@ -180,12 +180,12 @@ export default function CompareStartups() {
                             <tr className="hover:bg-slate-50/50 transition-colors">
                                 <td className="p-4 pl-6 text-sm font-medium text-slate-500">Business Model</td>
                                 {compareList.map(s => <td key={s._id || s.id} className="p-4 text-sm font-medium text-slate-900">{s.businessModel || 'N/A'}</td>)}
-                                {compareList.length < 3 && Array.from({ length: 3 - compareList.length }).map((_, i) => <td key={`empty-${i}`}></td>)}
+                                {compareList.length < 4 && Array.from({ length: 4 - compareList.length }).map((_, i) => <td key={`empty-${i}`}></td>)}
                             </tr>
                             <tr className="hover:bg-slate-50/50 transition-colors">
                                 <td className="p-4 pl-6 text-sm font-medium text-slate-500">Stage</td>
                                 {compareList.map(s => <td key={s._id || s.id} className="p-4 text-sm font-medium text-slate-900">{s.stage || 'N/A'}</td>)}
-                                {compareList.length < 3 && Array.from({ length: 3 - compareList.length }).map((_, i) => <td key={`empty-${i}`}></td>)}
+                                {compareList.length < 4 && Array.from({ length: 4 - compareList.length }).map((_, i) => <td key={`empty-${i}`}></td>)}
                             </tr>
 
                             {/* --- Funding Ask --- */}
@@ -197,21 +197,21 @@ export default function CompareStartups() {
                                 {compareList.map(s => <td key={s._id || s.id} className="p-4">
                                     <span className={`px-3 py-1 rounded-lg text-sm font-mono font-bold ${isBest(s, 'asking') ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-sm' : 'text-slate-900'}`}>{formatCurrency(extractMetric(s, 'asking'))}</span>
                                 </td>)}
-                                {compareList.length < 3 && Array.from({ length: 3 - compareList.length }).map((_, i) => <td key={`empty-${i}`}></td>)}
+                                {compareList.length < 4 && Array.from({ length: 4 - compareList.length }).map((_, i) => <td key={`empty-${i}`}></td>)}
                             </tr>
                             <tr className="hover:bg-slate-50/50 transition-colors">
                                 <td className="p-4 pl-6 text-sm font-medium text-slate-500">Equity Offered</td>
                                 {compareList.map(s => <td key={s._id || s.id} className="p-4">
                                     <span className={`px-3 py-1 rounded-lg text-sm font-bold ${isBest(s, 'equity') ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-sm' : 'text-slate-900'}`}>{extractMetric(s, 'equity')}%</span>
                                 </td>)}
-                                {compareList.length < 3 && Array.from({ length: 3 - compareList.length }).map((_, i) => <td key={`empty-${i}`}></td>)}
+                                {compareList.length < 4 && Array.from({ length: 4 - compareList.length }).map((_, i) => <td key={`empty-${i}`}></td>)}
                             </tr>
                             <tr className="hover:bg-slate-50/50 transition-colors">
                                 <td className="p-4 pl-6 text-sm font-medium text-slate-500">Implied Valuation</td>
                                 {compareList.map(s => <td key={s._id || s.id} className="p-4">
                                     <span className={`px-3 py-1 rounded-lg text-sm font-mono font-bold ${isBest(s, 'valuation') ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-sm' : 'text-slate-900'}`}>{formatCurrency(extractMetric(s, 'valuation'))}</span>
                                 </td>)}
-                                {compareList.length < 3 && Array.from({ length: 3 - compareList.length }).map((_, i) => <td key={`empty-${i}`}></td>)}
+                                {compareList.length < 4 && Array.from({ length: 4 - compareList.length }).map((_, i) => <td key={`empty-${i}`}></td>)}
                             </tr>
 
                             {/* --- Financials --- */}
@@ -223,7 +223,7 @@ export default function CompareStartups() {
                                 {compareList.map(s => <td key={s._id || s.id} className="p-4">
                                     <span className={`px-3 py-1 rounded-lg text-sm font-mono font-bold ${isBest(s, 'revenue') ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-sm' : 'text-slate-900'}`}>{extractMetric(s, 'revenue') > 0 ? formatCurrency(extractMetric(s, 'revenue')) : 'N/A'}</span>
                                 </td>)}
-                                {compareList.length < 3 && Array.from({ length: 3 - compareList.length }).map((_, i) => <td key={`empty-${i}`}></td>)}
+                                {compareList.length < 4 && Array.from({ length: 4 - compareList.length }).map((_, i) => <td key={`empty-${i}`}></td>)}
                             </tr>
                             <tr className="hover:bg-slate-50/50 transition-colors">
                                 <td className="p-4 pl-6 text-sm font-medium text-slate-500">Monthly Profit / Loss</td>
@@ -234,7 +234,7 @@ export default function CompareStartups() {
                                         <span className={`px-3 py-1 rounded-lg ${isBest(s, 'loss') ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-sm' : 'text-red-500'}`}>-{formatCurrency(extractMetric(s, 'loss'))}</span>
                                     ) : 'N/A'}
                                 </td>)}
-                                {compareList.length < 3 && Array.from({ length: 3 - compareList.length }).map((_, i) => <td key={`empty-${i}`}></td>)}
+                                {compareList.length < 4 && Array.from({ length: 4 - compareList.length }).map((_, i) => <td key={`empty-${i}`}></td>)}
                             </tr>
                             <tr className="hover:bg-slate-50/50 transition-colors">
                                 <td className="p-4 pl-6 text-sm font-medium text-slate-500">Revenue Growth</td>
@@ -245,7 +245,7 @@ export default function CompareStartups() {
                                         </span>
                                     ) : <span className="text-slate-400">N/A</span>}
                                 </td>)}
-                                {compareList.length < 3 && Array.from({ length: 3 - compareList.length }).map((_, i) => <td key={`empty-${i}`}></td>)}
+                                {compareList.length < 4 && Array.from({ length: 4 - compareList.length }).map((_, i) => <td key={`empty-${i}`}></td>)}
                             </tr>
 
                             {/* --- Scores --- */}
@@ -257,21 +257,21 @@ export default function CompareStartups() {
                                 {compareList.map(s => <td key={s._id || s.id} className="p-4">
                                     <span className={`px-3 py-1 rounded-lg text-sm font-bold flex items-center w-max gap-1.5 ${isBest(s, 'ai') ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-sm' : 'text-slate-900'}`}><BrainCircuit className="size-4"/> {extractMetric(s, 'ai')}</span>
                                 </td>)}
-                                {compareList.length < 3 && Array.from({ length: 3 - compareList.length }).map((_, i) => <td key={`empty-${i}`}></td>)}
+                                {compareList.length < 4 && Array.from({ length: 4 - compareList.length }).map((_, i) => <td key={`empty-${i}`}></td>)}
                             </tr>
                             <tr className="hover:bg-slate-50/50 transition-colors">
                                 <td className="p-4 pl-6 text-sm font-medium text-slate-500">Business Health Score</td>
                                 {compareList.map(s => <td key={s._id || s.id} className="p-4">
                                     <span className={`px-3 py-1 rounded-lg text-sm font-bold flex items-center w-max gap-1.5 ${isBest(s, 'health') ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-sm' : 'text-slate-900'}`}><TrendingUp className="size-4"/> {extractMetric(s, 'health')}</span>
                                 </td>)}
-                                {compareList.length < 3 && Array.from({ length: 3 - compareList.length }).map((_, i) => <td key={`empty-${i}`}></td>)}
+                                {compareList.length < 4 && Array.from({ length: 4 - compareList.length }).map((_, i) => <td key={`empty-${i}`}></td>)}
                             </tr>
                             <tr className="hover:bg-slate-50/50 transition-colors">
                                 <td className="p-4 pl-6 text-sm font-medium text-slate-500">Trust Score</td>
                                 {compareList.map(s => <td key={s._id || s.id} className="p-4">
                                     <span className={`px-3 py-1 rounded-lg text-sm font-bold flex items-center w-max gap-1.5 ${isBest(s, 'trust') ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-sm' : 'text-slate-900'}`}><ShieldCheck className="size-4"/> {extractMetric(s, 'trust')}</span>
                                 </td>)}
-                                {compareList.length < 3 && Array.from({ length: 3 - compareList.length }).map((_, i) => <td key={`empty-${i}`}></td>)}
+                                {compareList.length < 4 && Array.from({ length: 4 - compareList.length }).map((_, i) => <td key={`empty-${i}`}></td>)}
                             </tr>
 
                             {/* --- Verification --- */}
@@ -285,7 +285,7 @@ export default function CompareStartups() {
                                         <span className="text-emerald-600 font-bold text-sm flex items-center gap-1"><CheckCircle2 className="size-4"/> Verified</span> : 
                                         <span className="text-slate-400 font-medium text-sm flex items-center gap-1">Pending</span>}
                                 </td>)}
-                                {compareList.length < 3 && Array.from({ length: 3 - compareList.length }).map((_, i) => <td key={`empty-${i}`}></td>)}
+                                {compareList.length < 4 && Array.from({ length: 4 - compareList.length }).map((_, i) => <td key={`empty-${i}`}></td>)}
                             </tr>
                             <tr className="hover:bg-slate-50/50 transition-colors">
                                 <td className="p-4 pl-6 text-sm font-medium text-slate-500">Financial Verification</td>
@@ -294,14 +294,14 @@ export default function CompareStartups() {
                                         <span className="text-indigo-600 font-bold text-sm flex items-center gap-1"><ShieldCheck className="size-4"/> Verified by InVolution</span> : 
                                         <span className="text-slate-400 font-medium text-sm flex items-center gap-1">Not Verified</span>}
                                 </td>)}
-                                {compareList.length < 3 && Array.from({ length: 3 - compareList.length }).map((_, i) => <td key={`empty-${i}`}></td>)}
+                                {compareList.length < 4 && Array.from({ length: 4 - compareList.length }).map((_, i) => <td key={`empty-${i}`}></td>)}
                             </tr>
                             <tr className="hover:bg-slate-50/50 transition-colors">
                                 <td className="p-4 pl-6 text-sm font-medium text-slate-500">Founder Activity</td>
                                 {compareList.map(s => <td key={s._id || s.id} className="p-4 text-sm font-medium text-slate-900">
                                     {getApprovedUpdates(s).length > 2 ? 'High (Regular Updates)' : getApprovedUpdates(s).length > 0 ? 'Moderate' : 'Low'}
                                 </td>)}
-                                {compareList.length < 3 && Array.from({ length: 3 - compareList.length }).map((_, i) => <td key={`empty-${i}`}></td>)}
+                                {compareList.length < 4 && Array.from({ length: 4 - compareList.length }).map((_, i) => <td key={`empty-${i}`}></td>)}
                             </tr>
                             <tr className="hover:bg-slate-50/50 transition-colors">
                                 <td className="p-4 pl-6 text-sm font-medium text-slate-500">Last Financial Update</td>
@@ -312,7 +312,7 @@ export default function CompareStartups() {
                                         {u.length > 0 ? formatRelativeTime(u[u.length - 1].dateSubmitted) : 'N/A'}
                                     </td>)
                                 })}
-                                {compareList.length < 3 && Array.from({ length: 3 - compareList.length }).map((_, i) => <td key={`empty-${i}`}></td>)}
+                                {compareList.length < 4 && Array.from({ length: 4 - compareList.length }).map((_, i) => <td key={`empty-${i}`}></td>)}
                             </tr>
                         </tbody>
                     </table>

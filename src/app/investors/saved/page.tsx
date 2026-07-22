@@ -64,10 +64,10 @@ export default function SavedStartups() {
         setFollowedList(next);
         localStorage.setItem('inv_followed_startups', JSON.stringify(next));
 
-        fetch(`/api/startups/${id}/metrics`, {
+        fetch(`/api/startups/${id}/follow`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'follow', delta: isFollowing ? 1 : -1 })
+            body: JSON.stringify({ action: isFollowing ? 'follow' : 'unfollow' })
         }).catch(console.error);
     };
 
@@ -77,7 +77,7 @@ export default function SavedStartups() {
             setCompareList(next);
             localStorage.setItem('inv_compare_list', JSON.stringify(next));
         } else {
-            if (compareList.length >= 3) return;
+            if (compareList.length >= 4) return;
             const next = [...compareList, id];
             setCompareList(next);
             localStorage.setItem('inv_compare_list', JSON.stringify(next));

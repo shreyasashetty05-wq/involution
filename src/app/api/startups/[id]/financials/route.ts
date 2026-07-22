@@ -126,6 +126,25 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
             startup_id: startup.id
         });
 
+        // Notify Followers
+        const { data: followers } = await supabase
+            .from('startup_follows')
+            .select('investor_email')
+            .eq('startup_id', startup.id);
+            
+        if (followers && followers.length > 0) {
+            const followerNotifications = followers.map((f: any) => ({
+                user_email: f.investor_email,
+                role: 'investor',
+                type: 'financial_update',
+                title: "📊 Financial Summary Updated",
+                description: `${startup.name} has updated their financial metrics for ${reqReportingDate}.`,
+                link: `/startups/${startup.id}`,
+                startup_id: startup.id
+            }));
+            await supabase.from('notifications').insert(followerNotifications);
+        }
+
         return NextResponse.json({ success: true, data: updatedUpdates }, { status: 201 });
     } catch (error: any) {
         console.error("Failed to post financial update:", error);

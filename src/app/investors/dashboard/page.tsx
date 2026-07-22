@@ -52,8 +52,19 @@ export default function InvestorDashboard() {
                 }
 
                 // 3. Fetch All Startups to build Followed, Saved, Recommended, Analytics
+                const { data: followData } = await supabase
+                    .from('startup_follows')
+                    .select('startup_id')
+                    .eq('investor_email', user?.email);
+                
+                let followedIds = followData ? followData.map((f: any) => f.startup_id) : [];
+                
+                // Fallback to local storage to ensure UI works even if DB isn't updated
                 const f = localStorage.getItem('inv_followed_startups');
-                const followedIds = f ? JSON.parse(f) : [];
+                if (f) {
+                    const localIds = JSON.parse(f);
+                    followedIds = Array.from(new Set([...followedIds, ...localIds]));
+                }
                 
                 const s = localStorage.getItem('inv_saved_startups');
                 const savedIds = s ? JSON.parse(s) : [];
@@ -137,12 +148,11 @@ export default function InvestorDashboard() {
     const unfollow = (id: string) => {
         const next = followedStartups.filter(s => (s._id || s.id) !== id);
         setFollowedStartups(next);
-        localStorage.setItem('inv_followed_startups', JSON.stringify(next.map(s => s._id || s.id)));
         
-        fetch(`/api/startups/${id}/metrics`, {
+        fetch(`/api/startups/${id}/follow`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'follow', delta: -1 })
+            body: JSON.stringify({ action: 'unfollow' })
         }).catch(console.error);
     };
 
