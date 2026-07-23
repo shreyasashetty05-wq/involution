@@ -1,36 +1,102 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# InVolution
 
-## Getting Started
+**InVolution** is an AI-powered investment platform designed to bridge the gap between visionary startups and strategic investors. Built around trust and data, it streamlines the deal-flow process with automated KYC, AI-driven due diligence, and verifiable financial metrics within a secure, encrypted ecosystem.
 
-First, run the development server:
+## 🚀 Key Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- **Automated KYC & Verification**: Robust verification for both startups and investors via Aadhaar and PAN validation to ensure a trusted network.
+- **AI Due Diligence**: Integrated Google Gemini AI that analyzes 42+ startup signals (market opportunity, competitive moat, business model) to generate an Investability Score, Trust Tier, and comprehensive automated reports.
+- **Startup Health Monitor**: Real-time tracking of critical startup vitals, including burn rate, runway, revenue, churn, and gross margins.
+- **Encrypted Deal Room**: A 5-phase investment lifecycle environment featuring PII masking, integrated meeting scheduling, and deal negotiation tools.
+- **Incubation & Applications**: Dedicated flows for startups to apply for incubation and get discovered by top-tier incubators.
+- **In-Platform Communication**: Real-time shared chats and notifications connecting founders and investors directly.
+
+## 🛠 Tech Stack
+
+**Frontend:**
+- [Next.js 16](https://nextjs.org/) (App Router)
+- [React 19](https://react.dev/)
+- [TailwindCSS 4](https://tailwindcss.com/)
+- [Framer Motion](https://www.framer.com/motion/) (Animations)
+- [Recharts](https://recharts.org/) (Data Visualization)
+- [Lucide React](https://lucide.dev/) (Icons)
+
+**Backend & API:**
+- Next.js Route Handlers (Serverless APIs)
+- [Supabase](https://supabase.com/) (PostgreSQL Database, Auth, Storage)
+- [Google GenAI](https://ai.google.dev/) (Gemini AI integration)
+- [NextAuth](https://next-auth.js.org/) (Authentication)
+- [Zod](https://zod.dev/) (Schema Validation)
+
+## 📁 Project Structure
+
+```text
+InVolution/
+├── src/
+│   ├── app/                # Next.js App Router (Pages, Layouts, API Routes)
+│   │   ├── api/            # Backend API Route Handlers (admin, ai, auth, deals, kyc, etc.)
+│   │   └── ...             # Public pages (about, startups, investors, etc.)
+│   ├── backend/            # Backend business logic and core services
+│   ├── components/         # Shared generic React components
+│   ├── frontend/           # Frontend-specific components and hooks (e.g., chat, AIChat)
+│   ├── lib/                # Utility libraries (e.g., Gemini report helpers, validations)
+│   └── utils/              # General helper functions and Supabase clients
+├── supabase/
+│   ├── migrations/         # PostgreSQL schema migrations (roles, tables, RLS)
+│   └── config.toml         # Supabase configuration
+├── public/                 # Static assets
+└── package.json            # Project dependencies and scripts
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🏁 Getting Started
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Prerequisites
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Ensure you have the following installed on your local machine:
+- [Node.js](https://nodejs.org/) (v18 or higher)
+- npm, yarn, pnpm, or bun
 
-## Learn More
+### Installation
 
-To learn more about Next.js, take a look at the following resources:
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/your-username/involution.git
+   cd involution
+   ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+2. **Install dependencies:**
+   ```bash
+   npm install
+   # or yarn install, pnpm install, bun install
+   ```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+3. **Set up Environment Variables:**
+   Create a `.env.local` file in the root directory and configure the following variables:
+   ```env
+   NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+   SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+   GEMINI_API_KEY=your_google_gemini_api_key
+   NEXTAUTH_SECRET=your_nextauth_secret
+   # Add any other required keys (e.g. NextAuth URL)
+   ```
 
-## Deploy on Vercel
+4. **Run the Development Server:**
+   ```bash
+   npm run dev
+   ```
+   Open [http://localhost:3000](http://localhost:3000) in your browser to view the application.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 🗄 Database Setup (Supabase)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The project uses Supabase as its primary database. The database schema is managed via migrations located in the `supabase/migrations/` directory.
+
+To apply migrations locally using the Supabase CLI:
+```bash
+supabase start
+supabase db push
+```
+
+## 📜 License
+
+This project is proprietary. All rights reserved.
