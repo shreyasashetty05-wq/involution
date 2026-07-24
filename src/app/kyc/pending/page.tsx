@@ -15,6 +15,7 @@ export default function KYCPendingPage() {
     const [latestNotification, setLatestNotification] = useState<any>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
+    const [isRedirecting, setIsRedirecting] = useState(false);
 
     const fetchStatus = useCallback(async () => {
         try {
@@ -55,6 +56,32 @@ export default function KYCPendingPage() {
         return () => clearInterval(interval);
     }, [fetchStatus]);
 
+    useEffect(() => {
+        if (kycRecord?.status === 'Approved' && !isRedirecting) {
+            setIsRedirecting(true);
+            const syncAndRedirect = async () => {
+                try {
+                    await supabase.auth.updateUser({
+                        data: { kycStatus: 'Approved', kycDone: true }
+                    });
+                    await supabase.auth.refreshSession();
+                    router.refresh(); // Invalidate Next.js client-side router cache
+                    
+                    setTimeout(() => {
+                        let dashUrl = '/investors/dashboard';
+                        if (kycRecord.type === 'Startup Founder') dashUrl = '/startups/dashboard';
+                        if (kycRecord.type === 'Incubation Founder') dashUrl = '/incube/dashboard';
+                        if (kycRecord.type === 'Mentor') dashUrl = '/mentors/dashboard';
+                        router.push(dashUrl);
+                    }, 2500);
+                } catch (error) {
+                    console.error("Failed to sync session state:", error);
+                }
+            };
+            syncAndRedirect();
+        }
+    }, [kycRecord?.status, kycRecord?.type, router, supabase.auth, isRedirecting]);
+
     if (isLoading) {
         return (
             <div className="min-h-[80vh] flex items-center justify-center">
@@ -92,14 +119,18 @@ export default function KYCPendingPage() {
                     <p className="text-slate-600 font-inter mb-8 text-lg max-w-lg mx-auto">
                         Your KYC has been approved successfully. You now have full access to the InVolution platform.
                     </p>
-                    <button onClick={() => {
+                    <button onClick={async () => {
+                        setIsRedirecting(true);
+                        await supabase.auth.updateUser({ data: { kycStatus: 'Approved', kycDone: true } });
+                        await supabase.auth.refreshSession();
+                        router.refresh();
                         let dashUrl = '/investors/dashboard';
                         if (kycRecord.type === 'Startup Founder') dashUrl = '/startups/dashboard';
                         if (kycRecord.type === 'Incubation Founder') dashUrl = '/incube/dashboard';
                         if (kycRecord.type === 'Mentor') dashUrl = '/mentors/dashboard';
                         router.push(dashUrl);
-                    }} className="px-8 py-3 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 mx-auto">
-                        Continue to Dashboard <ChevronRight className="size-4" />
+                    }} disabled={isRedirecting} className="px-8 py-3 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 mx-auto disabled:opacity-70 disabled:cursor-not-allowed">
+                        {isRedirecting ? "Redirecting to Dashboard..." : "Continue to Dashboard"} <ChevronRight className="size-4" />
                     </button>
                 </div>
             </div>
