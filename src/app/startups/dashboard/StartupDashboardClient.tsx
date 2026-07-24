@@ -5,6 +5,7 @@ import Link from "next/link";
 import { FileText, MessageSquare, TrendingUp, Eye, CheckCircle2, ShieldCheck, Activity, Users, Star, BarChart3, Clock, LineChart, Bookmark, Bell, HeartPulse, BrainCircuit, Rocket, Target, Award, Copy, Share2, AlertTriangle, Scale } from "lucide-react";
 import { formatRelativeTime } from "@/utils/timeHelper";
 import { useToast } from "@/components/ui/ToastProvider";
+import { calculateFinancialMetrics } from "@/utils/financialMetrics";
 
 interface StartupDashboardClientProps {
     myStartups: any[];
@@ -92,8 +93,7 @@ export default function StartupDashboardClient({ myStartups }: StartupDashboardC
             ) : (
                 myStartups.map((myStartup, idx) => {
                     const { score: growthScore, actions: growthActions } = calculateGrowthScore(myStartup);
-                    const approvedUpdates = getApprovedUpdates(myStartup);
-                    const latestUpdate = approvedUpdates.length > 0 ? approvedUpdates[approvedUpdates.length - 1] : null;
+                    const dynamicFinancials = calculateFinancialMetrics(myStartup, true);
                     
                     const securedAmount = agreements.reduce((sum, agr) => {
                         const amountStr = String(agr.amount).replace(/[^0-9.]/g, '');
@@ -113,7 +113,7 @@ export default function StartupDashboardClient({ myStartups }: StartupDashboardC
                                     <div>
                                         <div className="flex items-center gap-3 mb-1">
                                             <h1 className="text-3xl md:text-4xl font-outfit font-bold text-slate-900">{myStartup.name}</h1>
-                                            {approvedUpdates.length > 0 && <span className="bg-emerald-100 text-emerald-700 p-1 rounded-full" title="Financially Verified"><ShieldCheck className="size-5" /></span>}
+                                            {dynamicFinancials.hasVerifiedData && <span className="bg-emerald-100 text-emerald-700 p-1 rounded-full" title="Financially Verified"><ShieldCheck className="size-5" /></span>}
                                         </div>
                                         <p className="text-slate-500 font-inter font-medium flex items-center gap-2">
                                             {myStartup.sector} • {myStartup.stage}
@@ -209,23 +209,23 @@ export default function StartupDashboardClient({ myStartups }: StartupDashboardC
                                             </Link>
                                         </div>
 
-                                        {latestUpdate ? (
+                                        {dynamicFinancials.hasVerifiedData ? (
                                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                                 <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl">
                                                     <p className="text-[10px] uppercase font-bold text-slate-400 mb-1">Latest Revenue</p>
-                                                    <p className="text-xl font-bold font-mono text-emerald-600">{formatCurrency(latestUpdate.revenue)}</p>
+                                                    <p className="text-xl font-bold font-mono text-emerald-600">{formatCurrency(dynamicFinancials.monthlyRevenue)}</p>
                                                 </div>
                                                 <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl">
                                                     <p className="text-[10px] uppercase font-bold text-slate-400 mb-1">Latest Profit/Loss</p>
-                                                    <p className={`text-xl font-bold font-mono ${latestUpdate.profit >= 0 ? 'text-blue-600' : 'text-red-500'}`}>{formatCurrency(latestUpdate.profit >= 0 ? latestUpdate.profit : latestUpdate.netLoss)}</p>
+                                                    <p className={`text-xl font-bold font-mono ${dynamicFinancials.monthlyProfit >= 0 ? 'text-blue-600' : 'text-red-500'}`}>{formatCurrency(dynamicFinancials.monthlyProfit)}</p>
                                                 </div>
                                                 <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl">
-                                                    <p className="text-[10px] uppercase font-bold text-slate-400 mb-1">Status</p>
-                                                    <p className="text-sm font-bold text-emerald-600 flex items-center gap-1 mt-1"><ShieldCheck className="size-4"/> Verified</p>
+                                                    <p className="text-[10px] uppercase font-bold text-slate-400 mb-1">Burn Rate</p>
+                                                    <p className="text-xl font-bold font-mono text-amber-600">{formatCurrency(dynamicFinancials.monthlyBurnRate)}</p>
                                                 </div>
                                                 <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl">
                                                     <p className="text-[10px] uppercase font-bold text-slate-400 mb-1">Last Updated</p>
-                                                    <p className="text-sm font-bold text-slate-800 mt-1">{formatRelativeTime(latestUpdate.dateSubmitted)}</p>
+                                                    <p className="text-sm font-bold text-slate-800 mt-1">{dynamicFinancials.latestUpdateDate ? formatRelativeTime(dynamicFinancials.latestUpdateDate) : 'Unknown'}</p>
                                                 </div>
                                             </div>
                                         ) : (
@@ -307,7 +307,7 @@ export default function StartupDashboardClient({ myStartups }: StartupDashboardC
                                             </div>
                                             <div className="flex justify-between items-center p-3 bg-slate-50 rounded-xl border border-slate-100">
                                                 <span className="text-sm font-medium text-slate-600">Financial Verification</span>
-                                                {approvedUpdates.length > 0
+                                                {dynamicFinancials.hasVerifiedData
                                                     ? <span className="bg-emerald-100 text-emerald-700 px-2 py-1 rounded-lg text-xs font-bold flex items-center gap-1"><ShieldCheck className="size-3"/> Verified</span>
                                                     : <span className="bg-red-100 text-red-700 px-2 py-1 rounded-lg text-xs font-bold flex items-center gap-1"><AlertTriangle className="size-3"/> Required</span>
                                                 }

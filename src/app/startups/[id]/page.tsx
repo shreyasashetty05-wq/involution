@@ -7,6 +7,7 @@ import { ArrowLeft, MessageSquare, Briefcase, TrendingUp, Presentation, CheckCir
 import { formatRelativeTime } from "@/utils/timeHelper";
 import { LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import AIChat from "@/frontend/components/AIChat";
+import { calculateFinancialMetrics } from "@/utils/financialMetrics";
 
 const formatCurrency = (val: number | string) => {
     if (!val && val !== 0) return "₹0";
@@ -181,6 +182,9 @@ export default function StartupProfile() {
         credibility = {},
         risk_disclosure = {}
     } = startup;
+
+    // Calculate Dynamic Financial Metrics
+    const dynamicFinancials = calculateFinancialMetrics(startup, true);
 
     // Team Members
     const founder = {
@@ -428,41 +432,88 @@ export default function StartupProfile() {
 
                 {/* 5. Financial Overview */}
                 <section>
-                    <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
-                        <Banknote className="size-6 text-emerald-500" /> Financial Overview
-                    </h2>
-                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
-                        <div className="bg-white border border-slate-200 p-4 rounded-2xl shadow-sm text-center">
-                            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 flex items-center justify-center gap-1"><TrendingUp className="size-3 text-emerald-500" /> Monthly Revenue</p>
-                            <p className="text-lg font-black text-slate-900 font-mono">{formatCurrency(financials_monthly.monthlyRevenue || startup.revenue)}</p>
-                        </div>
-                        <div className="bg-white border border-slate-200 p-4 rounded-2xl shadow-sm text-center">
-                            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 flex items-center justify-center gap-1"><TrendingUp className="size-3 text-red-500 rotate-180" /> Monthly Expenses</p>
-                            <p className="text-lg font-black text-slate-900 font-mono">{formatCurrency(financials_monthly.monthlyExpenses || "0")}</p>
-                        </div>
-                        <div className="bg-white border border-slate-200 p-4 rounded-2xl shadow-sm text-center">
-                            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 flex items-center justify-center gap-1"><Banknote className="size-3 text-emerald-500" /> Monthly Profit</p>
-                            <p className="text-lg font-black text-slate-900 font-mono">{formatCurrency(financials_monthly.monthlyProfit || "0")}</p>
-                        </div>
-                        <div className="bg-white border border-slate-200 p-4 rounded-2xl shadow-sm text-center">
-                            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 flex items-center justify-center gap-1"><Building2 className="size-3 text-indigo-500" /> Cash in Bank</p>
-                            <p className="text-lg font-black text-slate-900 font-mono">{formatCurrency(financials_monthly.cashInBank || "0")}</p>
-                        </div>
-                        <div className="bg-white border border-slate-200 p-4 rounded-2xl shadow-sm text-center">
-                            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 flex items-center justify-center gap-1"><Activity className="size-3 text-amber-500" /> Burn Rate</p>
-                            <p className="text-lg font-black text-slate-900 font-mono">{formatCurrency(financials_monthly.monthlyBurnRate || startup.burn)}</p>
-                        </div>
-                        <div className="bg-white border border-slate-200 p-4 rounded-2xl shadow-sm text-center">
-                            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 flex items-center justify-center gap-1"><Clock className="size-3 text-amber-500" /> Runway</p>
-                            <p className="text-lg font-black text-slate-900 font-mono">{financials_monthly.runway || "0"} Months</p>
-                        </div>
-                        <div className="bg-white border border-slate-200 p-4 rounded-2xl shadow-sm text-center">
-                            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 flex items-center justify-center gap-1"><TrendingUp className="size-3 text-purple-500" /> Profit Margin</p>
-                            <p className="text-lg font-black text-slate-900 font-mono">
-                                {Number(financials_monthly.monthlyRevenue) > 0 ? ((Number(financials_monthly.monthlyProfit) / Number(financials_monthly.monthlyRevenue)) * 100).toFixed(1) : 0}%
-                            </p>
-                        </div>
+                    <div className="flex items-center justify-between mb-6">
+                        <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                            <Banknote className="size-6 text-emerald-500" /> Financial Overview
+                        </h2>
+                        {dynamicFinancials.hasVerifiedData && dynamicFinancials.latestUpdateDate && (
+                            <span className="text-xs font-bold text-slate-400 flex items-center gap-1 bg-white px-3 py-1.5 rounded-lg border border-slate-200">
+                                <ShieldCheck className="size-3 text-emerald-500" /> Verified: {new Date(dynamicFinancials.latestUpdateDate).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })}
+                            </span>
+                        )}
                     </div>
+                    
+                    {!dynamicFinancials.hasVerifiedData ? (
+                        <div className="bg-white border border-dashed border-slate-300 rounded-3xl p-12 text-center shadow-sm">
+                            <AlertTriangle className="size-12 text-slate-300 mx-auto mb-4" />
+                            <h3 className="text-lg font-bold text-slate-700 mb-2">No Verified Financial Data</h3>
+                            <p className="text-slate-500 text-sm max-w-md mx-auto">This startup has not yet submitted or received verification for its monthly financial updates.</p>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
+                            <div className="bg-white border border-slate-200 p-4 rounded-2xl shadow-sm text-center relative overflow-hidden group">
+                                <div className="absolute top-0 left-0 w-full h-1 bg-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 flex items-center justify-center gap-1">
+                                    Monthly Revenue
+                                </p>
+                                <p className="text-lg font-black text-slate-900 font-mono">{formatCurrency(dynamicFinancials.monthlyRevenue)}</p>
+                                {dynamicFinancials.revenueGrowth !== 0 && (
+                                    <p className={`text-[10px] font-bold mt-1 flex items-center justify-center gap-0.5 ${dynamicFinancials.revenueGrowth > 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                                        <TrendingUp className={`size-3 ${dynamicFinancials.revenueGrowth < 0 ? 'rotate-180' : ''}`} />
+                                        {Math.abs(dynamicFinancials.revenueGrowth)}% vs last month
+                                    </p>
+                                )}
+                            </div>
+                            <div className="bg-white border border-slate-200 p-4 rounded-2xl shadow-sm text-center relative overflow-hidden group">
+                                <div className="absolute top-0 left-0 w-full h-1 bg-red-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 flex items-center justify-center gap-1">
+                                    Monthly Expenses
+                                </p>
+                                <p className="text-lg font-black text-slate-900 font-mono">{formatCurrency(dynamicFinancials.monthlyExpenses)}</p>
+                            </div>
+                            <div className="bg-white border border-slate-200 p-4 rounded-2xl shadow-sm text-center relative overflow-hidden group">
+                                <div className="absolute top-0 left-0 w-full h-1 bg-blue-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 flex items-center justify-center gap-1">
+                                    Net Profit
+                                </p>
+                                <p className={`text-lg font-black font-mono ${dynamicFinancials.monthlyProfit >= 0 ? 'text-slate-900' : 'text-red-600'}`}>
+                                    {formatCurrency(dynamicFinancials.monthlyProfit)}
+                                </p>
+                            </div>
+                            <div className="bg-white border border-slate-200 p-4 rounded-2xl shadow-sm text-center relative overflow-hidden group">
+                                <div className="absolute top-0 left-0 w-full h-1 bg-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 flex items-center justify-center gap-1">
+                                    Cash in Bank
+                                </p>
+                                <p className="text-lg font-black text-slate-900 font-mono">{formatCurrency(dynamicFinancials.cashInBank)}</p>
+                            </div>
+                            <div className="bg-white border border-slate-200 p-4 rounded-2xl shadow-sm text-center relative overflow-hidden group">
+                                <div className="absolute top-0 left-0 w-full h-1 bg-amber-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 flex items-center justify-center gap-1">
+                                    Burn Rate
+                                </p>
+                                <p className="text-lg font-black text-slate-900 font-mono">{formatCurrency(dynamicFinancials.monthlyBurnRate)}</p>
+                            </div>
+                            <div className="bg-white border border-slate-200 p-4 rounded-2xl shadow-sm text-center relative overflow-hidden group">
+                                <div className="absolute top-0 left-0 w-full h-1 bg-amber-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 flex items-center justify-center gap-1">
+                                    Runway
+                                </p>
+                                <p className="text-lg font-black text-slate-900 font-mono">
+                                    {dynamicFinancials.runway === "Infinite" ? "Infinite" : `${dynamicFinancials.runway} Months`}
+                                </p>
+                            </div>
+                            <div className="bg-white border border-slate-200 p-4 rounded-2xl shadow-sm text-center relative overflow-hidden group">
+                                <div className="absolute top-0 left-0 w-full h-1 bg-purple-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 flex items-center justify-center gap-1">
+                                    Profit Margin
+                                </p>
+                                <p className={`text-lg font-black font-mono ${dynamicFinancials.profitMargin >= 0 ? 'text-slate-900' : 'text-red-600'}`}>
+                                    {dynamicFinancials.profitMargin}%
+                                </p>
+                            </div>
+                        </div>
+                    )}
                 </section>
 
                 {/* 6. AI Startup Analysis */}
