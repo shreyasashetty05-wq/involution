@@ -253,8 +253,8 @@ export async function PUT(req: NextRequest) {
             const { meeting } = body;
 
             // Server-side validation: reject past dates/times
-            const meetingStartStr = `${meeting.date}T${meeting.time}:00`;
-            const meetingStart = new Date(meetingStartStr);
+            // Use the client-provided startTime to avoid backend timezone offset bugs
+            const meetingStart = meeting.startTime ? new Date(meeting.startTime) : new Date(`${meeting.date}T${meeting.time}:00`);
             const now = new Date();
 
             if (isNaN(meetingStart.getTime())) {
@@ -262,6 +262,12 @@ export async function PUT(req: NextRequest) {
             }
             if (meetingStart <= now) {
                 return NextResponse.json({ success: false, error: 'Cannot schedule a meeting in the past' }, { status: 400 });
+            }
+
+            // Reject if there is already an active meeting
+            const hasActive = (deal.meetings || []).some((m: any) => m.status === 'scheduled' || m.status === 'live');
+            if (hasActive) {
+                return NextResponse.json({ success: false, error: 'An active meeting already exists. Please wait for it to end.' }, { status: 400 });
             }
             
             // Jitsi meeting room URL link logic — unique per meeting

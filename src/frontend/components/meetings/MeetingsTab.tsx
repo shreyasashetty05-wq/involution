@@ -62,7 +62,7 @@ function getTodayStr(): string {
 }
 
 function getDefaultTime(): string {
-    const d = new Date(Date.now() + 30 * 60 * 1000);
+    const d = new Date(Date.now() + 60 * 1000); // 1 minute ahead
     return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
 }
 
@@ -174,13 +174,10 @@ export default function MeetingsTab({
                     (m.status === "live" && (liveStatus === "expired" || liveStatus === "completed"))
                 ) {
                     statusSyncRef.current.add(m.id);
-                    // Optimistic update first
-                    setMeetings((prev: Meeting[]) => prev.map(pm =>
-                        pm.id === m.id ? { ...pm, status: liveStatus } : pm
-                    ));
-                    // Then persist to server
+                    // Persist to server. The UI already uses liveStatus via computeLiveStatus(m)
                     syncMeetingStatus(m.id, liveStatus === "expired" && m.status === "live" ? "completed" : liveStatus)
-                        .finally(() => {
+                        .catch(() => {
+                            // Only remove from sync ref if failed, so we can retry.
                             statusSyncRef.current.delete(m.id);
                         });
                 }
@@ -211,6 +208,11 @@ export default function MeetingsTab({
         if (!meetingDate || !meetingTime || !startupId) return;
 
         // Client-side validation
+        if (hasActiveMeeting) {
+            toast.warning("You already have an active meeting. Please wait for it to end before scheduling another.");
+            return;
+        }
+
         const selectedStart = new Date(`${meetingDate}T${meetingTime}:00`);
         const now = new Date();
         if (selectedStart <= now) {
@@ -230,6 +232,7 @@ export default function MeetingsTab({
                         title: meetingType,
                         date: meetingDate,
                         time: meetingTime,
+                        startTime: selectedStart.toISOString(),
                         durationMinutes: 20,
                         status: "scheduled",
                     },
@@ -336,11 +339,11 @@ export default function MeetingsTab({
             return;
         }
         if (status === "upcoming") {
-            // Allow join 5 min before
+            // Allow join 30 seconds before
             const start = getMeetingStart(m);
-            const fiveMinBefore = new Date(start.getTime() - 5 * 60 * 1000);
+            const fiveMinBefore = new Date(start.getTime() - 30 * 1000);
             if (new Date() < fiveMinBefore) {
-                toast.info("You can join 5 minutes before the meeting.");
+                toast.info("You can join 30 seconds before the meeting.");
                 return;
             }
         }
@@ -359,7 +362,7 @@ export default function MeetingsTab({
         const end = getMeetingEnd(m);
         const diffToStart = start.getTime() - now.getTime();
         const diffToEnd = end.getTime() - now.getTime();
-        const canJoin = liveStatus === "live" || (liveStatus === "upcoming" && diffToStart <= 5 * 60 * 1000);
+        const canJoin = liveStatus === "live" || (liveStatus === "upcoming" && diffToStart <= 30 * 1000);
         return { ...m, liveStatus, start, end, diffToStart, diffToEnd, canJoin };
     });
 
@@ -367,6 +370,8 @@ export default function MeetingsTab({
     const activeMeetings = enrichedMeetings.filter(m => m.liveStatus === "upcoming" || m.liveStatus === "live");
     const historicalMeetings = enrichedMeetings.filter(m => m.liveStatus === "completed" || m.liveStatus === "expired" || m.liveStatus === "cancelled");
     const displayMeetings = showAllMeetings ? enrichedMeetings : [...activeMeetings, ...historicalMeetings.slice(0, 3)];
+
+    const hasActiveMeeting = activeMeetings.length > 0;
 
     // Sort: live first, then upcoming (nearest first), then historical (newest first)
     displayMeetings.sort((a, b) => {
@@ -506,18 +511,21 @@ export default function MeetingsTab({
                         <Info className="size-4 text-indigo-600 shrink-0 mt-0.5" />
                         <div>
                             <p className="text-xs text-indigo-800 font-semibold">Duration: 20 minutes</p>
-                            <p className="text-xs text-indigo-600/80 mt-0.5">You can join the meeting 5 minutes before the scheduled time.</p>
+                            <p className="text-xs text-indigo-600/80 mt-0.5">You can join the meeting 30 seconds before the scheduled time.</p>
                         </div>
                     </div>
 
                     {/* Submit */}
                     <button
                         type="submit"
-                        disabled={isScheduling}
+                        disabled={isScheduling || hasActiveMeeting}
                         className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg text-sm transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-sm shadow-emerald-600/20"
+                        title={hasActiveMeeting ? "You already have an active meeting scheduled." : ""}
                     >
                         {isScheduling ? (
                             <><Loader2 className="size-4 animate-spin" /> Scheduling...</>
+                        ) : hasActiveMeeting ? (
+                            <><AlertTriangle className="size-4" /> Active Meeting Exists</>
                         ) : (
                             <><CalendarCheck className="size-4" /> Schedule Meeting</>
                         )}
