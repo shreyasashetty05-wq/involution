@@ -29,6 +29,11 @@ export async function POST(req: Request) {
             return NextResponse.json({ success: false, error: "Missing identity documents." }, { status: 400 });
         }
 
+        const name = formData.get('name') as string;
+        if (!name || !name.trim()) {
+            return NextResponse.json({ success: false, error: "Full Legal Name is required." }, { status: 400 });
+        }
+
         const aadhaarBuffer = Buffer.from(await aadhaarFile.arrayBuffer());
         const panBuffer = Buffer.from(await panFile.arrayBuffer());
 
@@ -48,7 +53,7 @@ export async function POST(req: Request) {
 
         const kycPayload = {
             email: user.email,
-            name: (formData.get('name') as string) || "Anonymous User",
+            name: name.trim(),
             type: (formData.get('type') as string) || "Startup Founder",
             aadhaar: formData.get('aadhaar') as string,
             pan: formData.get('pan') as string,

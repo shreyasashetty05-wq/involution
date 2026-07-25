@@ -148,7 +148,7 @@ export default function Navbar() {
     };
 
     const role = dbRole || user?.user_metadata?.role || "investor";
-    const name = user?.user_metadata?.full_name || user?.email?.split('@')[0] || "User";
+    const name = (user?.user_metadata?.kycStatus === 'Approved' ? user?.user_metadata?.kyc_name : null) || user?.user_metadata?.full_name || "User";
     const image = user?.user_metadata?.avatar_url || null;
     const isAuthenticated = !loading && !!user;
 

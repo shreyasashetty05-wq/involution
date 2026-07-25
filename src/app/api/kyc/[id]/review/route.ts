@@ -50,6 +50,15 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
             notifTitle = "✅ Your KYC has been approved";
             notifDesc = "Your identity verification is complete. You can now access all features.";
 
+            // Set the Permanent Verified Name (Full Legal Name)
+            if (doc.name) {
+                const { error: rpcError } = await supabase.rpc('admin_update_user_name', {
+                    target_email: doc.email,
+                    new_name: doc.name
+                });
+                if (rpcError) console.error("Failed to update permanent verified name via RPC:", rpcError);
+            }
+
             // If KYC is approved, update panVerified in startups
             const { data: userStartups } = await supabase
                 .from("startups")

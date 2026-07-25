@@ -1,20 +1,21 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Upload, CheckCircle2, AlertCircle, Loader2, ShieldCheck, FileText, Lock } from "lucide-react";
+import { Upload, CheckCircle2, AlertCircle, Loader2, ShieldCheck, FileText, Lock, BadgeCheck } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { formatBytes } from "@/utils/formatBytes";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
-const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/jpg"];
 
 export default function KYCSubmitPage() {
     const supabase = createClient();
     const [user, setUser] = useState<any>(null);
     const router = useRouter();
 
+    const [legalName, setLegalName] = useState("");
     const [aadhaar, setAadhaar] = useState("");
     const [pan, setPan] = useState("");
     const [fileA, setFileA] = useState<File | null>(null);
@@ -22,6 +23,12 @@ export default function KYCSubmitPage() {
     const [previewA, setPreviewA] = useState<string | null>(null);
     const [previewP, setPreviewP] = useState<string | null>(null);
     
+    // AI Verification states
+    const [verifyingA, setVerifyingA] = useState(false);
+    const [verifiedA, setVerifiedA] = useState(false);
+    const [verifyingP, setVerifyingP] = useState(false);
+    const [verifiedP, setVerifiedP] = useState(false);
+
     // Status states
     const [status, setStatus] = useState<"idle" | "uploading" | "submitting" | "success" | "error">("idle");
     const statusRef = useRef(status);
@@ -42,11 +49,12 @@ export default function KYCSubmitPage() {
             if (user?.email) {
                 const { data: existingKyc } = await supabase
                     .from("kyc_documents")
-                    .select("aadhaar, pan, status")
+                    .select("name, aadhaar, pan, status")
                     .eq("email", user.email)
                     .maybeSingle();
                     
                 if (existingKyc && (existingKyc.status === 'Rejected' || existingKyc.status === 'Pending')) {
+                    if (existingKyc.name) setLegalName(existingKyc.name);
                     setAadhaar(formatAadhaar(existingKyc.aadhaar));
                     setPan(existingKyc.pan);
                 }
@@ -71,22 +79,68 @@ export default function KYCSubmitPage() {
 
     const validateFile = (file: File): string | null => {
         if (!ALLOWED_TYPES.includes(file.type)) {
-            return "Only JPG, JPEG, PNG or WEBP images are allowed (Maximum 5 MB).";
+            return "Only JPG, JPEG, PNG or WEBP images are allowed (Maximum 5 MB). Videos are rejected.";
         }
         if (file.size > MAX_FILE_SIZE) {
-            return "Only JPG, JPEG, PNG or WEBP images are allowed (Maximum 5 MB).";
+            return "File size exceeds maximum 5 MB limit.";
         }
         return null;
     };
 
-    const handleFileSelect = (file: File, type: 'A' | 'P') => {
+    const handleFileSelect = async (file: File, type: 'A' | 'P') => {
         const error = validateFile(file);
+        
         if (type === 'A') {
-            if (error) { setFileErrorA(error); setFileA(null); setPreviewA(null); }
-            else { setFileErrorA(""); setFileA(file); setPreviewA(URL.createObjectURL(file)); }
+            if (error) { setFileErrorA(error); setFileA(null); setPreviewA(null); setVerifiedA(false); return; }
+            setFileErrorA(""); setFileA(file); setPreviewA(URL.createObjectURL(file));
+            setVerifyingA(true);
+            setVerifiedA(false);
         } else {
-            if (error) { setFileErrorP(error); setFileP(null); setPreviewP(null); }
-            else { setFileErrorP(""); setFileP(file); setPreviewP(URL.createObjectURL(file)); }
+            if (error) { setFileErrorP(error); setFileP(null); setPreviewP(null); setVerifiedP(false); return; }
+            setFileErrorP(""); setFileP(file); setPreviewP(URL.createObjectURL(file));
+            setVerifyingP(true);
+            setVerifiedP(false);
+        }
+
+        // Call backend for AI Verification
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("type", type === 'A' ? "Aadhaar" : "PAN");
+
+        try {
+            const res = await fetch("/api/kyc/verify", {
+                method: "POST",
+                body: formData
+            });
+            const data = await res.json();
+            
+            if (type === 'A') {
+                setVerifyingA(false);
+                if (data.success) {
+                    setVerifiedA(true);
+                } else {
+                    setFileErrorA(data.error || "Aadhaar verification failed.");
+                    setFileA(null); setPreviewA(null);
+                }
+            } else {
+                setVerifyingP(false);
+                if (data.success) {
+                    setVerifiedP(true);
+                } else {
+                    setFileErrorP(data.error || "PAN verification failed.");
+                    setFileP(null); setPreviewP(null);
+                }
+            }
+        } catch (err: any) {
+            if (type === 'A') {
+                setVerifyingA(false);
+                setFileErrorA("Verification service unavailable.");
+                setFileA(null); setPreviewA(null);
+            } else {
+                setVerifyingP(false);
+                setFileErrorP("Verification service unavailable.");
+                setFileP(null); setPreviewP(null);
+            }
         }
     };
 
@@ -98,11 +152,14 @@ export default function KYCSubmitPage() {
         }
     };
 
-
-
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setErrorMsg("");
+
+        if (!legalName.trim()) {
+            setErrorMsg("Please enter your Full Legal Name.");
+            return;
+        }
 
         const cleanedAadhaar = aadhaar.replace(/\s/g, '');
         if (!/^\d{12}$/.test(cleanedAadhaar)) {
@@ -115,15 +172,15 @@ export default function KYCSubmitPage() {
             return;
         }
 
-        if (!fileA || !fileP) {
-            setErrorMsg("Please upload both your Aadhaar card and PAN card images.");
+        if (!fileA || !fileP || !verifiedA || !verifiedP) {
+            setErrorMsg("Please upload and verify both your Aadhaar card and PAN card images.");
             return;
         }
 
         try {
             setStatus("uploading");
             const formData = new FormData();
-            formData.append("name", user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Active User");
+            formData.append("name", legalName.trim());
             formData.append("type", user?.user_metadata?.role === "investor" ? "Investor" : (user?.user_metadata?.role === "incubation" ? "Incubation Founder" : "Startup Founder"));
             formData.append("aadhaar", cleanedAadhaar);
             formData.append("pan", pan);
@@ -158,28 +215,39 @@ export default function KYCSubmitPage() {
         }
     };
 
-    const FileUploadCard = ({ type, file, preview, error, drag, setDrag }: any) => (
+    const FileUploadCard = ({ type, file, preview, error, drag, setDrag, verifying, verified }: any) => (
         <div 
             className={`border-2 rounded-2xl p-6 text-center transition-all relative overflow-hidden group 
-                ${error ? 'border-red-300 bg-red-50' : drag ? 'border-indigo-500 bg-indigo-50' : 'border-dashed border-slate-300 hover:border-indigo-400 bg-slate-50'}`}
+                ${error ? 'border-red-300 bg-red-50' : verified ? 'border-green-400 bg-green-50/30' : drag ? 'border-indigo-500 bg-indigo-50' : 'border-dashed border-slate-300 hover:border-indigo-400 bg-slate-50'}`}
             onDragOver={(e) => { e.preventDefault(); setDrag(true); }}
             onDragLeave={() => setDrag(false)}
             onDrop={(e) => handleDrop(e, type)}
         >
-            {preview ? (
+            {verifying ? (
+                <div className="flex flex-col items-center justify-center py-4">
+                    <Loader2 className="size-8 text-indigo-600 animate-spin mb-3" />
+                    <p className="text-sm font-semibold text-slate-700">AI Verification in Progress...</p>
+                    <p className="text-xs text-slate-500 mt-1">Analyzing visual elements</p>
+                </div>
+            ) : preview ? (
                 <div className="flex items-center gap-4 text-left relative z-10">
                     <div className="relative size-16 rounded-lg overflow-hidden shrink-0 border border-slate-200">
                         <Image src={preview} alt="Preview" fill className="object-cover" />
+                        {verified && <div className="absolute inset-0 bg-green-500/20 flex items-center justify-center backdrop-blur-[1px]"><CheckCircle2 className="size-6 text-green-600 drop-shadow-md"/></div>}
                     </div>
                     <div className="flex-1 min-w-0">
                         <p className="text-sm font-semibold text-slate-800 truncate">{file?.name}</p>
-                        <p className="text-xs text-slate-500 mt-0.5">{formatBytes(file?.size || 0)}</p>
+                        {verified ? (
+                            <p className="text-xs text-green-600 font-bold flex items-center gap-1 mt-0.5"><BadgeCheck className="size-3" /> AI Verified</p>
+                        ) : (
+                            <p className="text-xs text-slate-500 mt-0.5">{formatBytes(file?.size || 0)}</p>
+                        )}
                     </div>
                     <div className="flex flex-col gap-2 shrink-0">
                         <label className="text-xs font-medium text-indigo-600 hover:text-indigo-700 cursor-pointer flex items-center gap-1 bg-indigo-50 px-2 py-1 rounded-md transition-colors">
                             Replace <input type="file" className="hidden" accept=".jpg,.jpeg,.png,.webp" onChange={(e) => e.target.files?.[0] && handleFileSelect(e.target.files[0], type)} />
                         </label>
-                        <button type="button" onClick={() => type === 'A' ? (setFileA(null), setPreviewA(null)) : (setFileP(null), setPreviewP(null))} className="text-xs font-medium text-red-600 hover:text-red-700 flex items-center gap-1 bg-red-50 px-2 py-1 rounded-md transition-colors">
+                        <button type="button" onClick={() => type === 'A' ? (setFileA(null), setPreviewA(null), setVerifiedA(false)) : (setFileP(null), setPreviewP(null), setVerifiedP(false))} className="text-xs font-medium text-red-600 hover:text-red-700 flex items-center gap-1 bg-red-50 px-2 py-1 rounded-md transition-colors">
                             Remove
                         </button>
                     </div>
@@ -199,7 +267,7 @@ export default function KYCSubmitPage() {
             {error && (
                 <div className="mt-4 p-2.5 bg-red-100 rounded-lg text-xs text-red-700 font-medium flex items-center justify-center gap-1.5 relative z-10">
                     <AlertCircle className="size-4 shrink-0" />
-                    {error}
+                    <span className="text-left">{error}</span>
                 </div>
             )}
         </div>
@@ -213,7 +281,7 @@ export default function KYCSubmitPage() {
                 </div>
                 <h1 className="text-4xl font-outfit font-bold text-slate-900 mb-4">Secure Identity Verification</h1>
                 <p className="text-slate-500 font-inter max-w-xl mx-auto">
-                    To ensure platform safety, please complete your KYC by providing your PAN and Aadhaar details. Your documents are encrypted and securely validated.
+                    To ensure platform safety, please complete your KYC by providing your PAN and Aadhaar details. Your documents are encrypted and AI-validated before submission.
                 </p>
                 {user?.user_metadata?.kycStatus === 'Rejected' && (
                     <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 font-medium max-w-lg mx-auto flex items-start gap-3 text-left shadow-sm">
@@ -237,9 +305,27 @@ export default function KYCSubmitPage() {
                     </div>
                 ) : (
                     <form onSubmit={handleSubmit} className="relative z-10 space-y-8">
+                        <div className="max-w-xl mx-auto mb-8 bg-slate-50 p-6 rounded-2xl border border-slate-200">
+                            <label className="block text-sm font-bold text-slate-700 font-inter mb-3 flex items-center justify-between">
+                                Full Legal Name *
+                                <span className="text-[10px] font-normal text-indigo-600 bg-indigo-100 px-2 py-0.5 rounded-full">Permanent Record</span>
+                            </label>
+                            <input
+                                type="text"
+                                placeholder="e.g. Ramesh Kumar"
+                                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 font-medium placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                                value={legalName}
+                                onChange={(e) => setLegalName(e.target.value)}
+                                required
+                            />
+                            <p className="text-xs text-slate-500 mt-2">
+                                Enter your exact name as it appears on your identity documents. This will become your permanent verified name across the platform.
+                            </p>
+                        </div>
+
                         <div className="grid md:grid-cols-2 gap-8">
                             <div className="space-y-3">
-                                <label className="block text-sm font-semibold text-slate-700 font-inter">Aadhaar Number</label>
+                                <label className="block text-sm font-semibold text-slate-700 font-inter">Aadhaar Number *</label>
                                 <input
                                     type="text"
                                     placeholder="1234 5678 9012"
@@ -248,11 +334,11 @@ export default function KYCSubmitPage() {
                                     onChange={handleAadhaarChange}
                                     required
                                 />
-                                <FileUploadCard type="A" file={fileA} preview={previewA} error={fileErrorA} drag={dragA} setDrag={setDragA} />
+                                <FileUploadCard type="A" file={fileA} preview={previewA} error={fileErrorA} drag={dragA} setDrag={setDragA} verifying={verifyingA} verified={verifiedA} />
                             </div>
 
                             <div className="space-y-3">
-                                <label className="block text-sm font-semibold text-slate-700 font-inter">PAN Number</label>
+                                <label className="block text-sm font-semibold text-slate-700 font-inter">PAN Number *</label>
                                 <input
                                     type="text"
                                     placeholder="ABCDE1234F"
@@ -262,7 +348,7 @@ export default function KYCSubmitPage() {
                                     required
                                     maxLength={10}
                                 />
-                                <FileUploadCard type="P" file={fileP} preview={previewP} error={fileErrorP} drag={dragP} setDrag={setDragP} />
+                                <FileUploadCard type="P" file={fileP} preview={previewP} error={fileErrorP} drag={dragP} setDrag={setDragP} verifying={verifyingP} verified={verifiedP} />
                             </div>
                         </div>
 
@@ -276,8 +362,8 @@ export default function KYCSubmitPage() {
                         <div className="pt-6 border-t border-slate-100 flex justify-end">
                             <button
                                 type="submit"
-                                disabled={status === "uploading" || status === "submitting"}
-                                className="px-8 py-3 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-700 transition-all flex items-center justify-center min-w-[200px] gap-2 disabled:opacity-70 disabled:cursor-not-allowed shadow-sm hover:shadow"
+                                disabled={status === "uploading" || status === "submitting" || !verifiedA || !verifiedP || !legalName.trim()}
+                                className="px-8 py-3 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-700 transition-all flex items-center justify-center min-w-[200px] gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow"
                             >
                                 {status === "uploading" ? (
                                     <><Loader2 className="size-5 animate-spin" /> Uploading...</>

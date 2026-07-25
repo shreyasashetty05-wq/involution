@@ -14,6 +14,8 @@ export default function InvestorVerificationForm() {
     const [uploadingPhoto, setUploadingPhoto] = useState(false);
     const [error, setError] = useState("");
     const [email, setEmail] = useState("");
+    const [currentUser, setCurrentUser] = useState<any>(null);
+    const [fetchedKycName, setFetchedKycName] = useState<string | null>(null);
     const [adminRemarks, setAdminRemarks] = useState("");
 
     const [formData, setFormData] = useState({
@@ -57,6 +59,7 @@ export default function InvestorVerificationForm() {
                 router.push("/login");
                 return;
             }
+            setCurrentUser(user);
             setEmail(user.email || "");
 
             const res = await fetch("/api/investors/verification");
@@ -76,8 +79,13 @@ export default function InvestorVerificationForm() {
                     setAdminRemarks(data.profile.admin_remarks || "");
                 }
 
+                if (data.kycName) {
+                    setFetchedKycName(data.kycName);
+                }
+
                 setFormData({
-                    ...data.profile
+                    ...data.profile,
+                    full_name: (data.kycName ? data.kycName : (user?.user_metadata?.kycStatus === 'Approved' ? (user.user_metadata.kyc_name || user.user_metadata.full_name) : data.profile.full_name)) || ""
                 });
 
                 // Map docs back
@@ -91,6 +99,16 @@ export default function InvestorVerificationForm() {
                     else if (d.title === "Other Supporting Documents") newDocs.other_docs = d.url;
                 });
                 setDocs(newDocs);
+            } else {
+                if (data.kycName) {
+                    setFetchedKycName(data.kycName);
+                }
+                if (data.kycName || user?.user_metadata?.kycStatus === 'Approved') {
+                    setFormData(prev => ({
+                        ...prev,
+                        full_name: data.kycName || (user.user_metadata.kyc_name || user.user_metadata.full_name) || ""
+                    }));
+                }
             }
             setLoading(false);
         };
@@ -273,7 +291,7 @@ export default function InvestorVerificationForm() {
                             
                             <div>
                                 <label className="block text-sm font-semibold text-slate-700 mb-2">Full Name *</label>
-                                <input type="text" name="full_name" required value={formData.full_name} onChange={handleChange} placeholder="Enter your full name" className="w-full border border-slate-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
+                                <input type="text" name="full_name" required value={formData.full_name} onChange={handleChange} placeholder="Enter your full name" className="w-full border border-slate-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none disabled:opacity-70 disabled:bg-slate-100 disabled:cursor-not-allowed" disabled={!!(fetchedKycName || currentUser?.user_metadata?.kycStatus === 'Approved' || formData.full_name === currentUser?.user_metadata?.kyc_name)} title={(fetchedKycName || currentUser?.user_metadata?.kycStatus === 'Approved' || formData.full_name === currentUser?.user_metadata?.kyc_name) ? "Your verified Legal Name cannot be changed" : ""} />
                             </div>
                             
                             <div>

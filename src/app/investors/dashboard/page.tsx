@@ -46,7 +46,7 @@ export default function InvestorDashboard() {
                 const { data: { user } } = await supabase.auth.getUser();
                 if (user) {
                     setInvestorProfile({
-                        name: user.user_metadata?.full_name || "Investor",
+                        name: (user.user_metadata?.kycStatus === 'Approved' ? (user.user_metadata?.kyc_name || user.user_metadata?.full_name) : user.user_metadata?.full_name) || "Investor",
                         joined: new Date(user.created_at || Date.now()).getFullYear().toString()
                     });
                 }

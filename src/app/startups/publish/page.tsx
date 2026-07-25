@@ -19,7 +19,7 @@ const Label = ({ children, required }: { children: React.ReactNode, required?: b
 );
 
 const Input = (props: any) => (
-    <input className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 transition-all font-medium" {...props} />
+    <input className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 transition-all font-medium disabled:opacity-70 disabled:bg-slate-50 disabled:cursor-not-allowed" {...props} />
 );
 
 const Select = ({ children, ...props }: any) => (
@@ -41,6 +41,12 @@ export default function StartupPublishForm() {
         const fetchUser = async () => {
             const { data: { user: currentUser } } = await supabase.auth.getUser();
             setUser(currentUser);
+            if (currentUser?.user_metadata?.kycStatus === 'Approved') {
+                const kycName = currentUser.user_metadata.kyc_name || currentUser.user_metadata.full_name;
+                if (kycName) {
+                    setFormData(prev => ({ ...prev, founderName: kycName }));
+                }
+            }
         };
         fetchUser();
     }, [supabase]);
@@ -347,7 +353,7 @@ export default function StartupPublishForm() {
                     <div>
                         <SectionHeader num="2" title="Founder Information" />
                         <div className="grid md:grid-cols-2 gap-6">
-                            <div><Label required>Founder Name</Label><Input required placeholder="e.g. Sohan S Salian" value={formData.founderName} onChange={(e: any) => updateField('founderName', e.target.value)} /></div>
+                            <div><Label required>Founder Name</Label><Input required placeholder="e.g. Sohan S Salian" value={formData.founderName} onChange={(e: any) => updateField('founderName', e.target.value)} disabled={user?.user_metadata?.kycStatus === 'Approved'} title={user?.user_metadata?.kycStatus === 'Approved' ? "Your verified Legal Name cannot be changed" : ""} /></div>
                             <div><Label required>Founder Age</Label><Input type="number" required placeholder="e.g. 24" value={formData.founderAge} onChange={(e: any) => updateField('founderAge', e.target.value)} /></div>
                             <div>
                                 <Label required>Founder Role</Label>

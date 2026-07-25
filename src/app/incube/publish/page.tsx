@@ -27,7 +27,7 @@ const Label = ({ children, required, subtitle }: { children: React.ReactNode, re
 );
 
 const Input = (props: any) => (
-    <input className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 transition-all font-medium text-sm" {...props} />
+    <input className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 transition-all font-medium text-sm disabled:opacity-70 disabled:bg-slate-100 disabled:cursor-not-allowed" {...props} />
 );
 
 const Select = ({ children, ...props }: any) => (
@@ -118,7 +118,7 @@ export default function IncubationForm() {
                 setFormData(prev => ({ 
                     ...prev, 
                     email: currentUser.email || "",
-                    fullName: currentUser.user_metadata?.full_name || "" 
+                    fullName: (currentUser.user_metadata?.kycStatus === 'Approved' ? (currentUser.user_metadata.kyc_name || currentUser.user_metadata.full_name) : currentUser.user_metadata?.full_name) || "" 
                 }));
             }
         };
@@ -322,7 +322,7 @@ export default function IncubationForm() {
 
                             {/* Details */}
                             <div className="md:col-span-9 grid md:grid-cols-3 gap-6">
-                                <div className="md:col-span-1"><Label required>Full Name</Label><Input required value={formData.fullName} onChange={(e:any)=>updateField('fullName', e.target.value)} /></div>
+                                <div className="md:col-span-1"><Label required>Full Name</Label><Input required value={formData.fullName} onChange={(e:any)=>updateField('fullName', e.target.value)} disabled={user?.user_metadata?.kycStatus === 'Approved'} title={user?.user_metadata?.kycStatus === 'Approved' ? "Your verified Legal Name cannot be changed" : ""} /></div>
                                 <div className="md:col-span-1"><Label required>Email</Label><Input type="email" required disabled value={formData.email} className="bg-slate-100 text-slate-500 cursor-not-allowed" /></div>
                                 <div className="md:col-span-1"><Label required>Phone Number</Label><Input type="tel" required value={formData.phoneNumber} onChange={(e:any)=>updateField('phoneNumber', e.target.value)} /></div>
                                 

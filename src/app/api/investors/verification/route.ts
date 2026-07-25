@@ -107,7 +107,16 @@ export async function GET(req: Request) {
             return NextResponse.json({ error: error.message }, { status: 500 });
         }
 
-        return NextResponse.json({ profile: data });
+        // Also fetch KYC name directly to be 100% bulletproof against OAuth sync issues
+        const { data: kycData } = await supabase
+            .from("kyc_documents")
+            .select("name, status")
+            .eq("email", user.email)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+        return NextResponse.json({ profile: data, kycName: kycData?.name || null });
     } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
