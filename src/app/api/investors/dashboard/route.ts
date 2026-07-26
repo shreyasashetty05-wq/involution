@@ -100,6 +100,25 @@ export async function GET(req: NextRequest) {
             });
         }
 
+        const activeChatIds = activeChats.map(c => c.id);
+        if (activeChatIds.length > 0) {
+            const { data: negotiations } = await supabase
+                .from('negotiations')
+                .select('deal_id, status')
+                .in('deal_id', activeChatIds);
+                
+            const rejectMap = (negotiations || []).reduce((acc: any, n: any) => {
+                if (n.status === 'Negotiation Rejected' || n.status === 'Rejected') {
+                    acc[n.deal_id] = true;
+                }
+                return acc;
+            }, {});
+
+            activeChats.forEach(chat => {
+                chat.isRejected = rejectMap[chat.id] || false;
+            });
+        }
+
         const totalCapitalStr = executedDeals.reduce((sum, d) => sum + parseCapitalAmount(d.term_amount), 0);
 
         const { data: profileData } = await supabase

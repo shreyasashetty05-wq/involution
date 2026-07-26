@@ -275,7 +275,8 @@ export default function StartupDashboardClient({ myStartups }: StartupDashboardC
                                                                 <div>
                                                                     <div className="flex items-center gap-2 mb-1">
                                                                         <h3 className="font-bold text-slate-900">{deal.investorName || deal.investor}</h3>
-                                                                        {deal.unread > 0 && <span className="px-2 py-0.5 bg-red-100 text-red-600 rounded-lg text-[10px] font-bold animate-pulse">{deal.unread} New</span>}
+                                                                        {deal.isRejected && <span className="px-2 py-0.5 bg-red-50 text-red-600 rounded-lg text-[10px] font-bold border border-red-200">Negotiation Rejected</span>}
+                                                                        {deal.unread > 0 && <span className="px-2 py-0.5 bg-blue-100 text-blue-600 rounded-lg text-[10px] font-bold animate-pulse">{deal.unread} New</span>}
                                                                     </div>
                                                                     <p className="text-sm text-slate-500 line-clamp-1 flex items-center gap-1.5"><MessageSquare className="size-3"/> {deal.lastMessage}</p>
                                                                 </div>

@@ -75,6 +75,7 @@ export function NegotiationTab({
     const [messageInput, setMessageInput] = useState("");
     const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
     const [showProceedDialog, setShowProceedDialog] = useState(false);
+    const [showRejectDialog, setShowRejectDialog] = useState(false);
     
     const [isEditing, setIsEditing] = useState(false);
     
@@ -206,8 +207,8 @@ export function NegotiationTab({
         }
     };
 
-    const handleReject = async () => {
-        if (!confirm("Are you sure you want to reject this offer? This will end the negotiation.")) return;
+    const executeReject = async () => {
+        setShowRejectDialog(false);
         setSubmitting(true);
         try {
             const res = await fetch(`/api/deals/negotiation`, {
@@ -221,6 +222,29 @@ export function NegotiationTab({
             });
             if (res.ok) {
                 toast.success("Offer Rejected");
+                fetchNegotiationData();
+            }
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    const handleContinueNegotiation = async () => {
+        setSubmitting(true);
+        try {
+            const res = await fetch(`/api/deals/negotiation`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    dealId,
+                    action: 'continue',
+                    senderType: isStartup ? 'startup' : 'investor'
+                })
+            });
+            if (res.ok) {
+                toast.success("Negotiation resumed!");
                 fetchNegotiationData();
             }
         } catch (error) {
@@ -333,6 +357,7 @@ export function NegotiationTab({
     const isRejected = negotiation?.status === 'Negotiation Rejected' || negotiation?.status === 'Rejected';
     
     const amIStartup = resolvedRole === 'startup';
+    const rejectedByMe = isRejected && currentVersion?.action === 'Rejected' && currentVersion?.proposed_by_type === resolvedRole;
 
     // waitingForMe handles the core logic of whether action buttons should appear
     // Startup CANNOT act on Initial Offer (it's theirs)
@@ -537,7 +562,7 @@ export function NegotiationTab({
                                     
                                     {waitingForMe && !isEditing && (
                                         <>
-                                            <button onClick={handleReject} disabled={submitting} className="flex-1 py-2.5 bg-red-50 text-red-600 font-semibold rounded-xl text-sm transition-colors hover:bg-red-100 border border-red-200 shadow-sm flex items-center justify-center gap-2 disabled:opacity-50">
+                                            <button onClick={() => setShowRejectDialog(true)} disabled={submitting} className="flex-1 py-2.5 bg-red-50 text-red-600 font-semibold rounded-xl text-sm transition-colors hover:bg-red-100 border border-red-200 shadow-sm flex items-center justify-center gap-2 disabled:opacity-50">
                                                 Reject Offer
                                             </button>
                                             <button onClick={handleAccept} disabled={submitting} className="flex-1 py-2.5 bg-emerald-600 text-white font-semibold rounded-xl text-sm transition-colors hover:bg-emerald-700 shadow-sm flex items-center justify-center gap-2 disabled:opacity-50">
@@ -623,6 +648,15 @@ export function NegotiationTab({
                                     <h3 className="font-bold text-red-800 text-lg mb-1">Negotiation Rejected</h3>
                                     <p className="text-red-600 text-sm">The negotiation has ended and the Deal Room is closed.</p>
                                 </div>
+                                {rejectedByMe && (
+                                    <button 
+                                        onClick={handleContinueNegotiation} 
+                                        disabled={submitting}
+                                        className="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl transition-colors disabled:opacity-50"
+                                    >
+                                        {submitting ? <Loader2 className="animate-spin size-4 mx-auto" /> : "Continue Negotiation"}
+                                    </button>
+                                )}
                             </div>
                         )}
                     </div>
@@ -789,6 +823,38 @@ export function NegotiationTab({
                                 className="flex-1 py-2.5 bg-blue-600 text-white font-bold rounded-xl text-sm hover:bg-blue-700 transition-colors disabled:opacity-50"
                             >
                                 Yes
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Reject Offer Dialog */}
+            {showRejectDialog && (
+                <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 border-t-4 border-red-500">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="size-10 rounded-full bg-red-100 flex items-center justify-center">
+                                <Trash2 className="size-5 text-red-600" />
+                            </div>
+                            <h3 className="text-xl font-bold text-slate-800">Reject Offer</h3>
+                        </div>
+                        <p className="text-slate-600 mb-6">
+                            Are you sure you want to reject this offer? This will end the current negotiation phase.
+                        </p>
+                        <div className="flex gap-3">
+                            <button 
+                                onClick={() => setShowRejectDialog(false)}
+                                className="flex-1 py-2.5 bg-slate-100 text-slate-700 font-bold rounded-xl text-sm hover:bg-slate-200 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button 
+                                onClick={executeReject}
+                                disabled={submitting}
+                                className="flex-1 py-2.5 bg-red-600 text-white font-bold rounded-xl text-sm hover:bg-red-700 transition-colors disabled:opacity-50"
+                            >
+                                {submitting ? "Rejecting..." : "Yes, Reject"}
                             </button>
                         </div>
                     </div>

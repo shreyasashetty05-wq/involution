@@ -400,11 +400,6 @@ export async function POST(req: NextRequest) {
                     });
             }
                 
-            await supabase
-                .from("deals")
-                .update({ status: 'Closed' })
-                .eq("id", dealId);
-                
             await supabase.from("notifications").insert({
                 user_email: null,
                 role: backendSenderType === 'startup' ? 'investor' : 'startup',
@@ -414,6 +409,47 @@ export async function POST(req: NextRequest) {
                 link: `/messages?tab=negotiation&deal=${dealId}`
             });
                 
+            return NextResponse.json({ success: true });
+            
+        } else if (action === 'continue') {
+            if (!negotiation) return NextResponse.json({ success: false, error: 'No active negotiation' }, { status: 400 });
+
+            const newStatus = backendSenderType === 'startup' ? 'Waiting for Startup Response' : 'Waiting for Investor Response';
+
+            await supabase
+                .from("deals")
+                .update({ status: 'negotiating' })
+                .eq("id", dealId);
+
+            await supabase
+                .from("negotiations")
+                .update({ status: newStatus })
+                .eq("id", negotiation.id);
+            
+            const { data: currentVersion } = await supabase
+                .from("negotiation_versions")
+                .select("*")
+                .eq("deal_id", dealId)
+                .eq("status", "Current")
+                .maybeSingle();
+
+            if (currentVersion && currentVersion.action === 'Rejected') {
+                await supabase.from("negotiation_versions").delete().eq("id", currentVersion.id);
+                
+                const { data: prevVersion } = await supabase
+                    .from("negotiation_versions")
+                    .select("id")
+                    .eq("deal_id", dealId)
+                    .eq("version_number", currentVersion.version_number - 1)
+                    .maybeSingle();
+                    
+                if (prevVersion) {
+                    await supabase
+                        .from("negotiation_versions")
+                        .update({ status: 'Current' })
+                        .eq("id", prevVersion.id);
+                }
+            }
             return NextResponse.json({ success: true });
             
         } else if (action === 'lock') {

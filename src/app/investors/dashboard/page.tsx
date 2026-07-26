@@ -266,7 +266,10 @@ export default function InvestorDashboard() {
                                                     {chat.startup.charAt(0)}
                                                 </div>
                                                 <div>
-                                                    <h3 className="font-bold text-slate-900">{chat.startup}</h3>
+                                                    <div className="flex items-center gap-2 mb-1">
+                                                        <h3 className="font-bold text-slate-900">{chat.startup}</h3>
+                                                        {chat.isRejected && <span className="px-2 py-0.5 bg-red-50 text-red-600 rounded-lg text-[10px] font-bold border border-red-200">Negotiation Rejected</span>}
+                                                    </div>
                                                     <p className="text-sm text-slate-500 line-clamp-1">{chat.lastMessage}</p>
                                                     <span className="text-xs font-medium text-slate-400 flex items-center gap-1 mt-1"><Clock className="size-3" /> {chat.time}</span>
                                                 </div>
