@@ -38,7 +38,8 @@ function buildActiveChat(deal: any) {
         founderName: '',
         lastMessage: lastMsg?.text ?? "No messages yet.",
         time: lastMsg?.time ?? 'Recently',
-        unread: 0
+        unread: 0,
+        isRejected: false
     };
 }
 

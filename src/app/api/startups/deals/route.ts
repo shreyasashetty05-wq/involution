@@ -27,7 +27,8 @@ function buildActiveChat(deal: any) {
         phase: deal.current_phase || 1,
         lastMessage: lastMsg?.text ?? "No messages yet.",
         time: lastMsg?.time ?? 'Recently',
-        unread: 0
+        unread: 0,
+        isRejected: false
     };
 }
 
