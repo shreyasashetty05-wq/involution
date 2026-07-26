@@ -114,7 +114,7 @@ export async function GET(req: NextRequest) {
                         if (!negErr) {
                             negotiation = newNeg;
                         }
-                    } else if (negotiation.status !== 'Initial Offer Available' && versions.length === 0) {
+                    } else if (negotiation.status !== 'Initial Offer Available' && (!versions || versions.length === 0)) {
                          await supabase
                             .from("negotiations")
                             .update({ status: 'Initial Offer Available' })
