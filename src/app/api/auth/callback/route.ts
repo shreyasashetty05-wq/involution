@@ -6,26 +6,44 @@ export async function GET(request: Request) {
     try {
         const { searchParams, origin } = new URL(request.url);
         const code = searchParams.get("code");
+        const token_hash = searchParams.get("token_hash");
+        const type = searchParams.get("type") as any;
         const queryRole = searchParams.get("role");
 
-        if (code) {
+        console.log(`[Auth Callback] Processing callback. Code: ${!!code}, TokenHash: ${!!token_hash}, Type: ${type || 'N/A'}`);
+
+        if (code || (token_hash && type)) {
             const cookieStore = await cookies();
             const supabase = createClient(cookieStore);
-            const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+            
+            let user = null;
+            let error = null;
 
-            if (!error && data?.user) {
+            if (code) {
+                const res = await supabase.auth.exchangeCodeForSession(code);
+                user = res.data?.user;
+                error = res.error;
+            } else if (token_hash && type) {
+                const res = await supabase.auth.verifyOtp({ token_hash, type });
+                user = res.data?.user;
+                error = res.error;
+            }
+
+            if (!error && user) {
+                console.log(`[Auth Callback] Session established successfully for user ID: ${user.id}, email: ${user.email}`);
+
                 // Get role from URL query or cookie
                 const roleCookie = cookieStore.get("involution_role");
                 let role = queryRole || roleCookie?.value || "investor";
 
                 // Update user metadata to save role if not already set
-                let currentRole = data.user.user_metadata?.role;
+                let currentRole = user.user_metadata?.role;
                 
                 // Fetch dbRole explicitly to override cookie/metadata for admins
                 const { data: roleData } = await supabase
                     .from("user_roles")
                     .select("role")
-                    .eq("email", data.user.email)
+                    .eq("email", user.email)
                     .maybeSingle();
 
                 if (roleData?.role === "admin") {
@@ -34,7 +52,7 @@ export async function GET(request: Request) {
                 }
 
                 // Check if they already have a KYC record
-                const userEmail = data.user.email;
+                const userEmail = user.email;
                 let kycRecord = null;
                 if (userEmail) {
                     const { data: kycData } = await supabase
@@ -47,7 +65,7 @@ export async function GET(request: Request) {
                     kycRecord = kycData;
                 }
 
-                const kycDone = Boolean(kycRecord);
+                const kycDone = Boolean(kycRecord && kycRecord.status === "Approved");
                 const isNewUser = !kycRecord;
                 const kycStatus = kycRecord?.status || "None";
 
@@ -62,21 +80,27 @@ export async function GET(request: Request) {
                 });
 
                 const redirectRole = currentRole || role;
-                let redirectPath = redirectRole === "investor" ? "/investors/dashboard" : "/startups/dashboard";
+                let redirectPath = redirectRole === "investor" ? "/investors/dashboard" : 
+                                 redirectRole === "startup" ? "/startups/dashboard" :
+                                 redirectRole === "incubation" ? "/incube/dashboard" :
+                                 redirectRole === "mentor" ? "/mentors/dashboard" :
+                                 "/investors/dashboard";
                 
                 if (redirectRole === "admin") {
                     redirectPath = "/admin/kyc";
                 }
 
+                console.log(`[Auth Callback] Redirecting user ${user.email} (Role: ${redirectRole}) to ${redirectPath}`);
                 return NextResponse.redirect(`${origin}${redirectPath}`);
             } else {
-                console.error("Supabase exchangeCodeForSession error:", error);
+                console.error(`[Auth Callback] Supabase verification error:`, error?.message || error);
             }
         }
 
-        return NextResponse.redirect(`${origin}/login?error=Could not authenticate`);
+        console.warn(`[Auth Callback] Authentication failed or missing code/token_hash. Redirecting to login with error.`);
+        return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent("Could not authenticate. Verification link may have expired or is invalid.")}`);
     } catch (e: any) {
-        console.error("Auth callback exception:", e);
+        console.error("[Auth Callback] Uncaught exception:", e);
         return NextResponse.redirect(new URL("/login?error=Server error", request.url));
     }
 }

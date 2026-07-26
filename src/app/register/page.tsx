@@ -51,12 +51,18 @@ export default function RegisterPage() {
                 return;
             }
 
-            setSuccessMsg("Account created successfully! Redirecting...");
+            const msg = data.requiresVerification
+                ? "Account created! Please check your email inbox to confirm your verification link before logging in."
+                : "Account created successfully! Redirecting...";
+            setSuccessMsg(msg);
             
-            // Redirect to login after a short delay
+            // Redirect to login after a short delay, passing any verification message
             setTimeout(() => {
-                router.push("/login");
-            }, 1500);
+                const redirectUrl = data.requiresVerification
+                    ? `/login?message=${encodeURIComponent("Please check your email inbox and click the Supabase verification link to activate your account before logging in.")}`
+                    : "/login";
+                router.push(redirectUrl);
+            }, 2000);
 
         } catch (err) {
             setError("An unexpected error occurred. Please try again later.");

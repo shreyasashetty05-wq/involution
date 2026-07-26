@@ -1,17 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, ShieldCheck, Mail, Lock } from "lucide-react";
 import { RoleToggle } from "@/components/RoleToggle";
 import { GoogleAuthButton } from "@/components/GoogleAuthButton";
 import { useGoogleAuth } from "@/frontend/hooks/useGoogleAuth";
 
-/**
- * Renders the login page with role selection, email/password sign-in, and Google sign-in.
- */
-export default function LoginPage() {
+function LoginContent() {
     const [isEmailLoading, setIsEmailLoading] = useState(false);
     const [role, setRole] = useState("investor");
     
@@ -19,9 +16,18 @@ export default function LoginPage() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState<string | null>(null);
+    const [infoMessage, setInfoMessage] = useState<string | null>(null);
     
     const router = useRouter();
+    const searchParams = useSearchParams();
     const { isLoading: isGoogleLoading, error: googleError, handleGoogleAuth } = useGoogleAuth(role);
+
+    useEffect(() => {
+        const urlError = searchParams.get("error");
+        const urlMessage = searchParams.get("message");
+        if (urlError) setError(urlError);
+        if (urlMessage) setInfoMessage(urlMessage);
+    }, [searchParams]);
 
     // Merge Google auth errors into local error state
     const displayError = error || googleError;
@@ -30,6 +36,7 @@ export default function LoginPage() {
         e.preventDefault();
         setIsEmailLoading(true);
         setError(null);
+        setInfoMessage(null);
         
         document.cookie = `involution_role=${role}; path=/; max-age=3600; Secure; SameSite=Lax`;
 
@@ -48,10 +55,12 @@ export default function LoginPage() {
                 return;
             }
 
-            // Redirect based on role
-            const dashUrl = role === "startup" ? "/startups/dashboard" : 
-                            role === "incubation" ? "/incube/dashboard" : 
-                            role === "mentor" ? "/mentors/dashboard" : 
+            // Redirect based on actual user role from database/metadata if available, fallback to UI toggle
+            const userRole = (data.user?.user_metadata?.role || role).toLowerCase();
+            const dashUrl = userRole === "startup" ? "/startups/dashboard" : 
+                            userRole === "incubation" ? "/incube/dashboard" : 
+                            userRole === "mentor" ? "/mentors/dashboard" : 
+                            userRole === "admin" ? "/admin/kyc" :
                             "/investors/dashboard";
             router.push(dashUrl);
         } catch (err) {
@@ -86,6 +95,12 @@ export default function LoginPage() {
 
                     {/* Role toggle */}
                     <RoleToggle role={role} setRole={setRole} />
+
+                    {infoMessage && (
+                        <div className="mb-6 p-3 rounded-xl bg-emerald-50 border border-emerald-100 text-emerald-700 text-sm text-left animate-fade-in-up">
+                            {infoMessage}
+                        </div>
+                    )}
 
                     {displayError && (
                         <div className="mb-6 p-3 rounded-xl bg-red-50 border border-red-100 text-red-600 text-sm text-left animate-fade-in-up">
@@ -162,5 +177,20 @@ export default function LoginPage() {
                 </div>
             </div>
         </div>
+    );
+}
+
+/**
+ * Renders the login page wrapped in a Suspense boundary to support search parameters.
+ */
+export default function LoginPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center p-6 bg-[#f8faf9]">
+                <div className="size-8 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+        }>
+            <LoginContent />
+        </Suspense>
     );
 }
