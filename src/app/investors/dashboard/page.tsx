@@ -22,7 +22,7 @@ export default function InvestorDashboard() {
     const [savedStartups, setSavedStartups] = useState<any[]>([]);
     const [recentActivity, setRecentActivity] = useState<any[]>([]);
     const [recommendedStartups, setRecommendedStartups] = useState<any[]>([]);
-    const [investorProfile, setInvestorProfile] = useState<any>({ name: "Investor", joined: "2024" });
+    const [investorProfile, setInvestorProfile] = useState<any>({ name: "Investor", joined: "2024", photo: null });
     const [analytics, setAnalytics] = useState<any>({ industries: 0, verified: 0, avgTrust: 0, avgAi: 0 });
 
     const supabase = createClient();
@@ -47,7 +47,8 @@ export default function InvestorDashboard() {
                 if (user) {
                     setInvestorProfile({
                         name: (user.user_metadata?.kycStatus === 'Approved' ? (user.user_metadata?.kyc_name || user.user_metadata?.full_name) : user.user_metadata?.full_name) || "Investor",
-                        joined: new Date(user.created_at || Date.now()).getFullYear().toString()
+                        joined: new Date(user.created_at || Date.now()).getFullYear().toString(),
+                        photo: dataDash.success ? dataDash.profilePhoto : null
                     });
                 }
 
@@ -181,8 +182,12 @@ export default function InvestorDashboard() {
             {/* Header Area */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-6">
                 <div className="flex items-center gap-4">
-                    <div className="size-14 rounded-full bg-slate-900 flex items-center justify-center text-white text-xl font-bold font-outfit shadow-lg shadow-slate-900/20 shrink-0">
-                        {investorProfile.name.charAt(0).toUpperCase()}
+                    <div className="size-14 rounded-2xl bg-slate-900 flex items-center justify-center text-white text-xl font-bold font-outfit shadow-lg shadow-slate-900/20 shrink-0 overflow-hidden">
+                        {investorProfile.photo ? (
+                            <img src={investorProfile.photo} alt={investorProfile.name} className="w-full h-full object-cover" />
+                        ) : (
+                            investorProfile.name.charAt(0).toUpperCase()
+                        )}
                     </div>
                     <div>
                         <h1 className="text-2xl md:text-3xl font-outfit font-bold text-slate-900 flex items-center gap-2">

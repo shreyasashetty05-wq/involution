@@ -102,10 +102,17 @@ export async function GET(req: NextRequest) {
 
         const totalCapitalStr = executedDeals.reduce((sum, d) => sum + parseCapitalAmount(d.term_amount), 0);
 
+        const { data: profileData } = await supabase
+            .from('investor_profiles')
+            .select('photo_url')
+            .eq('email', user.email)
+            .maybeSingle();
+
         return NextResponse.json({
             success: true,
             executedAgreements,
             activeChats,
+            profilePhoto: profileData?.photo_url || null,
             portfolioStats: {
                 totalCapital: formatCapital(totalCapitalStr),
                 activeStartups: executedDeals.length

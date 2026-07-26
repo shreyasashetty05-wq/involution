@@ -107,8 +107,12 @@ export default function StartupDashboardClient({ myStartups }: StartupDashboardC
                             <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-4 gap-6 bg-white p-6 md:p-8 rounded-3xl border border-slate-200 shadow-sm relative overflow-hidden">
                                 <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none"><Rocket className="size-40 text-emerald-600" /></div>
                                 <div className="flex items-center gap-5 relative z-10">
-                                    <div className="size-20 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg shadow-emerald-500/20 flex items-center justify-center text-white text-3xl font-bold font-outfit shrink-0 border-2 border-white">
-                                        {myStartup.name.charAt(0)}
+                                    <div className="size-20 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg shadow-emerald-500/20 flex items-center justify-center text-white text-3xl font-bold font-outfit shrink-0 border-2 border-white overflow-hidden">
+                                        {myStartup.basicInfo?.logoUrl ? (
+                                            <img src={myStartup.basicInfo.logoUrl} alt={myStartup.name} className="w-full h-full object-cover" />
+                                        ) : (
+                                            myStartup.name.charAt(0)
+                                        )}
                                     </div>
                                     <div>
                                         <div className="flex items-center gap-3 mb-1">
