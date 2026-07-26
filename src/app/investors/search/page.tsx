@@ -475,7 +475,7 @@ export default function AISearchEngine() {
 
                                         {/* Row 3: Stats */}
                                         <div className="flex flex-wrap items-center gap-6 text-sm font-bold text-slate-600">
-                                            <span className="flex items-center gap-1.5"><MapPin className="size-4 text-slate-400"/> {startup.location || '—'}</span>
+                                            <span className="flex items-center gap-1.5"><MapPin className="size-4 text-slate-400"/> {startup.business_info?.headquarters || startup.location || '—'}</span>
                                             <span className="flex items-center gap-1.5"><Calendar className="size-4 text-slate-400"/> Founded {startup.business_info?.yearFounded || '—'}</span>
                                             <span className="flex items-center gap-1.5"><Users className="size-4 text-slate-400"/> Team Size: {(startup.basic_info?.teamMembersData?.length || 0) + 1}</span>
                                         </div>
