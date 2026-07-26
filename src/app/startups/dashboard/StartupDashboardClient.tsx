@@ -261,12 +261,16 @@ export default function StartupDashboardClient({ myStartups }: StartupDashboardC
                                                     {activeDeals.map((deal) => (
                                                         <Link href={`/messages?startupId=${deal.startupId}&investorId=${encodeURIComponent(deal.investor)}&name=${encodeURIComponent(deal.startupName)}`} key={deal.id} className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center p-4 rounded-2xl border border-slate-100 bg-slate-50 hover:bg-white hover:border-blue-200 hover:shadow-md transition-all group">
                                                             <div className="flex items-center gap-4">
-                                                                <div className="size-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-xl border border-blue-100 shrink-0">
-                                                                    {deal.investor.charAt(0)}
+                                                                <div className="size-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-xl border border-blue-100 shrink-0 overflow-hidden">
+                                                                    {deal.investorPhoto ? (
+                                                                        <img src={deal.investorPhoto} alt={deal.investorName || "Investor"} className="w-full h-full object-cover" />
+                                                                    ) : (
+                                                                        (deal.investorName || deal.investor).charAt(0).toUpperCase()
+                                                                    )}
                                                                 </div>
                                                                 <div>
                                                                     <div className="flex items-center gap-2 mb-1">
-                                                                        <h3 className="font-bold text-slate-900">{deal.investor}</h3>
+                                                                        <h3 className="font-bold text-slate-900">{deal.investorName || deal.investor}</h3>
                                                                         {deal.unread > 0 && <span className="px-2 py-0.5 bg-red-100 text-red-600 rounded-lg text-[10px] font-bold animate-pulse">{deal.unread} New</span>}
                                                                     </div>
                                                                     <p className="text-sm text-slate-500 line-clamp-1 flex items-center gap-1.5"><MessageSquare className="size-3"/> {deal.lastMessage}</p>

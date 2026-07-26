@@ -22,6 +22,8 @@ function buildActiveChat(deal: any) {
         startupId: deal.startup_id,
         startupName: deal.startup_name,
         investor: deal.investor_id,
+        investorName: '',
+        investorPhoto: '',
         phase: deal.current_phase || 1,
         lastMessage: lastMsg?.text ?? "No messages yet.",
         time: lastMsg?.time ?? 'Recently',
@@ -79,6 +81,34 @@ export async function GET(req: NextRequest) {
         const activeChats = dealsList
             .filter(d => d.status === 'negotiating')
             .map(buildActiveChat);
+
+        const investorEmails = activeChats.map(c => c.investor);
+        if (investorEmails.length > 0) {
+            const { data: kycDocs } = await supabase
+                .from('kyc_documents')
+                .select('email, name')
+                .in('email', investorEmails);
+            
+            const nameMap = (kycDocs || []).reduce((acc: any, doc: any) => {
+                acc[doc.email] = doc.name;
+                return acc;
+            }, {});
+
+            const { data: profiles } = await supabase
+                .from('investor_profiles')
+                .select('email, photo_url')
+                .in('email', investorEmails);
+                
+            const photoMap = (profiles || []).reduce((acc: any, doc: any) => {
+                if (doc.photo_url) acc[doc.email] = doc.photo_url;
+                return acc;
+            }, {});
+
+            activeChats.forEach(chat => {
+                chat.investorName = nameMap[chat.investor] || chat.investor.split('@')[0];
+                chat.investorPhoto = photoMap[chat.investor] || '';
+            });
+        }
 
         return NextResponse.json({ success: true, activeChats, executedAgreements });
 

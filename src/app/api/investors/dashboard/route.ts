@@ -34,6 +34,8 @@ function buildActiveChat(deal: any) {
         id: deal.id,
         startupId: deal.startup_id || '',
         startup: deal.startup_name,
+        startupName: deal.startup_name,
+        founderName: '',
         lastMessage: lastMsg?.text ?? "No messages yet.",
         time: lastMsg?.time ?? 'Recently',
         unread: 0
@@ -76,6 +78,27 @@ export async function GET(req: NextRequest) {
         const executedDeals = dealsList.filter(d => d.status === 'executed');
         const executedAgreements = executedDeals.map(buildExecutedAgreement);
         const activeChats = dealsList.filter(d => d.status === 'negotiating').map(buildActiveChat);
+
+        const startupIds = activeChats.map(c => c.startupId).filter(Boolean);
+        if (startupIds.length > 0) {
+            const { data: startupsData } = await supabase
+                .from('startups')
+                .select('id, basic_info')
+                .in('id', startupIds);
+            
+            const founderMap = (startupsData || []).reduce((acc: any, s: any) => {
+                if (s.basic_info && s.basic_info.founderName) {
+                    acc[s.id] = s.basic_info.founderName;
+                }
+                return acc;
+            }, {});
+
+            activeChats.forEach(chat => {
+                chat.startupName = chat.startup; 
+                chat.founderName = founderMap[chat.startupId];
+                chat.startup = chat.founderName || chat.startup; 
+            });
+        }
 
         const totalCapitalStr = executedDeals.reduce((sum, d) => sum + parseCapitalAmount(d.term_amount), 0);
 
