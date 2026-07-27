@@ -95,7 +95,6 @@ export const publishStartup = async (supabase: SupabaseClient, body: any, ownerE
             investmentRequired: body.investmentRequired,
             equityOffered: body.equityOffered,
             currentValuation: body.currentValuation,
-            minInvestmentTicket: body.minInvestmentTicket,
             useOfFunds: body.useOfFunds || {}
         },
         growth_metrics: {

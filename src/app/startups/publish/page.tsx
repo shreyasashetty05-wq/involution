@@ -94,7 +94,6 @@ export default function StartupPublishForm() {
         investmentRequired: "",
         equityOffered: "",
         currentValuation: "",
-        minInvestmentTicket: "",
         useOfFunds: {
             productDevelopment: false, hiring: false, marketing: false, infrastructure: false, expansion: false, operations: false, other: false
         },
@@ -487,11 +486,10 @@ export default function StartupPublishForm() {
                 {/* 5. Investment Details */}
                 <div className="bg-white border border-slate-200 p-6 md:p-8 rounded-2xl shadow-sm">
                     <SectionHeader num="5" title="Investment Details" />
-                    <div className="grid md:grid-cols-4 gap-6 mb-8">
+                    <div className="grid md:grid-cols-3 gap-6 mb-8">
                         <div><Label required>Investment Required (₹)</Label><Input type="number" required placeholder="e.g. 5000000" value={formData.investmentRequired} onChange={(e: any) => updateField('investmentRequired', e.target.value)} /></div>
                         <div><Label required>Equity Offered (%)</Label><Input type="number" required placeholder="e.g. 10" value={formData.equityOffered} onChange={(e: any) => updateField('equityOffered', e.target.value)} /></div>
                         <div><Label required>Current Valuation (₹)</Label><Input type="number" required disabled className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-800 font-bold" value={formData.currentValuation} placeholder="Auto-calculated" /></div>
-                        <div><Label required>Minimum Investment Ticket (₹)</Label><Input type="number" required placeholder="e.g. 100000" value={formData.minInvestmentTicket} onChange={(e: any) => updateField('minInvestmentTicket', e.target.value)} /></div>
                     </div>
                     <div>
                         <Label required>Use of Funds</Label>

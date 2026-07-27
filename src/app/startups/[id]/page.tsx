@@ -354,7 +354,7 @@ export default function StartupProfile() {
                     <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
                         <Target className="size-6 text-emerald-500" /> Investment Snapshot
                     </h2>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                         <div className="bg-white border border-slate-200 p-6 rounded-3xl shadow-sm">
                             <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Investment Required</p>
                             <p className="text-2xl font-black text-slate-900 font-mono">{formatCurrency(investment_details.investmentRequired || startup.requested)}</p>
@@ -366,10 +366,6 @@ export default function StartupProfile() {
                         <div className="bg-white border border-slate-200 p-6 rounded-3xl shadow-sm">
                             <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Current Valuation</p>
                             <p className="text-2xl font-black text-slate-900 font-mono">{formatCurrency(investment_details.currentValuation || "0")}</p>
-                        </div>
-                        <div className="bg-white border border-slate-200 p-6 rounded-3xl shadow-sm">
-                            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Minimum Investment</p>
-                            <p className="text-2xl font-black text-slate-900 font-mono">{formatCurrency(investment_details.minimumInvestment || "0")}</p>
                         </div>
                     </div>
                     {investment_details.useOfFunds && Object.keys(investment_details.useOfFunds).length > 0 && (

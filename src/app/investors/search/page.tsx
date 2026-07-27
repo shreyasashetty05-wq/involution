@@ -531,7 +531,6 @@ export default function AISearchEngine() {
                                                 <div className="flex justify-between items-center"><span className="text-xs text-slate-500 font-bold">Investment Required</span><span className="text-sm font-mono font-bold text-slate-900">{startup.requested ? formatCurrency(startup.requested) : '—'}</span></div>
                                                 <div className="flex justify-between items-center"><span className="text-xs text-slate-500 font-bold">Equity Offered</span><span className="text-sm font-bold text-emerald-600">{startup.equity ? `${startup.equity}%` : '—'}</span></div>
                                                 <div className="flex justify-between items-center"><span className="text-xs text-slate-500 font-bold">Current Valuation</span><span className="text-sm font-mono font-bold text-slate-900">{impliedValuation ? formatCurrency(impliedValuation) : '—'}</span></div>
-                                                <div className="flex justify-between items-center"><span className="text-xs text-slate-500 font-bold">Min. Investment Ticket</span><span className="text-sm font-mono font-bold text-slate-900">{startup.investment_details?.minimumInvestment ? formatCurrency(startup.investment_details.minimumInvestment) : '—'}</span></div>
                                             </div>
                                             
                                             {/* Financial Snapshot */}
