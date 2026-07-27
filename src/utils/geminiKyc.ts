@@ -72,7 +72,11 @@ Respond strictly in JSON format:
 
     } catch (error: any) {
         console.error("Gemini KYC Verification Error:", error);
-        fs.appendFileSync("kyc-error.log", new Date().toISOString() + " - " + documentType + " Error: " + (error.message || error.toString()) + "\nStack: " + error.stack + "\n\n");
+        try {
+            fs.appendFileSync("kyc-error.log", new Date().toISOString() + " - " + documentType + " Error: " + (error.message || error.toString()) + "\nStack: " + error.stack + "\n\n");
+        } catch (fsError) {
+            console.error("Failed to write to kyc-error.log:", fsError);
+        }
         return { valid: false, reason: "AI verification failed due to an internal error." };
     }
 }

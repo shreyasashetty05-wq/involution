@@ -273,13 +273,21 @@ export default function KYCSubmitPage() {
         </div>
     );
 
+    const getVerificationTitle = () => {
+        const role = user?.user_metadata?.role;
+        if (role === "investor") return "Investor verification";
+        if (role === "startup" || role === "incubation") return "Startup verification";
+        if (role === "student") return "Student verification";
+        return "Secure Identity Verification";
+    };
+
     return (
         <div className="container mx-auto px-6 py-12 max-w-4xl min-h-screen">
             <div className="mb-10 text-center animate-fade-in-up">
                 <div className="inline-flex justify-center items-center size-16 rounded-full bg-indigo-50 mb-4">
                     <ShieldCheck className="size-8 text-indigo-600" />
                 </div>
-                <h1 className="text-4xl font-outfit font-bold text-slate-900 mb-4">Secure Identity Verification</h1>
+                <h1 className="text-4xl font-outfit font-bold text-slate-900 mb-4">{getVerificationTitle()}</h1>
                 <p className="text-slate-500 font-inter max-w-xl mx-auto">
                     To ensure platform safety, please complete your KYC by providing your PAN and Aadhaar details. Your documents are encrypted and AI-validated before submission.
                 </p>
