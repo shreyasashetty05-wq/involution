@@ -14,10 +14,12 @@ export default function IncubeDashboard() {
     const [activeDeals, setActiveDeals] = useState<any[]>([]);
 
     useEffect(() => {
+        let isMounted = true;
+
         const fetchDashboardData = async () => {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) {
-                router.push('/login');
+                if (isMounted) router.push('/login');
                 return;
             }
 
@@ -27,7 +29,7 @@ export default function IncubeDashboard() {
                 .eq('owner_email', user.email)
                 .maybeSingle();
 
-            if (!error && appData) {
+            if (!error && appData && isMounted) {
                 setApplication(appData);
                 
                 const { data: dealsData } = await supabase
@@ -35,14 +37,41 @@ export default function IncubeDashboard() {
                     .select("*")
                     .eq("startup_id", appData.id);
                     
-                if (dealsData) {
-                    setActiveDeals(dealsData);
+                if (dealsData && dealsData.length > 0) {
+                    const investorEmails = dealsData.map(d => d.investor_id);
+                    const { data: kycDocs } = await supabase
+                        .from('kyc_documents')
+                        .select('email, name')
+                        .in('email', investorEmails);
+                    
+                    const nameMap = (kycDocs || []).reduce((acc: any, doc: any) => {
+                        acc[doc.email] = doc.name;
+                        return acc;
+                    }, {});
+
+                    const enrichedDeals = dealsData.map(deal => {
+                        const lastMsg = deal.messages?.at(-1);
+                        return {
+                            ...deal,
+                            investorName: nameMap[deal.investor_id] || deal.investor_id.split('@')[0],
+                            lastMessage: lastMsg?.text || ""
+                        };
+                    });
+                    setActiveDeals(enrichedDeals);
+                } else {
+                    setActiveDeals([]);
                 }
             }
-            setLoading(false);
+            if (isMounted) setLoading(false);
         };
 
         fetchDashboardData();
+        const intervalId = setInterval(fetchDashboardData, 5000);
+
+        return () => {
+            isMounted = false;
+            clearInterval(intervalId);
+        };
     }, [supabase, router]);
 
     if (loading) {
@@ -215,8 +244,11 @@ export default function IncubeDashboard() {
                                                 className="flex items-center justify-between bg-white/10 hover:bg-white/20 border border-white/20 p-4 rounded-xl transition-colors"
                                             >
                                                 <div>
-                                                    <div className="font-bold">Deal with Investor</div>
-                                                    <div className="text-xs text-blue-200">Phase {deal.current_phase}</div>
+                                                    <div className="font-bold">{deal.investorName || "Deal with Investor"}</div>
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="text-xs text-blue-200">Phase {deal.current_phase}</div>
+                                                    </div>
+                                                    {deal.lastMessage && <div className="text-xs text-white/80 mt-1 line-clamp-1 italic">"{deal.lastMessage}"</div>}
                                                 </div>
                                                 <div className="px-3 py-1 bg-white text-blue-600 text-xs font-bold rounded-lg shadow-sm">
                                                     Open
