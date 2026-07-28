@@ -57,13 +57,15 @@ export function NegotiationTab({
     isStartup, 
     startupName, 
     investorName, 
-    onLock 
+    onLock,
+    isStudent = false
 }: { 
     dealId: string; 
     isStartup: boolean; 
     startupName: string; 
     investorName: string;
     onLock: () => void;
+    isStudent?: boolean;
 }) {
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
@@ -614,7 +616,7 @@ export function NegotiationTab({
                             <div className="bg-emerald-50 rounded-2xl p-6 border border-emerald-100 flex items-center justify-between mt-6">
                                 <div>
                                     <h3 className="font-bold text-emerald-800 text-lg mb-1">Pending Investor Final Approval</h3>
-                                    <p className="text-emerald-600 text-sm mb-4">Startup has accepted the Counter Offer.</p>
+                                    <p className="text-emerald-600 text-sm mb-4">{isStudent ? 'Student Founder' : 'Startup'} has accepted the Counter Offer.</p>
                                     
                                     {amIStartup ? (
                                         <p className="text-sm font-semibold text-emerald-700 flex items-center gap-2">
@@ -683,7 +685,7 @@ export function NegotiationTab({
                                         <div className="flex-1">
                                             <div className="flex justify-between items-center mb-1">
                                                 <div className="flex items-center gap-2">
-                                                    <span className="font-semibold text-slate-800">{amISender ? "You" : (msg.sender_type === 'startup' ? "Startup" : "Investor")}</span>
+                                                    <span className="font-semibold text-slate-800">{amISender ? "You" : (msg.sender_type === 'startup' ? (isStudent ? "Student Founder" : "Startup") : "Investor")}</span>
                                                     <span className="text-[10px] text-slate-400">{new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                                                     {msg.is_edited && <span className="text-[9px] text-slate-400 italic">(edited)</span>}
                                                 </div>
@@ -731,10 +733,10 @@ export function NegotiationTab({
                                     </div>
                                     <div className="flex-1">
                                         <p className="text-sm font-semibold text-slate-800">
-                                            {v.action === 'Initial Offer' ? 'Startup Initial Offer' : 
-                                             v.action === 'Counter Offer' ? `Counter Offer by ${v.proposed_by_type === 'startup' ? 'Startup' : 'Investor'}` :
-                                             v.action === 'Accepted' ? `Accepted by ${v.proposed_by_type === 'startup' ? 'Startup' : 'Investor'}` :
-                                             v.action === 'Rejected' ? `Rejected by ${v.proposed_by_type === 'startup' ? 'Startup' : 'Investor'}` :
+                                            {v.action === 'Initial Offer' ? (isStudent ? 'Student Founder Initial Offer' : 'Startup Initial Offer') : 
+                                             v.action === 'Counter Offer' ? `Counter Offer by ${v.proposed_by_type === 'startup' ? (isStudent ? 'Student Founder' : 'Startup') : 'Investor'}` :
+                                             v.action === 'Accepted' ? `Accepted by ${v.proposed_by_type === 'startup' ? (isStudent ? 'Student Founder' : 'Startup') : 'Investor'}` :
+                                             v.action === 'Rejected' ? `Rejected by ${v.proposed_by_type === 'startup' ? (isStudent ? 'Student Founder' : 'Startup') : 'Investor'}` :
                                              (v.proposed_by_type === 'startup' ? "Counter Offer by Founder" : "Counter Offer by Investor")}
                                         </p>
                                         <p className="text-xs text-slate-400">{new Date(v.created_at).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</p>

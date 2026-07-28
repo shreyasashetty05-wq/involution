@@ -105,6 +105,15 @@ function DealWorkspace() {
     const [investorProfile, setInvestorProfile] = useState<any>(null);
     const toast = useToast();
 
+    // Student Founder variables
+    const isStudentParam = searchParams.get('isStudent') === 'true';
+    const institutionParam = searchParams.get('institutionName');
+    const incubationParam = searchParams.get('incubationCentre');
+
+    const [isStudent, setIsStudent] = useState(isStudentParam);
+    const [institutionName, setInstitutionName] = useState<string | null>(institutionParam);
+    const [incubationCentre, setIncubationCentre] = useState<string | null>(incubationParam);
+
     const [messages, setMessages] = useState<any[]>([]);
     const [inputMessage, setInputMessage] = useState("");
     const [isUploading, setIsUploading] = useState(false);
@@ -248,6 +257,9 @@ function DealWorkspace() {
                 if (data.deal.status === 'executed') {
                     setNegotiationPhase(prev => prev !== 'executed' ? 'executed' : prev);
                 }
+                if (data.deal.isStudent) setIsStudent(true);
+                if (data.deal.institutionName) setInstitutionName(data.deal.institutionName);
+                if (data.deal.incubationCentre) setIncubationCentre(data.deal.incubationCentre);
 
                 if (data.deal.meetings) {
                     const newMeetings = data.deal.meetings.map((m: any) => ({
@@ -305,7 +317,8 @@ function DealWorkspace() {
             return;
         }
 
-        const nextPhase = Math.min(5, currentPhase + 1);
+        let nextPhase = Math.min(5, currentPhase + 1);
+        if (isStudent && nextPhase === 3) nextPhase = 4;
 
         try {
             await fetch('/api/deals', {
@@ -315,7 +328,8 @@ function DealWorkspace() {
                     startupId,
                     investorId,
                     action: 'advancePhase',
-                    newPhase: nextPhase
+                    newPhase: nextPhase,
+                    isStudent
                 })
             });
         } catch (err) {
@@ -599,15 +613,22 @@ function DealWorkspace() {
 
 
 
-    const phases = [
-        { num: 1, title: "Identity & Verification", desc: "Profile & KYC Verified", icon: ShieldCheck },
-        { num: 2, title: "Pitch & Initial Interest", desc: "Startup Discovery", icon: Search },
-        { num: 3, title: "Meetings", desc: "Trust Building", icon: Video },
-        { num: 4, title: "Negotiation", desc: "Deal Terms & Discussion", icon: Handshake },
-        { num: 5, title: "Agreement & Funding", desc: "Term Sheet Executed", icon: FileSignature },
+    const displayPhases = isStudent ? [
+        { num: 1, dbPhase: 1, title: "Identity & Verification", desc: "Profile & KYC Verified", icon: ShieldCheck },
+        { num: 2, dbPhase: 2, title: "Pitch & Initial Interest", desc: "Project Discovery", icon: Search },
+        { num: 3, dbPhase: 4, title: "Negotiation", desc: "Deal Terms & Discussion", icon: Handshake },
+        { num: 4, dbPhase: 5, title: "Agreement & Funding", desc: "Term Sheet Executed", icon: FileSignature },
+    ] : [
+        { num: 1, dbPhase: 1, title: "Identity & Verification", desc: "Profile & KYC Verified", icon: ShieldCheck },
+        { num: 2, dbPhase: 2, title: "Pitch & Initial Interest", desc: "Startup Discovery", icon: Search },
+        { num: 3, dbPhase: 3, title: "Meetings", desc: "Trust Building", icon: Video },
+        { num: 4, dbPhase: 4, title: "Negotiation", desc: "Deal Terms & Discussion", icon: Handshake },
+        { num: 5, dbPhase: 5, title: "Agreement & Funding", desc: "Term Sheet Executed", icon: FileSignature },
     ];
 
     const PHASE_COLOR = ["", "bg-emerald-500", "bg-emerald-500", "bg-indigo-600", "bg-amber-500", "bg-pink-500"];
+    
+    const nextPhaseObj = displayPhases.find(p => p.dbPhase > currentPhase);
 
     return (
         <div className="flex flex-col h-[calc(100vh-64px)] bg-[#f4f6f5] overflow-hidden">
@@ -619,17 +640,21 @@ function DealWorkspace() {
                         Secure Deal Workspace
                         <span className="text-sm font-medium px-3 py-0.5 bg-white/10 rounded-full text-slate-300 border border-white/10">with {startupName}</span>
                     </h1>
-                    <p className="text-xs text-slate-400 mt-0.5">End-to-end encrypted negotiation · 5-phase investment lifecycle</p>
+                    <p className="text-xs text-slate-400 mt-0.5">
+                        End-to-end encrypted negotiation · {displayPhases.length}-phase investment lifecycle
+                        {isStudent && institutionName && ` · ${institutionName}`}
+                        {isStudent && incubationCentre && ` (${incubationCentre})`}
+                    </p>
                 </div>
                 <div className="relative">
                     <Bubbles trigger={bubbleTrigger} />
-                    {currentPhase < 5 && (
+                    {currentPhase < 5 && nextPhaseObj && (
                         <button
                             onClick={advancePhase}
                             className="relative flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg text-sm transition-all shadow-md hover:shadow-emerald-600/30 hover:scale-105 active:scale-95"
                         >
                             <Sparkles className="size-4" />
-                            Advance to Phase {currentPhase + 1}
+                            Advance to Phase {nextPhaseObj.num}
                             <ChevronRight className="size-4" />
                         </button>
                     )}
@@ -645,10 +670,10 @@ function DealWorkspace() {
                     <div className="relative flex flex-col gap-0">
                         <div className="absolute left-5 inset-y-6 w-0.5 bg-slate-700 z-0" />
 
-                        {phases.map((phase) => {
-                            const isPast = phase.num < currentPhase;
-                            const isCurrent = phase.num === currentPhase;
-                            const isLocked = phase.num > currentPhase;
+                        {displayPhases.map((phase) => {
+                            const isPast = phase.dbPhase < currentPhase;
+                            const isCurrent = phase.dbPhase === currentPhase;
+                            const isLocked = phase.dbPhase > currentPhase;
                             const Icon = phase.icon;
 
                             return (
@@ -678,13 +703,13 @@ function DealWorkspace() {
                     {/* Tab bar */}
                     <div className="bg-white border-b border-slate-200 px-4 pt-3 pb-0 flex gap-1 overflow-x-auto shrink-0">
                         {[
-                            { key: 'chat', label: 'Message Room', phase: 1, color: 'emerald' },
-                            { key: 'trust', label: 'Meetings', phase: 2, color: 'indigo' },
-                            { key: 'diligence', label: 'Due Diligence', phase: 3, color: 'amber' },
-                            { key: 'negotiation', label: 'Negotiation', phase: 4, color: 'blue' },
-                            { key: 'agreement', label: 'Smart Agreement', phase: 5, color: 'pink' },
+                            { key: 'chat', label: 'Message Room', dbPhase: 1, displayPhase: 1, color: 'emerald' },
+                            { key: 'trust', label: 'Meetings', dbPhase: 2, displayPhase: 2, color: 'indigo' },
+                            ...(isStudent ? [] : [{ key: 'diligence', label: 'Due Diligence', dbPhase: 3, displayPhase: 3, color: 'amber' }]),
+                            { key: 'negotiation', label: 'Negotiation', dbPhase: 4, displayPhase: isStudent ? 3 : 4, color: 'blue' },
+                            { key: 'agreement', label: 'Smart Agreement', dbPhase: 5, displayPhase: isStudent ? 4 : 5, color: 'pink' },
                         ].map(t => {
-                            const locked = currentPhase < t.phase;
+                            const locked = currentPhase < t.dbPhase;
                             const isActive = activeTab === t.key;
                             return (
                                 <button key={t.key}
@@ -699,7 +724,7 @@ function DealWorkspace() {
                                             t.color === 'indigo' ? 'bg-indigo-100 text-indigo-700' :
                                                 t.color === 'amber' ? 'bg-amber-100 text-amber-700' :
                                                     'bg-pink-100 text-pink-700'}`}>
-                                        P{t.phase}
+                                        P{t.displayPhase}
                                     </span>
                                 </button>
                             );
@@ -1122,6 +1147,7 @@ function DealWorkspace() {
                                 startupName={startupName}
                                 investorName={investorProfile?.full_name || "Investor"}
                                 onLock={() => advancePhase()} 
+                                isStudent={isStudent}
                             />
                         )}
                         {activeTab === 'negotiation' && currentPhase < 4 && <PhaseLock phase={4} />}
@@ -1155,7 +1181,7 @@ function DealWorkspace() {
                                                 {(
                                                     [
                                                         ['Payment Method', paymentMethod, setPaymentMethod],
-                                                        ['Company Address', companyAddress, setCompanyAddress],
+                                                        [isStudent ? 'College/University' : 'Company Address', companyAddress, setCompanyAddress],
                                                     ] as [string, string, (v: string) => void][]
                                                 ).map(([label, val, fn]) => (
                                                     <div key={label}>
@@ -1189,9 +1215,9 @@ function DealWorkspace() {
                                     ) : negotiationPhase === 'startup_drafting' ? (
                                         <div className="space-y-4">
                                             <div className="bg-indigo-50 border border-indigo-200 p-4 rounded-xl">
-                                                <p className="text-sm text-indigo-700 font-medium">Step 1/2: Startup proposes final binding terms.</p>
+                                                <p className="text-sm text-indigo-700 font-medium">Step 1/2: {isStudent ? 'Student Founder' : 'Startup'} proposes final binding terms.</p>
                                             </div>
-                                            <label className="text-[10px] text-slate-400 uppercase tracking-wider font-bold">Startup Founder Signature</label>
+                                            <label className="text-[10px] text-slate-400 uppercase tracking-wider font-bold">{isStudent ? 'Student Founder' : 'Startup Founder'} Signature</label>
                                             <input type="text" placeholder="Type full legal name…"
                                                 className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-800 focus:ring-2 focus:ring-indigo-400 outline-none font-serif italic"
                                                 value={startupSignature} onChange={e => setStartupSignature(e.target.value)} />
@@ -1204,7 +1230,7 @@ function DealWorkspace() {
                                     ) : (
                                         <div className="space-y-4">
                                             <div className="bg-pink-50 border border-pink-200 p-4 rounded-xl">
-                                                <p className="text-sm text-pink-700 font-medium">Step 2/2: Investor Review. Terms are locked by the Startup.</p>
+                                                <p className="text-sm text-pink-700 font-medium">Step 2/2: Investor Review. Terms are locked by the {isStudent ? 'Student Founder' : 'Startup'}.</p>
                                             </div>
                                             <div>
                                                 <label className="text-[10px] text-slate-400 uppercase tracking-wider font-bold">Your Investor Address</label>

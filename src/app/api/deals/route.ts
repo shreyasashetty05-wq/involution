@@ -75,7 +75,34 @@ export async function GET(req: NextRequest) {
             });
         }
 
-        return NextResponse.json({ success: true, deal: mapDealToCamel(deal), currentUser: sessionUserId });
+        let isStudent = false;
+        let institutionName = null;
+        let incubationCentre = null;
+
+        if (deal) {
+            const { data: studentCheck, error: studentError } = await supabase
+                .from('incubation_applications')
+                .select('*')
+                .eq('id', startupId)
+                .maybeSingle();
+            
+            console.log("DEBUG DEAL FETCH:", { startupId, isStudentCheck: !!studentCheck, studentError });
+
+            if (studentCheck) {
+                isStudent = true;
+                institutionName = studentCheck.institution_name;
+                incubationCentre = studentCheck.incubation_centre || null;
+            }
+        }
+
+        const mappedDeal = mapDealToCamel(deal);
+        if (mappedDeal) {
+            (mappedDeal as any).isStudent = isStudent;
+            (mappedDeal as any).institutionName = institutionName;
+            (mappedDeal as any).incubationCentre = incubationCentre;
+        }
+
+        return NextResponse.json({ success: true, deal: mappedDeal, currentUser: sessionUserId });
 
     } catch (error: any) {
         console.error("Fetch Deal Error:", error);
@@ -232,8 +259,14 @@ export async function PUT(req: NextRequest) {
 
         let updateData: any = {};
 
+        // Check if student for conditional phase skipping
+        let isStudent = body.isStudent === true;
+
         if (action === 'advancePhase') {
-            const { newPhase } = body;
+            let { newPhase } = body;
+            if (isStudent && newPhase === 3) {
+                newPhase = 4; // Skip Due Diligence for Student Founders
+            }
             if (newPhase && newPhase > deal.current_phase) {
                 updateData.current_phase = newPhase;
             }

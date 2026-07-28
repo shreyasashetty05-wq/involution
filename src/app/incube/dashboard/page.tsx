@@ -11,6 +11,7 @@ export default function IncubeDashboard() {
     const router = useRouter();
     const [loading, setLoading] = useState(true);
     const [application, setApplication] = useState<any>(null);
+    const [activeDeals, setActiveDeals] = useState<any[]>([]);
 
     useEffect(() => {
         const fetchDashboardData = async () => {
@@ -28,6 +29,15 @@ export default function IncubeDashboard() {
 
             if (!error && appData) {
                 setApplication(appData);
+                
+                const { data: dealsData } = await supabase
+                    .from("deals")
+                    .select("*")
+                    .eq("startup_id", appData.id);
+                    
+                if (dealsData) {
+                    setActiveDeals(dealsData);
+                }
             }
             setLoading(false);
         };
@@ -195,9 +205,30 @@ export default function IncubeDashboard() {
                                 <div className="absolute top-0 right-0 p-4 opacity-20"><ShieldCheck className="size-24" /></div>
                                 <h3 className="font-bold text-xl mb-2 relative z-10">Active Deal Rooms</h3>
                                 <p className="text-blue-100 text-sm mb-6 relative z-10">Check your messages to see if any investors have opened a Deal Room with you.</p>
-                                <Link href="/messages" className="inline-block w-full text-center bg-white text-blue-600 font-bold py-3 rounded-xl hover:bg-blue-50 transition-colors relative z-10 shadow-sm">
-                                    View Messages
-                                </Link>
+                                
+                                {activeDeals.length > 0 ? (
+                                    <div className="space-y-3 relative z-10">
+                                        {activeDeals.map((deal) => (
+                                            <Link 
+                                                key={deal.id}
+                                                href={`/messages?startupId=${application.id}&investorId=${encodeURIComponent(deal.investor_id)}&name=${encodeURIComponent(application.project_name)}&isStudent=true&institutionName=${encodeURIComponent(application.institution_name)}&incubationCentre=${encodeURIComponent(application.incubation_centre || '')}`} 
+                                                className="flex items-center justify-between bg-white/10 hover:bg-white/20 border border-white/20 p-4 rounded-xl transition-colors"
+                                            >
+                                                <div>
+                                                    <div className="font-bold">Deal with Investor</div>
+                                                    <div className="text-xs text-blue-200">Phase {deal.current_phase}</div>
+                                                </div>
+                                                <div className="px-3 py-1 bg-white text-blue-600 text-xs font-bold rounded-lg shadow-sm">
+                                                    Open
+                                                </div>
+                                            </Link>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="text-center p-6 bg-white/10 border border-white/20 rounded-xl relative z-10">
+                                        <p className="text-sm font-medium">No active deal rooms yet.</p>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>

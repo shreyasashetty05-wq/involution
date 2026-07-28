@@ -60,7 +60,7 @@ export default function IncubeExploreIdea() {
                 .maybeSingle();
 
             if (existingDeal) {
-                router.push(`/startups/${application.id}/deal-room`);
+                router.push(`/messages?startupId=${application.id}&investorId=${investorProfile.id}&name=${encodeURIComponent(application.project_name)}&isStudent=true&institutionName=${encodeURIComponent(application.institution_name)}&incubationCentre=${encodeURIComponent(application.incubation_centre || '')}`);
                 return;
             }
 
@@ -80,7 +80,7 @@ export default function IncubeExploreIdea() {
 
             if (dealError) throw dealError;
             
-            router.push(`/startups/${application.id}/deal-room`);
+            router.push(`/messages?startupId=${application.id}&investorId=${investorProfile.id}&name=${encodeURIComponent(application.project_name)}&isStudent=true&institutionName=${encodeURIComponent(application.institution_name)}&incubationCentre=${encodeURIComponent(application.incubation_centre || '')}`);
         } catch (error) {
             console.error("Error opening deal room:", error);
             alert("Failed to open Deal Room. Please try again.");
