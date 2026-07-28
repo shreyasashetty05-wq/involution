@@ -40,47 +40,7 @@ export default function IncubeExploreIdea() {
                 return;
             }
 
-            const { data: investorProfile } = await supabase
-                .from("investor_profiles")
-                .select("id, entity_name")
-                .eq("email", user.email)
-                .single();
-
-            if (!investorProfile) {
-                alert("Only verified investors can open a Deal Room. Please complete your investor profile.");
-                setOpeningDeal(false);
-                return;
-            }
-
-            const { data: existingDeal } = await supabase
-                .from("deals")
-                .select("id")
-                .eq("startup_id", application.id)
-                .eq("investor_id", investorProfile.id)
-                .maybeSingle();
-
-            if (existingDeal) {
-                router.push(`/messages?startupId=${application.id}&investorId=${investorProfile.id}&name=${encodeURIComponent(application.project_name)}&isStudent=true&institutionName=${encodeURIComponent(application.institution_name)}&incubationCentre=${encodeURIComponent(application.incubation_centre || '')}`);
-                return;
-            }
-
-            const { data: newDeal, error: dealError } = await supabase
-                .from("deals")
-                .insert({
-                    startup_id: application.id,
-                    investor_id: investorProfile.id,
-                    startup_name: application.project_name,
-                    status: 'negotiating',
-                    term_amount: `₹ ${(application.ask_amount / 100000).toFixed(1)}L`,
-                    term_equity: `${application.equity_offered}%`,
-                    current_phase: 1
-                })
-                .select()
-                .single();
-
-            if (dealError) throw dealError;
-            
-            router.push(`/messages?startupId=${application.id}&investorId=${investorProfile.id}&name=${encodeURIComponent(application.project_name)}&isStudent=true&institutionName=${encodeURIComponent(application.institution_name)}&incubationCentre=${encodeURIComponent(application.incubation_centre || '')}`);
+            router.push(`/messages?startupId=${application.id}&name=${encodeURIComponent(application.project_name)}&isStudent=true&institutionName=${encodeURIComponent(application.institution_name)}&incubationCentre=${encodeURIComponent(application.incubation_centre || '')}`);
         } catch (error) {
             console.error("Error opening deal room:", error);
             alert("Failed to open Deal Room. Please try again.");
