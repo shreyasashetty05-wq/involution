@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { Search, BrainCircuit, Activity, LineChart, ChevronRight, SlidersHorizontal, ArrowUpDown, ShieldCheck, Building2, Users, CheckCircle2, Bookmark, Share2, Rss, Clock, MapPin, TrendingUp, AlertTriangle, HeartPulse, Factory, Briefcase, Scale, Bell, X, Copy, Mail, MessageCircle, Linkedin, FileText, Calendar, Banknote } from "lucide-react";
 import { formatRelativeTime } from "@/utils/timeHelper";
@@ -9,13 +9,13 @@ import { useToast } from "@/components/ui/ToastProvider";
 
 export default function AISearchEngine() {
     const toast = useToast();
-    const [filters, setFilters] = useState({
+    const [filters, setFilters] = useState<any>({
         keyword: "",
         sector: "All",
-        maxInvestment: 50000000,
+        maxInvestment: "",
         riskAppetite: "All",
         stage: "All",
-        minRevenue: 0,
+        minRevenue: "",
         businessModel: "All",
         financialStatus: "All",
         minTrustScore: 0,
@@ -23,14 +23,14 @@ export default function AISearchEngine() {
         location: "All",
         
         // Advanced
-        minEquity: 0,
-        maxBurn: 10000000,
-        maxCac: 1000000,
-        minLtv: 0,
-        minRoi: 0,
+        minEquity: "",
+        maxBurn: "",
+        maxCac: "",
+        minLtv: "",
+        minRoi: "",
         companyType: "All",
         revenueModel: "All",
-        minRunway: 0,
+        minRunway: "",
         excludeLegalRisk: false,
         sortBy: "ai_score"
     });
@@ -41,11 +41,22 @@ export default function AISearchEngine() {
     const [isLoadingData, setIsLoadingData] = useState(true);
     const [showAdvanced, setShowAdvanced] = useState(false);
 
+    const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const isInitialMount = useRef(true);
+
     // New Interaction States
     const [savedStartups, setSavedStartups] = useState<string[]>([]);
     const [followedStartups, setFollowedStartups] = useState<string[]>([]);
     const [compareList, setCompareList] = useState<string[]>([]);
     const [shareModalData, setShareModalData] = useState<any>(null);
+
+    useEffect(() => {
+        if (isInitialMount.current) {
+            isInitialMount.current = false;
+            return;
+        }
+        handleSearch();
+    }, [filters.keyword]);
 
     useEffect(() => {
         // Load interactive states from local storage
@@ -163,42 +174,39 @@ export default function AISearchEngine() {
 
     const handleSearch = () => {
         setIsSearching(true);
-        setTimeout(() => {
+        if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+        
+        searchTimeoutRef.current = setTimeout(() => {
             const filtered = allStartups.filter(s => {
                 const searchStr = filters.keyword.toLowerCase();
-                const keywordMatch = !searchStr ||
-                    s.name.toLowerCase().includes(searchStr) ||
-                    s.sector.toLowerCase().includes(searchStr) ||
-                    (s.desc && s.desc.toLowerCase().includes(searchStr)) ||
-                    (s.businessModel && s.businessModel.toLowerCase().includes(searchStr)) ||
-                    (s.tags && s.tags.some((t: string) => t.toLowerCase().includes(searchStr)));
+                const keywordMatch = !searchStr || s.name.toLowerCase().includes(searchStr);
 
                 const sectorMatch = filters.sector === "All" || s.sector === filters.sector;
-                const budgetMatch = s.requested <= filters.maxInvestment;
+                const budgetMatch = filters.maxInvestment === "" || s.requested <= Number(filters.maxInvestment);
                 const riskMatch = filters.riskAppetite === "All" || s.risk === filters.riskAppetite;
                 const stageMatch = filters.stage === "All" || (s.stage && s.stage === filters.stage) || true;
-                const revenueMatch = s.revenue >= filters.minRevenue;
+                const revenueMatch = filters.minRevenue === "" || s.revenue >= Number(filters.minRevenue);
                 const businessModelMatch = filters.businessModel === "All" || s.businessModel === filters.businessModel;
                 
                 const finStatusMatch = filters.financialStatus === "All" || 
                     (filters.financialStatus === "Verified" && getApprovedUpdates(s).length > 0) ||
                     (filters.financialStatus === "Pending" && getApprovedUpdates(s).length === 0);
-                const trustMatch = getTrust(s) >= filters.minTrustScore;
-                const healthMatch = calculateHealth(s) >= filters.minBusinessHealth;
+                const trustMatch = filters.minTrustScore === "" || getTrust(s) >= Number(filters.minTrustScore);
+                const healthMatch = filters.minBusinessHealth === "" || calculateHealth(s) >= Number(filters.minBusinessHealth);
                 const locationMatch = filters.location === "All" || s.location === filters.location;
 
                 // Advanced Filters
-                const equityMatch = s.equity >= filters.minEquity;
-                const burnMatch = s.burn <= filters.maxBurn;
-                const cacMatch = (s.financials?.cac || 0) <= filters.maxCac;
-                const ltvMatch = (s.financials?.ltv || 0) >= filters.minLtv;
-                const roiMatch = (s.financials?.roi || 0) >= filters.minRoi;
+                const equityMatch = filters.minEquity === "" || s.equity >= Number(filters.minEquity);
+                const burnMatch = filters.maxBurn === "" || s.burn <= Number(filters.maxBurn);
+                const cacMatch = filters.maxCac === "" || (s.financials?.cac || 0) <= Number(filters.maxCac);
+                const ltvMatch = filters.minLtv === "" || (s.financials?.ltv || 0) >= Number(filters.minLtv);
+                const roiMatch = filters.minRoi === "" || (s.financials?.roi || 0) >= Number(filters.minRoi);
                 const companyTypeMatch = filters.companyType === "All" || (s.basicInfo?.companyType === filters.companyType);
                 const revenueModelMatch = filters.revenueModel === "All" || (s.businessInfo?.revenueModel === filters.revenueModel);
                 
                 let sRunway = s.financialsMonthly?.runway || 0;
                 if ((s.financialsMonthly?.burnRate || 0) <= 0 && s.revenue > 0) sRunway = 999;
-                const runwayMatch = filters.minRunway === 0 || sRunway >= filters.minRunway;
+                const runwayMatch = filters.minRunway === "" || sRunway >= Number(filters.minRunway);
                 const legalMatch = !filters.excludeLegalRisk || !(s.riskDisclosure?.legalCases || s.riskDisclosure?.criminalRecord);
 
                 return keywordMatch && sectorMatch && budgetMatch && riskMatch && stageMatch &&
@@ -207,6 +215,22 @@ export default function AISearchEngine() {
             });
 
             filtered.sort((a, b) => {
+                if (filters.keyword) {
+                    const kw = filters.keyword.toLowerCase();
+                    const aName = a.name.toLowerCase();
+                    const bName = b.name.toLowerCase();
+                    
+                    const aStarts = aName.startsWith(kw);
+                    const bStarts = bName.startsWith(kw);
+                    if (aStarts && !bStarts) return -1;
+                    if (!aStarts && bStarts) return 1;
+                    
+                    const aContains = aName.includes(kw);
+                    const bContains = bName.includes(kw);
+                    if (aContains && !bContains) return -1;
+                    if (!aContains && bContains) return 1;
+                }
+
                 switch (filters.sortBy) {
                     case 'revenue_desc':
                         return b.revenue - a.revenue;
@@ -228,7 +252,7 @@ export default function AISearchEngine() {
 
             setResults(filtered);
             setIsSearching(false);
-        }, 600);
+        }, 300);
     };
 
     const generateMiniSparkline = (data: number[]) => {
@@ -272,6 +296,9 @@ export default function AISearchEngine() {
                                         placeholder="AI, B2B, solar..."
                                         className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-700 placeholder:text-slate-400 transition-shadow"
                                         value={filters.keyword} onChange={(e) => setFilters({ ...filters, keyword: e.target.value })}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter') handleSearch();
+                                        }}
                                     />
                                 </div>
                             </div>
@@ -353,14 +380,14 @@ export default function AISearchEngine() {
                                         <label className="text-xs font-bold uppercase tracking-wider text-slate-400">Max Funding Range (₹)</label>
                                         <input type="number" step="1000000"
                                             className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-700"
-                                            value={filters.maxInvestment} onChange={(e) => setFilters({ ...filters, maxInvestment: Number(e.target.value) })}
+                                            value={filters.maxInvestment} onChange={(e) => setFilters({ ...filters, maxInvestment: e.target.value === "" ? "" : Number(e.target.value) })}
                                         />
                                     </div>
                                     <div className="space-y-2">
                                         <label className="text-xs font-bold uppercase tracking-wider text-slate-400">Min. Monthly Revenue (₹)</label>
                                         <input type="number" step="50000"
                                             className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-700"
-                                            value={filters.minRevenue} onChange={(e) => setFilters({ ...filters, minRevenue: Number(e.target.value) })}
+                                            value={filters.minRevenue} onChange={(e) => setFilters({ ...filters, minRevenue: e.target.value === "" ? "" : Number(e.target.value) })}
                                         />
                                     </div>
                                     <div className="space-y-2">
