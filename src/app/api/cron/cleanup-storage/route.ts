@@ -3,7 +3,7 @@ import { createClient } from "@/utils/supabase/server";
 import { cookies } from "next/headers";
 import { extractStoragePaths, BUCKETS } from '@/utils/storageUtils';
 
-export async function POST(req: Request) {
+export async function GET(req: Request) {
     try {
         const cookieStore = await cookies();
         const supabase = createClient(cookieStore);
