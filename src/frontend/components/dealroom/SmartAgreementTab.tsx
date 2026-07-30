@@ -5,6 +5,8 @@ import { CheckCircle2, FileText, Loader2, ShieldCheck, Lock, CheckCircle, Activi
 import { useToast } from "@/components/ui/ToastProvider";
 import SignatureCanvas from 'react-signature-canvas';
 
+import { createClient } from "@/utils/supabase/client";
+
 export function SmartAgreementTab({
     dealId,
     startupId,
@@ -27,11 +29,14 @@ export function SmartAgreementTab({
     const [agreement, setAgreement] = useState<any>(null);
     const [actionLoading, setActionLoading] = useState(false);
     const [deal, setDeal] = useState<any>(null);
+    const [companyName, setCompanyName] = useState<string>("Loading...");
+    const [fetchedFounderName, setFetchedFounderName] = useState<string>(startupName);
+    const [fetchedInvestorName, setFetchedInvestorName] = useState<string>(investorName);
 
     const sigCanvas = useRef<SignatureCanvas>(null);
 
-    const isStartup = currentUserId === startupId;
     const isInvestor = currentUserId === investorId;
+    const isStartup = !isInvestor;
 
     const fetchAgreement = async () => {
         try {
@@ -41,6 +46,51 @@ export function SmartAgreementTab({
                 if (dealData.success) {
                     setDeal(dealData.deal);
                 }
+            }
+
+            // Fetch company and KYC names dynamically
+            try {
+                const supabase = createClient();
+                
+                // --- 1. Fetch Company Name & Founder Email ---
+                let founderEmail = startupId;
+                if (isStudent) {
+                    const { data: incubeData } = await supabase.from('incubation_applications').select('project_name, owner_email').eq('id', startupId).maybeSingle();
+                    setCompanyName(incubeData?.project_name || "N/A");
+                    if (incubeData?.owner_email) founderEmail = incubeData.owner_email;
+                } else {
+                    if (startupId.includes('@')) {
+                        const { data: startupData } = await supabase.from('startups').select('name, owner_email').eq('owner_email', startupId).maybeSingle();
+                        setCompanyName(startupData?.name || "N/A");
+                        if (startupData?.owner_email) founderEmail = startupData.owner_email;
+                    } else {
+                        const { data: startupData } = await supabase.from('startups').select('name, owner_email').eq('id', startupId).maybeSingle();
+                        setCompanyName(startupData?.name || "N/A");
+                        if (startupData?.owner_email) founderEmail = startupData.owner_email;
+                    }
+                }
+
+                // --- 2. Fetch Investor Email ---
+                let invEmail = investorId;
+                if (!investorId.includes('@')) {
+                    const { data: invData } = await supabase.from('investor_profiles').select('email').eq('id', investorId).maybeSingle();
+                    if (invData?.email) invEmail = invData.email;
+                }
+
+                // --- 3. Fetch Permanent Names from KYC ---
+                if (founderEmail) {
+                    const { data: founderKyc } = await supabase.from('kyc_documents').select('name').eq('email', founderEmail).order('created_at', { ascending: false }).limit(1).maybeSingle();
+                    // Override the passed startupName with KYC name
+                    setFetchedFounderName(founderKyc?.name || startupName);
+                }
+
+                if (invEmail) {
+                    const { data: invKyc } = await supabase.from('kyc_documents').select('name').eq('email', invEmail).order('created_at', { ascending: false }).limit(1).maybeSingle();
+                    // Override the passed investorName with KYC name
+                    setFetchedInvestorName(invKyc?.name || investorName);
+                }
+            } catch (e) {
+                setCompanyName("N/A");
             }
 
             const res = await fetch(`/api/deals/smart-agreement?dealId=${dealId}`);
@@ -115,7 +165,7 @@ export function SmartAgreementTab({
             toast.warning("Please provide your signature before saving.");
             return;
         }
-        const dataUrl = sigCanvas.current?.getTrimmedCanvas().toDataURL("image/png");
+        const dataUrl = sigCanvas.current?.getCanvas().toDataURL("image/png");
         if (dataUrl) {
             handleAction('sign', dataUrl);
         }
@@ -155,6 +205,15 @@ export function SmartAgreementTab({
 
     const canISign = isStartup ? !founderSigned : (isInvestor && founderSigned && !investorSigned);
     const waitingForOther = isStartup ? (founderSigned && !investorSigned) : (isInvestor && !founderSigned);
+
+    let computedValuation = 'N/A';
+    if (deal && deal.termAmount && deal.termEquity) {
+        const amountNum = parseFloat(String(deal.termAmount).replace(/[^0-9.]/g, ''));
+        const equityNum = parseFloat(String(deal.termEquity).replace(/[^0-9.]/g, ''));
+        if (amountNum && equityNum) {
+            computedValuation = `₹ ${(amountNum / (equityNum / 100)).toLocaleString('en-IN')}`;
+        }
+    }
 
     return (
         <div className="p-6 overflow-y-auto bg-slate-50 min-h-full">
@@ -205,12 +264,16 @@ export function SmartAgreementTab({
                             {deal && (
                                 <div className="grid grid-cols-2 md:grid-cols-3 gap-y-6 gap-x-4">
                                     <div>
-                                        <p className="text-xs text-slate-500 font-bold uppercase tracking-wider mb-1">Startup Name</p>
-                                        <p className="font-semibold text-slate-800">{startupName}</p>
+                                        <p className="text-xs text-slate-500 font-bold uppercase tracking-wider mb-1">Founder Name</p>
+                                        <p className="font-semibold text-slate-800">{fetchedFounderName}</p>
                                     </div>
                                     <div>
                                         <p className="text-xs text-slate-500 font-bold uppercase tracking-wider mb-1">Investor Name</p>
-                                        <p className="font-semibold text-slate-800">{investorName}</p>
+                                        <p className="font-semibold text-slate-800">{fetchedInvestorName}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-xs text-slate-500 font-bold uppercase tracking-wider mb-1">Company Name</p>
+                                        <p className="font-semibold text-slate-800">{companyName}</p>
                                     </div>
                                     <div>
                                         <p className="text-xs text-slate-500 font-bold uppercase tracking-wider mb-1">Investment Amount</p>
@@ -221,8 +284,8 @@ export function SmartAgreementTab({
                                         <p className="font-semibold text-slate-800">{deal.termEquity}</p>
                                     </div>
                                     <div>
-                                        <p className="text-xs text-slate-500 font-bold uppercase tracking-wider mb-1">Pre-money Valuation</p>
-                                        <p className="font-medium text-slate-700">{deal.valuation || 'N/A'}</p>
+                                        <p className="text-xs text-slate-500 font-bold uppercase tracking-wider mb-1">Valuation</p>
+                                        <p className="font-medium text-slate-700">{deal.valuation || computedValuation}</p>
                                     </div>
                                     <div>
                                         <p className="text-xs text-slate-500 font-bold uppercase tracking-wider mb-1">Payment Method</p>

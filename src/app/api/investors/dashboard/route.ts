@@ -81,23 +81,42 @@ export async function GET(req: NextRequest) {
         const activeChats = dealsList.filter(d => d.status === 'negotiating').map(buildActiveChat);
 
         const startupIds = activeChats.map(c => c.startupId).filter(Boolean);
+        const uuidIds = startupIds.filter(id => !id.includes('@'));
+        const emailIds = startupIds.filter(id => id.includes('@'));
+
         if (startupIds.length > 0) {
-            const { data: startupsData } = await supabase
-                .from('startups')
-                .select('id, basic_info')
-                .in('id', startupIds);
+            let startupsData: any[] = [];
+            let incubeData: any[] = [];
             
-            const founderMap = (startupsData || []).reduce((acc: any, s: any) => {
-                if (s.basic_info && s.basic_info.founderName) {
-                    acc[s.id] = s.basic_info.founderName;
+            if (uuidIds.length > 0) {
+                const { data: sData } = await supabase.from('startups').select('id, name, basic_info').in('id', uuidIds);
+                if (sData) startupsData = [...startupsData, ...sData];
+                
+                const { data: iData } = await supabase.from('incubation_applications').select('id, project_name, idea_logo_url').in('id', uuidIds);
+                if (iData) incubeData = [...incubeData, ...iData];
+            }
+            if (emailIds.length > 0) {
+                const { data: sData } = await supabase.from('startups').select('id, owner_email, name, basic_info').in('owner_email', emailIds);
+                if (sData) startupsData = [...startupsData, ...sData];
+            }
+
+            const startupInfoMap = [...startupsData, ...incubeData].reduce((acc: any, s: any) => {
+                const key = s.owner_email && emailIds.includes(s.owner_email) ? s.owner_email : s.id;
+                if (s.project_name) {
+                    acc[key] = { name: s.project_name, logo: s.idea_logo_url };
+                } else {
+                    acc[key] = { name: s.name, logo: s.basic_info?.logoUrl || s.basic_info?.logo || null };
                 }
                 return acc;
             }, {});
 
             activeChats.forEach(chat => {
-                chat.startupName = chat.startup; 
-                chat.founderName = founderMap[chat.startupId];
-                chat.startup = chat.founderName || chat.startup; 
+                const info = startupInfoMap[chat.startupId];
+                if (info && info.name) {
+                    chat.startupName = chat.startup; 
+                    chat.startup = info.name;
+                    (chat as any).logo = info.logo;
+                }
             });
         }
 

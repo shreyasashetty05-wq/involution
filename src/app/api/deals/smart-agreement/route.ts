@@ -87,10 +87,13 @@ export async function POST(req: NextRequest) {
         const now = new Date().toISOString();
         let updateData: any = { updated_at: now };
 
+        const isInvestorAction = sessionUserId === investorId;
+        const isStartupAction = !isInvestorAction;
+
         if (action === 'sign') {
             const currentLogs = agreement.activity_log || [];
             
-            if (sessionUserId === startupId) {
+            if (isStartupAction) {
                 updateData.founder_signature = signature;
                 updateData.founder_signed_at = now;
                 updateData.status = agreement.investor_signature ? 'Signatures Completed' : 'Founder Signed';
@@ -98,7 +101,7 @@ export async function POST(req: NextRequest) {
                     { message: 'Founder saved signature.', time: now },
                     ...currentLogs
                 ];
-            } else if (sessionUserId === investorId) {
+            } else if (isInvestorAction) {
                 if (!agreement.founder_signature) {
                     return NextResponse.json({ success: false, error: 'Investor cannot sign before Founder' }, { status: 400 });
                 }
@@ -113,12 +116,12 @@ export async function POST(req: NextRequest) {
                 return NextResponse.json({ success: false, error: 'Unauthorized role' }, { status: 403 });
             }
         } else if (action === 'confirm_sent') {
-            if (sessionUserId !== investorId) return NextResponse.json({ success: false, error: 'Only investor can confirm payment sent' }, { status: 403 });
+            if (!isInvestorAction) return NextResponse.json({ success: false, error: 'Only investor can confirm payment sent' }, { status: 403 });
             updateData.investor_payment_confirmed = true;
             updateData.investor_payment_confirmed_at = now;
             updateData.status = 'Investor Payment Confirmed';
         } else if (action === 'confirm_received') {
-            if (sessionUserId !== startupId) return NextResponse.json({ success: false, error: 'Only founder can confirm payment received' }, { status: 403 });
+            if (!isStartupAction) return NextResponse.json({ success: false, error: 'Only founder can confirm payment received' }, { status: 403 });
             updateData.startup_payment_received = true;
             updateData.startup_payment_received_at = now;
             updateData.status = 'Deal Completed';

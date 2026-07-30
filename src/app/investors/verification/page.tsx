@@ -91,7 +91,7 @@ export default function InvestorVerificationForm() {
 
                 setFormData({
                     ...data.profile,
-                    full_name: (data.kycName ? data.kycName : (user?.user_metadata?.kycStatus === 'Approved' ? (user.user_metadata.kyc_name || user.user_metadata.full_name) : data.profile.full_name)) || ""
+                    full_name: (data.kycName ? data.kycName : (user?.user_metadata?.kycStatus === 'Approved' ? user.user_metadata.kyc_name : data.profile.full_name)) || ""
                 });
 
                 // Map docs back
@@ -112,7 +112,7 @@ export default function InvestorVerificationForm() {
                 if (data.kycName || user?.user_metadata?.kycStatus === 'Approved') {
                     setFormData(prev => ({
                         ...prev,
-                        full_name: data.kycName || (user.user_metadata.kyc_name || user.user_metadata.full_name) || ""
+                        full_name: data.kycName || user.user_metadata.kyc_name || ""
                     }));
                 }
             }

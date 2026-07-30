@@ -45,8 +45,10 @@ export default function InvestorDashboard() {
                 // 2. Fetch User Profile
                 const { data: { user } } = await supabase.auth.getUser();
                 if (user) {
+                    const { data: kycData } = await supabase.from('kyc_documents').select('name').eq('email', user.email).order('created_at', { ascending: false }).limit(1).maybeSingle();
+                    
                     setInvestorProfile({
-                        name: (user.user_metadata?.kycStatus === 'Approved' ? (user.user_metadata?.kyc_name || user.user_metadata?.full_name) : user.user_metadata?.full_name) || "Investor",
+                        name: kycData?.name || "Investor",
                         joined: new Date(user.created_at || Date.now()).getFullYear().toString(),
                         photo: dataDash.success ? dataDash.profilePhoto : null
                     });
@@ -262,8 +264,12 @@ export default function InvestorDashboard() {
                                     {chats.map((chat) => (
                                         <div key={chat.id} className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center p-4 rounded-2xl border border-slate-100 bg-slate-50 hover:bg-white hover:border-blue-200 hover:shadow-md transition-all group">
                                             <div className="flex items-center gap-4">
-                                                <div className="size-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-xl border border-blue-100 shrink-0">
-                                                    {chat.startup.charAt(0)}
+                                                <div className="size-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-xl border border-blue-100 shrink-0 overflow-hidden">
+                                                    {chat.logo ? (
+                                                        <img src={chat.logo} alt={chat.startup} className="w-full h-full object-cover" />
+                                                    ) : (
+                                                        chat.startup.charAt(0)
+                                                    )}
                                                 </div>
                                                 <div>
                                                     <div className="flex items-center gap-2 mb-1">
@@ -324,8 +330,12 @@ export default function InvestorDashboard() {
                                                 <div>
                                                     <div className="flex items-start justify-between mb-4">
                                                         <div className="flex items-center gap-3">
-                                                            <div className="size-12 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 font-bold text-xl shrink-0">
-                                                                {s.name?.charAt(0)}
+                                                            <div className="size-12 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 font-bold text-xl shrink-0 overflow-hidden">
+                                                                {(s.basicInfo?.logoUrl || s.basicInfo?.logo || s.idea_logo_url) ? (
+                                                                    <img src={s.basicInfo?.logoUrl || s.basicInfo?.logo || s.idea_logo_url} alt={s.name} className="w-full h-full object-cover" />
+                                                                ) : (
+                                                                    s.name?.charAt(0)
+                                                                )}
                                                             </div>
                                                             <div>
                                                                 <h3 className="font-bold text-slate-900 group-hover:text-indigo-600 transition-colors line-clamp-1">{s.name}</h3>

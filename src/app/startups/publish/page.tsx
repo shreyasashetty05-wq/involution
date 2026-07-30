@@ -58,7 +58,7 @@ export default function StartupPublishForm() {
                     setFormData(prev => ({ ...prev, founderName: kycData.name }));
                     setIsKycVerified(true);
                 } else if (currentUser?.user_metadata?.kycStatus === 'Approved') {
-                    const kycName = currentUser.user_metadata.kyc_name || currentUser.user_metadata.full_name;
+                    const kycName = currentUser.user_metadata.kyc_name;
                     if (kycName) {
                         setFormData(prev => ({ ...prev, founderName: kycName }));
                         setIsKycVerified(true);
