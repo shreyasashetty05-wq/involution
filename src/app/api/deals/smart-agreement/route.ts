@@ -53,13 +53,19 @@ export async function POST(req: NextRequest) {
         }
 
         if (action === 'initialize') {
+            const initialLogs = [
+                { message: 'Negotiation completed.', time: new Date().toISOString() },
+                { message: 'Agreement initialized.', time: new Date().toISOString() }
+            ];
+            
             const { data: agreement, error } = await supabase
                 .from("smart_agreements")
                 .insert({
                     deal_id: dealId,
                     startup_id: startupId,
                     investor_id: investorId,
-                    status: 'Smart Agreement Started'
+                    status: 'Smart Agreement Started',
+                    activity_log: initialLogs
                 })
                 .select()
                 .single();
@@ -82,14 +88,27 @@ export async function POST(req: NextRequest) {
         let updateData: any = { updated_at: now };
 
         if (action === 'sign') {
+            const currentLogs = agreement.activity_log || [];
+            
             if (sessionUserId === startupId) {
                 updateData.founder_signature = signature;
                 updateData.founder_signed_at = now;
                 updateData.status = agreement.investor_signature ? 'Signatures Completed' : 'Founder Signed';
+                updateData.activity_log = [
+                    { message: 'Founder saved signature.', time: now },
+                    ...currentLogs
+                ];
             } else if (sessionUserId === investorId) {
+                if (!agreement.founder_signature) {
+                    return NextResponse.json({ success: false, error: 'Investor cannot sign before Founder' }, { status: 400 });
+                }
                 updateData.investor_signature = signature;
                 updateData.investor_signed_at = now;
                 updateData.status = agreement.founder_signature ? 'Signatures Completed' : 'Investor Signed';
+                updateData.activity_log = [
+                    { message: 'Investor saved signature.', time: now },
+                    ...currentLogs
+                ];
             } else {
                 return NextResponse.json({ success: false, error: 'Unauthorized role' }, { status: 403 });
             }

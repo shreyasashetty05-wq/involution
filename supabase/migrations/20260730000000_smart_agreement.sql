@@ -43,3 +43,7 @@ CREATE TABLE public.smart_agreements (
     created_at TIMESTAMPTZ DEFAULT now(),
     updated_at TIMESTAMPTZ DEFAULT now()
 );
+
+-- Add activity_log to smart_agreements table
+ALTER TABLE public.smart_agreements
+ADD COLUMN IF NOT EXISTS activity_log JSONB DEFAULT '[]'::jsonb;
