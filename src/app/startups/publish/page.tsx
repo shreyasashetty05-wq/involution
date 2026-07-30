@@ -58,10 +58,41 @@ export default function StartupPublishForm() {
                     setFormData(prev => ({ ...prev, founderName: kycData.name }));
                     setIsKycVerified(true);
                 } else if (currentUser?.user_metadata?.kycStatus === 'Approved') {
-                    const kycName = currentUser.user_metadata.kyc_name;
                     if (kycName) {
                         setFormData(prev => ({ ...prev, founderName: kycName }));
                         setIsKycVerified(true);
+                    }
+                }
+
+                // If user is an incubation founder, try to pre-fill existing images to prevent duplicate uploads
+                if (currentUser?.user_metadata?.role === 'incubation') {
+                    const { data: incubeData, error: incubeError } = await supabase
+                        .from('incubation_applications')
+                        .select('idea_logo_url, founder_photo_url, team_members')
+                        .eq('owner_email', currentUser.email)
+                        .order('created_at', { ascending: false })
+                        .limit(1)
+                        .maybeSingle();
+                    
+                    if (!incubeError && incubeData) {
+                        setFormData(prev => ({
+                            ...prev,
+                            logoPreview: incubeData.idea_logo_url || prev.logoPreview,
+                            logoUrl: incubeData.idea_logo_url || "",
+                            founderPhotoPreview: incubeData.founder_photo_url || prev.founderPhotoPreview,
+                            founderPhotoUrl: incubeData.founder_photo_url || "",
+                            // Optionally map team members if they exist
+                            teamMembers: incubeData.team_members && incubeData.team_members.length > 0 
+                                ? incubeData.team_members.map((t: any) => ({
+                                    photo: null,
+                                    photoPreview: t.photoUrl || "",
+                                    photoUrl: t.photoUrl || "",
+                                    name: t.name || "",
+                                    role: t.role || "",
+                                    linkedin: t.linkedin || ""
+                                  }))
+                                : prev.teamMembers
+                        }));
                     }
                 }
             }
@@ -78,6 +109,7 @@ export default function StartupPublishForm() {
         // Section 1
         logo: null as File | null,
         logoPreview: "",
+        logoUrl: "", // Stores existing URL to prevent re-upload
         startupName: "",
         startupTagline: "",
 
@@ -87,8 +119,9 @@ export default function StartupPublishForm() {
         founderRole: "Founder",
         founderPhoto: null as File | null,
         founderPhotoPreview: "",
+        founderPhotoUrl: "", // Stores existing URL to prevent re-upload
         founderLinkedin: "",
-        teamMembers: [] as { photo: File | null, photoPreview: string, name: string, role: string, linkedin: string }[],
+        teamMembers: [] as { photo: File | null, photoPreview: string, photoUrl?: string, name: string, role: string, linkedin: string }[],
 
         // Section 3
         industry: "FinTech",
@@ -265,8 +298,8 @@ export default function StartupPublishForm() {
 
         try {
             // Upload images first
-            let uploadedLogo = "";
-            let uploadedFounder = "";
+            let uploadedLogo = formData.logoUrl || "";
+            let uploadedFounder = formData.founderPhotoUrl || "";
             let uploadedTeam = [...formData.teamMembers];
 
             if (formData.logo) uploadedLogo = await uploadFileToSupabase(formData.logo);
@@ -275,6 +308,8 @@ export default function StartupPublishForm() {
             for (let i = 0; i < uploadedTeam.length; i++) {
                 if (uploadedTeam[i].photo) {
                     uploadedTeam[i].photoPreview = await uploadFileToSupabase(uploadedTeam[i].photo!);
+                } else if (uploadedTeam[i].photoUrl) {
+                    uploadedTeam[i].photoPreview = uploadedTeam[i].photoUrl!;
                 }
             }
 
@@ -345,10 +380,10 @@ export default function StartupPublishForm() {
                         <div className="col-span-1">
                             <Label required>Company Logo</Label>
                             <div className="mt-2">
-                                <input type="file" id="logo-upload" accept=".png,.jpg,.jpeg" className="hidden" onChange={(e) => handleFileUpload(e, 'logo')} required={!formData.logo} />
+                                <input type="file" id="logo-upload" accept=".png,.jpg,.jpeg" className="hidden" onChange={(e) => handleFileUpload(e, 'logo')} required={!formData.logo && !formData.logoUrl} />
                                 <label htmlFor="logo-upload" className="flex flex-col items-center justify-center w-full aspect-square border-2 border-dashed border-slate-300 rounded-2xl hover:border-emerald-400 hover:bg-emerald-50/50 transition-colors cursor-pointer overflow-hidden relative group">
-                                    {formData.logoPreview ? (
-                                        <img src={formData.logoPreview} alt="Logo Preview" className="w-full h-full object-contain p-4" />
+                                    {formData.logoPreview || formData.logoUrl ? (
+                                        <img src={formData.logoPreview || formData.logoUrl} alt="Logo Preview" className="w-full h-full object-contain p-4" />
                                     ) : (
                                         <div className="text-center p-4">
                                             <UploadCloud className="size-8 text-emerald-500 mx-auto mb-2 group-hover:scale-110 transition-transform" />
@@ -388,10 +423,10 @@ export default function StartupPublishForm() {
                             </div>
                             <div className="md:row-span-2">
                                 <Label required>Founder Photo</Label>
-                                <input type="file" id="founder-upload" accept=".png,.jpg,.jpeg" className="hidden" onChange={(e) => handleFileUpload(e, 'founder')} required={!formData.founderPhoto} />
+                                <input type="file" id="founder-upload" accept=".png,.jpg,.jpeg" className="hidden" onChange={(e) => handleFileUpload(e, 'founder')} required={!formData.founderPhoto && !formData.founderPhotoUrl} />
                                 <label htmlFor="founder-upload" className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-slate-300 rounded-xl hover:border-emerald-400 hover:bg-emerald-50/50 transition-colors cursor-pointer overflow-hidden mt-2">
-                                    {formData.founderPhotoPreview ? (
-                                        <img src={formData.founderPhotoPreview} alt="Founder Preview" className="w-full h-full object-cover" />
+                                    {formData.founderPhotoPreview || formData.founderPhotoUrl ? (
+                                        <img src={formData.founderPhotoPreview || formData.founderPhotoUrl} alt="Founder Preview" className="w-full h-full object-cover" />
                                     ) : (
                                         <div className="text-center p-2">
                                             <UploadCloud className="size-6 text-indigo-500 mx-auto mb-1" />
@@ -426,10 +461,10 @@ export default function StartupPublishForm() {
                                     </div>
                                     <div>
                                         <Label required>Photo</Label>
-                                        <input type="file" id={`team-upload-${idx}`} accept=".png,.jpg,.jpeg" className="hidden" onChange={(e) => handleFileUpload(e, 'team', idx)} required={!member.photo} />
+                                        <input type="file" id={`team-upload-${idx}`} accept=".png,.jpg,.jpeg" className="hidden" onChange={(e) => handleFileUpload(e, 'team', idx)} required={!member.photo && !member.photoUrl} />
                                         <label htmlFor={`team-upload-${idx}`} className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-slate-300 rounded-xl hover:border-indigo-400 hover:bg-indigo-50/50 transition-colors cursor-pointer overflow-hidden mt-1">
-                                            {member.photoPreview ? (
-                                                <img src={member.photoPreview} alt="Preview" className="w-full h-full object-cover" />
+                                            {member.photoPreview || member.photoUrl ? (
+                                                <img src={member.photoPreview || member.photoUrl} alt="Preview" className="w-full h-full object-cover" />
                                             ) : (
                                                 <div className="text-center">
                                                     <UploadCloud className="size-5 text-indigo-400 mx-auto mb-1" />
