@@ -54,6 +54,12 @@ export async function POST(req: Request) {
                 personal_website: body.personal_website,
                 supporting_documents: body.supporting_documents || [],
                 photo_url: body.photo_url,
+                payment_method: body.payment_method,
+                upi_id: body.upi_id,
+                account_holder_name: body.account_holder_name,
+                bank_name: body.bank_name,
+                account_number: body.account_number,
+                ifsc_code: body.ifsc_code,
                 status: 'Pending Verification',
                 updated_at: new Date().toISOString()
             }, { onConflict: 'email' })

@@ -114,7 +114,13 @@ export const publishStartup = async (supabase: SupabaseClient, body: any, ownerE
             fundingAmount: body.fundingAmount,
             investorName: body.investorName,
             fundingRound: body.fundingRound
-        }
+        },
+        payment_method: body.paymentMethod,
+        upi_id: body.upiId,
+        account_holder_name: body.accountHolderName,
+        bank_name: body.bankName,
+        account_number: body.accountNumber,
+        ifsc_code: body.ifscCode
     };
 
     const { data, error } = await supabase

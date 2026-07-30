@@ -68,6 +68,7 @@ export default function IncubationForm() {
     const supabase = createClient();
     const router = useRouter();
     const [user, setUser] = useState<any>(null);
+    const [isKycVerified, setIsKycVerified] = useState(false);
 
     const [saving, setSaving] = useState(false);
     const [success, setSuccess] = useState(false);
@@ -106,7 +107,11 @@ export default function IncubationForm() {
         // Section 7
         pitchVideos: [""] as string[],
 
-        // Section 8 (Declarations - not sent to DB, just for UI validation)
+        // Section 8 (Payment Details)
+        paymentMethod: "upi", upiId: "", 
+        accountHolderName: "", bankName: "", accountNumber: "", ifscCode: "",
+
+        // Section 9 (Declarations - not sent to DB, just for UI validation)
         dec1: false, dec2: false, dec3: false, dec4: false
     });
 
@@ -114,12 +119,39 @@ export default function IncubationForm() {
         const fetchUser = async () => {
             const { data: { user: currentUser } } = await supabase.auth.getUser();
             setUser(currentUser);
-            if (currentUser) {
-                setFormData(prev => ({ 
-                    ...prev, 
-                    email: currentUser.email || "",
-                    fullName: (currentUser.user_metadata?.kycStatus === 'Approved' ? (currentUser.user_metadata.kyc_name || currentUser.user_metadata.full_name) : currentUser.user_metadata?.full_name) || "" 
-                }));
+            if (currentUser?.email) {
+                // Fetch from KYC documents table first
+                const { data: kycData, error } = await supabase
+                    .from('kyc_documents')
+                    .select('name')
+                    .eq('email', currentUser.email)
+                    .order('created_at', { ascending: false })
+                    .limit(1)
+                    .maybeSingle();
+
+                if (error) console.error("KYC fetch error:", error);
+
+                if (kycData?.name) {
+                    setFormData(prev => ({ 
+                        ...prev, 
+                        email: currentUser.email || "",
+                        fullName: kycData.name 
+                    }));
+                    setIsKycVerified(true);
+                } else if (currentUser?.user_metadata?.kycStatus === 'Approved') {
+                    const kycName = currentUser.user_metadata.kyc_name || currentUser.user_metadata.full_name;
+                    setFormData(prev => ({ 
+                        ...prev, 
+                        email: currentUser.email || "",
+                        fullName: kycName || "" 
+                    }));
+                    setIsKycVerified(true);
+                } else {
+                    setFormData(prev => ({ 
+                        ...prev, 
+                        email: currentUser.email || ""
+                    }));
+                }
             }
         };
         fetchUser();
@@ -322,7 +354,7 @@ export default function IncubationForm() {
 
                             {/* Details */}
                             <div className="md:col-span-9 grid md:grid-cols-3 gap-6">
-                                <div className="md:col-span-1"><Label required>Full Name</Label><Input required value={formData.fullName} onChange={(e:any)=>updateField('fullName', e.target.value)} disabled={user?.user_metadata?.kycStatus === 'Approved'} title={user?.user_metadata?.kycStatus === 'Approved' ? "Your verified Legal Name cannot be changed" : ""} /></div>
+                                <div className="md:col-span-1"><Label required>Full Name</Label><Input required value={formData.fullName} onChange={(e:any)=>updateField('fullName', e.target.value)} disabled={isKycVerified} title={isKycVerified ? "Your verified Legal Name cannot be changed" : ""} /></div>
                                 <div className="md:col-span-1"><Label required>Email</Label><Input type="email" required disabled value={formData.email} className="bg-slate-100 text-slate-500 cursor-not-allowed" /></div>
                                 <div className="md:col-span-1"><Label required>Phone Number</Label><Input type="tel" required value={formData.phoneNumber} onChange={(e:any)=>updateField('phoneNumber', e.target.value)} /></div>
                                 
@@ -601,9 +633,41 @@ export default function IncubationForm() {
                         </button>
                     </div>
 
-                    {/* 8. DECLARATION */}
+                    {/* 8. PAYMENT DETAILS */}
                     <div className="bg-white border border-slate-200 p-8 rounded-3xl shadow-sm">
-                        <SectionHeader num="8" title="Declaration" />
+                        <SectionHeader num="8" title="Payment Details" />
+                        
+                        <div className="mb-6">
+                            <Label required>Preferred Payment Method</Label>
+                            <div className="flex gap-6 mt-2">
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                    <input type="radio" name="payment_method" value="upi" checked={formData.paymentMethod === 'upi'} onChange={(e: any) => updateField('paymentMethod', e.target.value)} className="size-4 text-emerald-600 focus:ring-emerald-500 border-slate-300" />
+                                    <span className="text-sm font-medium text-slate-700">UPI</span>
+                                </label>
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                    <input type="radio" name="payment_method" value="bank" checked={formData.paymentMethod === 'bank'} onChange={(e: any) => updateField('paymentMethod', e.target.value)} className="size-4 text-emerald-600 focus:ring-emerald-500 border-slate-300" />
+                                    <span className="text-sm font-medium text-slate-700">Bank Account</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        {formData.paymentMethod === 'upi' ? (
+                            <div className="grid md:grid-cols-2 gap-6">
+                                <div><Label required>UPI ID</Label><Input type="text" required value={formData.upiId} onChange={(e: any) => updateField('upiId', e.target.value)} placeholder="e.g. abc@okaxis" /></div>
+                            </div>
+                        ) : (
+                            <div className="grid md:grid-cols-2 gap-6">
+                                <div><Label required>Account Holder Name</Label><Input type="text" required value={formData.accountHolderName} onChange={(e: any) => updateField('accountHolderName', e.target.value)} placeholder="Name as per bank" /></div>
+                                <div><Label required>Bank Name</Label><Input type="text" required value={formData.bankName} onChange={(e: any) => updateField('bankName', e.target.value)} placeholder="e.g. HDFC Bank" /></div>
+                                <div><Label required>Account Number</Label><Input type="text" required value={formData.accountNumber} onChange={(e: any) => updateField('accountNumber', e.target.value)} placeholder="Bank Account Number" /></div>
+                                <div><Label required>IFSC Code</Label><Input type="text" required value={formData.ifscCode} onChange={(e: any) => updateField('ifscCode', e.target.value)} placeholder="e.g. HDFC0001234" /></div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* 9. DECLARATION */}
+                    <div className="bg-white border border-slate-200 p-8 rounded-3xl shadow-sm">
+                        <SectionHeader num="9" title="Declaration" />
                         
                         <div className="grid md:grid-cols-2 gap-y-4 gap-x-8">
                             <CheckboxLabel required label="I confirm that this idea is my own original work." checked={formData.dec1} onChange={(v) => updateField('dec1', v)} />

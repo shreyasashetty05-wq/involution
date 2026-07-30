@@ -40,6 +40,12 @@ export default function InvestorVerificationForm() {
         x_twitter: "",
         personal_website: "",
         supporting_documents: [] as { title: string, url: string }[],
+        payment_method: "Bank Account",
+        upi_id: "",
+        account_holder_name: "",
+        bank_name: "",
+        account_number: "",
+        ifsc_code: "",
     });
 
     const [docs, setDocs] = useState({
@@ -482,7 +488,54 @@ export default function InvestorVerificationForm() {
                         </div>
                     </div>
 
-                    {/* 7. Final Declaration */}
+                    {/* 7. Payment Details */}
+                    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-6">
+                        <div className="border-b border-slate-100 bg-slate-50/50 p-6 flex items-center gap-3">
+                            <div className="p-2 bg-emerald-100 text-emerald-600 rounded-lg"><Shield className="size-5" /></div>
+                            <h2 className="text-xl font-bold text-slate-800">7. Payment Details</h2>
+                        </div>
+                        <div className="p-6">
+                            <p className="text-sm text-slate-500 mb-6">These payment details will be used during the Smart Agreement process. Please provide accurate information.</p>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label className="block text-sm font-semibold text-slate-700 mb-2">Preferred Payment Method *</label>
+                                    <select name="payment_method" required value={formData.payment_method} onChange={handleChange} className="w-full border border-slate-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-emerald-500 outline-none appearance-none bg-white">
+                                        <option value="Bank Account">Bank Account</option>
+                                        <option value="UPI">UPI</option>
+                                    </select>
+                                </div>
+                            </div>
+                            {formData.payment_method === "UPI" ? (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                                    <div>
+                                        <label className="block text-sm font-semibold text-slate-700 mb-2">UPI ID *</label>
+                                        <input type="text" name="upi_id" required value={formData.upi_id || ""} onChange={handleChange} placeholder="e.g. abc@okaxis" className="w-full border border-slate-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-emerald-500 outline-none" />
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                                    <div>
+                                        <label className="block text-sm font-semibold text-slate-700 mb-2">Account Holder Name *</label>
+                                        <input type="text" name="account_holder_name" required value={formData.account_holder_name || ""} onChange={handleChange} placeholder="e.g. John Doe" className="w-full border border-slate-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-emerald-500 outline-none" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-semibold text-slate-700 mb-2">Bank Name *</label>
+                                        <input type="text" name="bank_name" required value={formData.bank_name || ""} onChange={handleChange} placeholder="e.g. HDFC Bank" className="w-full border border-slate-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-emerald-500 outline-none" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-semibold text-slate-700 mb-2">Account Number *</label>
+                                        <input type="text" name="account_number" required value={formData.account_number || ""} onChange={handleChange} placeholder="e.g. 50100123456789" className="w-full border border-slate-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-emerald-500 outline-none" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-semibold text-slate-700 mb-2">IFSC Code *</label>
+                                        <input type="text" name="ifsc_code" required value={formData.ifsc_code || ""} onChange={handleChange} placeholder="e.g. HDFC0001234" className="w-full border border-slate-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-emerald-500 outline-none" />
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* 8. Final Declaration */}
                     <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex items-start gap-4">
                         <input 
                             type="checkbox" 

@@ -4,6 +4,7 @@ import { useState, Suspense, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Send, FileSignature, CheckCircle2, ShieldCheck, User, FileText, ChevronRight, Video, Calendar, Clock, AlertTriangle, PlayCircle, CheckSquare, Search, Lock, Sparkles, Paperclip, Loader2, ArrowLeft, Trash2, MoreVertical, Smile, Check, CheckCheck, Reply, Copy, Edit2, X, ChevronDown, Ban, Handshake } from "lucide-react";
 import { NegotiationTab } from "@/frontend/components/negotiation/NegotiationTab";
+import { SmartAgreementTab } from "@/frontend/components/dealroom/SmartAgreementTab";
 import MeetingsTab from "@/frontend/components/meetings/MeetingsTab";
 import { createClient } from "@/utils/supabase/client";
 import FileAttachment from "@/components/FileAttachment";
@@ -1153,131 +1154,16 @@ function DealWorkspace() {
                         {activeTab === 'negotiation' && currentPhase < 4 && <PhaseLock phase={4} />}
 
                         {/* ── AGREEMENT ── */}
-                        {activeTab === 'agreement' && currentPhase >= 5 && (
-                            <div className="p-6 flex flex-col md:flex-row gap-8 overflow-y-auto bg-slate-50">
-                                <div className="md:w-1/2 space-y-4">
-                                    <div className="flex items-center gap-2 text-pink-600 mb-1">
-                                        <ShieldCheck className="size-5" />
-                                        <h2 className="text-lg font-bold">Smart Agreement</h2>
-                                    </div>
-                                    <p className="text-xs text-slate-500 border-b border-slate-200 pb-4">These terms will be deployed to an on-chain legally binding digital contract.</p>
-                                    <div className="space-y-3">
-                                        {negotiationPhase === 'startup_drafting' ? (
-                                            <>
-                                                <div className="grid grid-cols-2 gap-3">
-                                                    {(
-                                                        [
-                                                            ['Invest Amount', termAmount, setTermAmount],
-                                                            ['Equity Exch.', termEquity, setTermEquity],
-                                                        ] as [string, string, (v: string) => void][]
-                                                    ).map(([label, val, fn]) => (
-                                                        <div key={label}>
-                                                            <label className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">{label}</label>
-                                                            <input type="text" value={val} onChange={e => fn(e.target.value)}
-                                                                className="w-full mt-1 bg-white border border-slate-200 rounded-lg px-3 py-2 text-slate-800 text-sm focus:ring-2 focus:ring-pink-400 outline-none" />
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                                {(
-                                                    [
-                                                        ['Payment Method', paymentMethod, setPaymentMethod],
-                                                        [isStudent ? 'College/University' : 'Company Address', companyAddress, setCompanyAddress],
-                                                    ] as [string, string, (v: string) => void][]
-                                                ).map(([label, val, fn]) => (
-                                                    <div key={label}>
-                                                        <label className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">{label}</label>
-                                                        <input type="text" value={val} onChange={e => fn(e.target.value)}
-                                                            className="w-full mt-1 bg-white border border-slate-200 rounded-lg px-3 py-2 text-slate-800 text-sm focus:ring-2 focus:ring-pink-400 outline-none" />
-                                                    </div>
-                                                ))}
-                                            </>
-                                        ) : (
-                                            <div className="p-4 bg-white rounded-xl border border-slate-200">
-                                                <p className="text-xs text-slate-400 mb-1 uppercase tracking-widest">Final Terms</p>
-                                                <p className="text-pink-600 font-bold">{termAmount} for {termEquity}</p>
-                                                <p className="text-slate-400 text-xs mt-1">Via {paymentMethod}, locked for {investmentPeriod} years.</p>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                                <div className="md:w-1/2 flex flex-col justify-center gap-5">
-                                    {negotiationPhase === 'executed' ? (
-                                        <div className="bg-emerald-50 border border-emerald-200 p-8 rounded-2xl text-center">
-                                            <CheckCircle2 className="size-14 text-emerald-500 mx-auto mb-3" />
-                                            <h3 className="text-emerald-700 font-bold text-xl mb-2">Deal Executed!</h3>
-                                            <p className="text-sm text-emerald-600/70 mb-6 border-b border-emerald-200 pb-4">Countersigned by both parties. Investment round is finalized.</p>
-                                            <button
-                                                onClick={() => router.push(`/messages/agreement?startup=${encodeURIComponent(startupName)}&amount=${encodeURIComponent(termAmount)}&equity=${encodeURIComponent(termEquity)}&signature=${encodeURIComponent(investorSignature)}&startupSig=${encodeURIComponent(startupSignature)}&cAddress=${encodeURIComponent(companyAddress)}&iAddress=${encodeURIComponent(investorAddress)}&payment=${encodeURIComponent(paymentMethod)}&period=${encodeURIComponent(investmentPeriod)}&execs=${encodeURIComponent(executives)}&board=${encodeURIComponent(board)}`)}
-                                                className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl flex items-center justify-center gap-2 transition-colors">
-                                                <FileText className="size-4" /> View Official Term Sheet
-                                            </button>
-                                        </div>
-                                    ) : negotiationPhase === 'startup_drafting' ? (
-                                        <div className="space-y-4">
-                                            <div className="bg-indigo-50 border border-indigo-200 p-4 rounded-xl">
-                                                <p className="text-sm text-indigo-700 font-medium">Step 1/2: {isStudent ? 'Student Founder' : 'Startup'} proposes final binding terms.</p>
-                                            </div>
-                                            <label className="text-[10px] text-slate-400 uppercase tracking-wider font-bold">{isStudent ? 'Student Founder' : 'Startup Founder'} Signature</label>
-                                            <input type="text" placeholder="Type full legal name…"
-                                                className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-800 focus:ring-2 focus:ring-indigo-400 outline-none font-serif italic"
-                                                value={startupSignature} onChange={e => setStartupSignature(e.target.value)} />
-                                            <button onClick={() => startupSignature.length > 3 && setNegotiationPhase('investor_review')}
-                                                disabled={startupSignature.length <= 3}
-                                                className="w-full py-3 mt-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl disabled:opacity-40 transition-all">
-                                                Sign & Lock Terms
-                                            </button>
-                                        </div>
-                                    ) : (
-                                        <div className="space-y-4">
-                                            <div className="bg-pink-50 border border-pink-200 p-4 rounded-xl">
-                                                <p className="text-sm text-pink-700 font-medium">Step 2/2: Investor Review. Terms are locked by the {isStudent ? 'Student Founder' : 'Startup'}.</p>
-                                            </div>
-                                            <div>
-                                                <label className="text-[10px] text-slate-400 uppercase tracking-wider font-bold">Your Investor Address</label>
-                                                <input type="text" value={investorAddress} onChange={e => setInvestorAddress(e.target.value)}
-                                                    className="w-full mt-1 bg-white border border-slate-200 rounded-lg px-3 py-2 text-slate-800 text-sm focus:ring-2 focus:ring-pink-400 outline-none" placeholder="Registered address…" />
-                                            </div>
-                                            <label className="text-[10px] text-slate-400 uppercase tracking-wider font-bold">Investor Counter-Signature</label>
-                                            <input type="text" placeholder="Type full legal name…"
-                                                className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-800 focus:ring-2 focus:ring-pink-400 outline-none font-serif italic"
-                                                value={investorSignature} onChange={e => setInvestorSignature(e.target.value)} />
-                                            <button onClick={async () => {
-                                                if (investorSignature.length > 3) {
-                                                    try {
-                                                        await fetch('/api/deals', {
-                                                            method: 'PUT',
-                                                            headers: { 'Content-Type': 'application/json' },
-                                                            body: JSON.stringify({
-                                                                startupId,
-                                                                investorId,
-                                                                action: 'execute',
-                                                                termAmount,
-                                                                termEquity,
-                                                                startupSignature,
-                                                                investorSignature,
-                                                                companyAddress,
-                                                                investorAddress,
-                                                                paymentMethod,
-                                                                investmentPeriod,
-                                                                executives,
-                                                                board
-                                                            })
-                                                        });
-                                                    } catch (err) {
-                                                        console.error("Failed to execute deal", err);
-                                                    }
-                                                    setNegotiationPhase('executed');
-                                                    router.push(`/messages/agreement?success=true&startup=${encodeURIComponent(startupName)}&amount=${encodeURIComponent(termAmount)}&equity=${encodeURIComponent(termEquity)}&signature=${encodeURIComponent(investorSignature)}&startupSig=${encodeURIComponent(startupSignature)}&cAddress=${encodeURIComponent(companyAddress)}&iAddress=${encodeURIComponent(investorAddress)}&payment=${encodeURIComponent(paymentMethod)}&period=${encodeURIComponent(investmentPeriod)}&execs=${encodeURIComponent(executives)}&board=${encodeURIComponent(board)}`);
-                                                }
-                                            }}
-                                                disabled={investorSignature.length <= 3}
-                                                className="w-full py-3 mt-2 bg-gradient-to-r from-pink-500 to-rose-600 text-white font-bold rounded-xl disabled:opacity-40 transition-all">
-                                                Counter-Sign & Execute Deal
-                                            </button>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
+                        {activeTab === 'agreement' && currentPhase >= 5 && dealId && startupId && currentUserId && (
+                            <SmartAgreementTab 
+                                dealId={dealId}
+                                startupId={startupId}
+                                investorId={investorId || currentUserId}
+                                currentUserId={currentUserId}
+                                isStudent={isStudent}
+                                startupName={startupName}
+                                investorName={investorProfile?.full_name || "Investor"}
+                            />
                         )}
                         {activeTab === 'agreement' && currentPhase < 5 && <PhaseLock phase={5} />}
                     </div>

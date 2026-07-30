@@ -36,15 +36,33 @@ export default function StartupPublishForm() {
     const supabase = createClient();
     const router = useRouter();
     const [user, setUser] = useState<any>(null);
+    const [isKycVerified, setIsKycVerified] = useState(false);
 
     useEffect(() => {
         const fetchUser = async () => {
             const { data: { user: currentUser } } = await supabase.auth.getUser();
             setUser(currentUser);
-            if (currentUser?.user_metadata?.kycStatus === 'Approved') {
-                const kycName = currentUser.user_metadata.kyc_name || currentUser.user_metadata.full_name;
-                if (kycName) {
-                    setFormData(prev => ({ ...prev, founderName: kycName }));
+            if (currentUser?.email) {
+                // Fetch from KYC documents table first
+                const { data: kycData, error } = await supabase
+                    .from('kyc_documents')
+                    .select('name')
+                    .eq('email', currentUser.email)
+                    .order('created_at', { ascending: false })
+                    .limit(1)
+                    .maybeSingle();
+
+                if (error) console.error("KYC fetch error:", error);
+
+                if (kycData?.name) {
+                    setFormData(prev => ({ ...prev, founderName: kycData.name }));
+                    setIsKycVerified(true);
+                } else if (currentUser?.user_metadata?.kycStatus === 'Approved') {
+                    const kycName = currentUser.user_metadata.kyc_name || currentUser.user_metadata.full_name;
+                    if (kycName) {
+                        setFormData(prev => ({ ...prev, founderName: kycName }));
+                        setIsKycVerified(true);
+                    }
                 }
             }
         };
@@ -128,6 +146,14 @@ export default function StartupPublishForm() {
 
         // Section 10
         pitchVideos: [""],
+
+        // Section 11: Payment Details
+        paymentMethod: "UPI",
+        upiId: "",
+        accountHolderName: "",
+        bankName: "",
+        accountNumber: "",
+        ifscCode: "",
 
         // Confirmation
         confirmed: false
@@ -352,7 +378,7 @@ export default function StartupPublishForm() {
                     <div>
                         <SectionHeader num="2" title="Founder Information" />
                         <div className="grid md:grid-cols-2 gap-6">
-                            <div><Label required>Founder Name</Label><Input required placeholder="e.g. Sohan S Salian" value={formData.founderName} onChange={(e: any) => updateField('founderName', e.target.value)} disabled={user?.user_metadata?.kycStatus === 'Approved'} title={user?.user_metadata?.kycStatus === 'Approved' ? "Your verified Legal Name cannot be changed" : ""} /></div>
+                            <div><Label required>Founder Name</Label><Input required placeholder="e.g. Sohan S Salian" value={formData.founderName} onChange={(e: any) => updateField('founderName', e.target.value)} disabled={isKycVerified} title={isKycVerified ? "Your verified Legal Name cannot be changed" : ""} /></div>
                             <div><Label required>Founder Age</Label><Input type="number" required placeholder="e.g. 24" value={formData.founderAge} onChange={(e: any) => updateField('founderAge', e.target.value)} /></div>
                             <div>
                                 <Label required>Founder Role</Label>
@@ -607,6 +633,35 @@ export default function StartupPublishForm() {
                             <Plus className="size-4" /> Add Another Video
                         </button>
                     </div>
+                </div>
+
+                {/* 11. Payment Details */}
+                <div className="bg-white border border-slate-200 p-6 md:p-8 rounded-2xl shadow-sm mb-8">
+                    <SectionHeader num="11" title="Payment Details" />
+                    <p className="text-sm text-slate-500 mb-6">These payment details will be used during the Smart Agreement process. Please provide accurate information. If you are receiving investment funds, investors will use these details to transfer the agreed investment amount.</p>
+                    <div className="grid md:grid-cols-2 gap-6">
+                        <div className="col-span-2 md:col-span-1">
+                            <Label required>Preferred Payment Method</Label>
+                            <Select required value={formData.paymentMethod} onChange={(e: any) => {
+                                updateField('paymentMethod', e.target.value);
+                            }}>
+                                <option value="UPI">UPI</option>
+                                <option value="Bank Account">Bank Account</option>
+                            </Select>
+                        </div>
+                    </div>
+                    {formData.paymentMethod === "UPI" ? (
+                        <div className="grid md:grid-cols-2 gap-6 mt-6">
+                            <div><Label required>UPI ID</Label><Input required placeholder="e.g. abcstartup@okaxis" value={formData.upiId} onChange={(e: any) => updateField('upiId', e.target.value)} /></div>
+                        </div>
+                    ) : (
+                        <div className="grid md:grid-cols-2 gap-6 mt-6">
+                            <div><Label required>Account Holder Name</Label><Input required placeholder="e.g. HealthSync Inc" value={formData.accountHolderName} onChange={(e: any) => updateField('accountHolderName', e.target.value)} /></div>
+                            <div><Label required>Bank Name</Label><Input required placeholder="e.g. HDFC Bank" value={formData.bankName} onChange={(e: any) => updateField('bankName', e.target.value)} /></div>
+                            <div><Label required>Account Number</Label><Input required placeholder="e.g. 50100123456789" value={formData.accountNumber} onChange={(e: any) => updateField('accountNumber', e.target.value)} /></div>
+                            <div><Label required>IFSC Code</Label><Input required placeholder="e.g. HDFC0001234" value={formData.ifscCode} onChange={(e: any) => updateField('ifscCode', e.target.value)} /></div>
+                        </div>
+                    )}
                 </div>
 
                 {/* Final Confirmation */}

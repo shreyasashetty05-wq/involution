@@ -104,6 +104,14 @@ export async function POST(req: Request) {
             pitch_videos: body.pitchVideos || [],
             additional_notes: body.additionalNotes || "",
             
+            // Payment Details
+            payment_method: body.paymentMethod || null,
+            upi_id: body.upiId || null,
+            account_holder_name: body.accountHolderName || null,
+            bank_name: body.bankName || null,
+            account_number: body.accountNumber || null,
+            ifsc_code: body.ifscCode || null,
+            
             // AI Analysis
             ai_match_score: matchScore,
             innovation_score: innovationScore,
