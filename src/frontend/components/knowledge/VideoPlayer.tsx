@@ -3,7 +3,10 @@
 import { useState, useRef } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import { KnowledgeVideo, KnowledgeWatchHistory } from '@/lib/types/knowledge';
-import ReactPlayer from 'react-player';
+import dynamic from 'next/dynamic';
+import { extractYouTubeId, getYouTubeEmbedUrl } from '@/utils/youtube';
+
+const ReactPlayer = dynamic(() => import('react-player'), { ssr: false });
 
 interface VideoPlayerProps {
     video: KnowledgeVideo;
@@ -65,16 +68,14 @@ export default function VideoPlayer({ video, initialWatchHistory, userId }: Vide
         }
     };
 
-    // ReactPlayer prefers watch URLs to load the YT API properly
-    const playerUrl = video.url.includes('/embed/') 
-        ? `https://www.youtube.com/watch?v=${video.url.split('/embed/')[1].split('?')[0]}`
-        : video.url;
+    const videoId = extractYouTubeId(video.url);
+    const embedUrl = videoId ? getYouTubeEmbedUrl(videoId) : video.url;
 
     return (
         <div className="w-full bg-black rounded-2xl overflow-hidden aspect-video shadow-lg relative">
             <ReactPlayer
                 ref={playerRef}
-                url={playerUrl}
+                url={embedUrl}
                 width="100%"
                 height="100%"
                 controls={true}
