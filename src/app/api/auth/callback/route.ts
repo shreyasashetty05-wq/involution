@@ -69,17 +69,28 @@ export async function GET(request: Request) {
                 const isNewUser = !kycRecord;
                 const kycStatus = kycRecord?.status || "None";
 
+                let finalRole = currentRole;
+                if (roleData?.role === "admin") {
+                    finalRole = "admin";
+                } else if (isNewUser) {
+                    // User hasn't finished onboarding. Always honor their latest selection.
+                    finalRole = role;
+                } else {
+                    // Existing users must keep their established role
+                    finalRole = currentRole || role;
+                }
+
                 // Update user metadata with role and KYC status
                 await supabase.auth.updateUser({
                     data: {
-                        role: currentRole || role,
+                        role: finalRole,
                         kycDone,
                         isNewUser,
                         kycStatus
                     }
                 });
 
-                const redirectRole = currentRole || role;
+                const redirectRole = finalRole;
                 let redirectPath = redirectRole === "investor" ? "/investors/dashboard" : 
                                  redirectRole === "startup" ? "/startups/dashboard" :
                                  redirectRole === "incubation" ? "/incube/dashboard" :
