@@ -18,14 +18,13 @@ export default function UploadVideoPage() {
     const [categoryId, setCategoryId] = useState('');
     const [visibility, setVisibility] = useState('public');
     const [tags, setTags] = useState('');
-    const [videoFile, setVideoFile] = useState<File | null>(null);
+    const [youtubeUrl, setYoutubeUrl] = useState('');
+    const [duration, setDuration] = useState('');
     const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
     
     const [isUploading, setIsUploading] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(0);
     const [error, setError] = useState('');
-
-    const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         const fetchCategories = async () => {
@@ -37,8 +36,8 @@ export default function UploadVideoPage() {
 
     const handleUpload = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!title || !videoFile) {
-            setError('Title and Video File are required.');
+        if (!title || !youtubeUrl) {
+            setError('Title and YouTube URL are required.');
             return;
         }
 
@@ -50,19 +49,7 @@ export default function UploadVideoPage() {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) throw new Error('Not authenticated');
 
-            // 1. Upload Video
-            const videoExt = videoFile.name.split('.').pop();
-            const videoName = `${uuidv4()}.${videoExt}`;
-            const { data: videoUploadData, error: videoUploadError } = await supabase.storage
-                .from('knowledge_hub')
-                .upload(`videos/${videoName}`, videoFile);
-            
-            if (videoUploadError) throw videoUploadError;
             setUploadProgress(50);
-            
-            const { data: { publicUrl: videoUrl } } = supabase.storage
-                .from('knowledge_hub')
-                .getPublicUrl(`videos/${videoName}`);
 
             // 2. Upload Thumbnail if exists
             let thumbnailUrl = null;
@@ -84,12 +71,14 @@ export default function UploadVideoPage() {
 
             // 3. Create DB Record
             const tagsArray = tags.split(',').map(t => t.trim()).filter(Boolean);
+            const durationInt = duration ? parseInt(duration, 10) : null;
 
             const { error: dbError } = await supabase.from('knowledge_videos').insert({
                 title,
                 description,
-                url: videoUrl,
+                url: youtubeUrl,
                 thumbnail_url: thumbnailUrl,
+                duration: durationInt,
                 category_id: categoryId || null,
                 tags: tagsArray,
                 visibility,
@@ -192,24 +181,27 @@ export default function UploadVideoPage() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-slate-100">
-                    <div className="flex flex-col gap-2">
-                        <label className="text-sm font-bold text-slate-700">Video File <span className="text-rose-500">*</span> (MP4, MOV, WEBM)</label>
-                        <div 
-                            className="border-2 border-dashed border-slate-300 rounded-xl p-6 flex flex-col items-center justify-center text-center hover:bg-slate-50 transition-colors cursor-pointer"
-                            onClick={() => fileInputRef.current?.click()}
-                        >
-                            <FileVideo className="size-8 text-slate-400 mb-2" />
-                            <span className="text-sm font-semibold text-slate-600">
-                                {videoFile ? videoFile.name : 'Click to select video'}
-                            </span>
+                    <div className="flex flex-col gap-6">
+                        <div className="flex flex-col gap-2">
+                            <label className="text-sm font-bold text-slate-700">YouTube URL <span className="text-rose-500">*</span></label>
                             <input 
-                                type="file" 
-                                ref={fileInputRef} 
-                                accept="video/mp4,video/quicktime,video/webm" 
-                                className="hidden"
-                                onChange={e => {
-                                    if (e.target.files && e.target.files[0]) setVideoFile(e.target.files[0]);
-                                }}
+                                type="url" 
+                                required
+                                value={youtubeUrl}
+                                onChange={e => setYoutubeUrl(e.target.value)}
+                                className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white"
+                                placeholder="https://www.youtube.com/watch?v=..."
+                            />
+                        </div>
+                        <div className="flex flex-col gap-2">
+                            <label className="text-sm font-bold text-slate-700">Duration (in seconds, optional)</label>
+                            <input 
+                                type="number" 
+                                min="0"
+                                value={duration}
+                                onChange={e => setDuration(e.target.value)}
+                                className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white"
+                                placeholder="e.g. 120"
                             />
                         </div>
                     </div>

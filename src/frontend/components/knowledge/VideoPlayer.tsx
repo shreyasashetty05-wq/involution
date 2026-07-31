@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import { KnowledgeVideo, KnowledgeWatchHistory } from '@/lib/types/knowledge';
+import ReactPlayer from 'react-player';
 
 interface VideoPlayerProps {
     video: KnowledgeVideo;
@@ -11,70 +12,74 @@ interface VideoPlayerProps {
 }
 
 export default function VideoPlayer({ video, initialWatchHistory, userId }: VideoPlayerProps) {
-    const videoRef = useRef<HTMLVideoElement>(null);
+    const playerRef = useRef<ReactPlayer>(null);
     const [progress, setProgress] = useState(initialWatchHistory?.progress_seconds || 0);
     const [isCompleted, setIsCompleted] = useState(initialWatchHistory?.is_completed || false);
     const supabase = createClient();
     
-    // Resume watching from where user left off
-    useEffect(() => {
-        if (videoRef.current && progress > 0 && !isCompleted) {
-            videoRef.current.currentTime = progress;
-        }
-    }, [videoRef, isCompleted]);
+    // To ensure we only seek once when the video is ready
+    const [hasSeeked, setHasSeeked] = useState(false);
 
-    // Update progress debounced
-    useEffect(() => {
-        const interval = setInterval(async () => {
-            if (!videoRef.current || videoRef.current.paused || !userId) return;
+    const handleProgress = async (state: { playedSeconds: number, played: number }) => {
+        if (!userId) return;
 
-            const currentProgress = Math.floor(videoRef.current.currentTime);
-            const duration = videoRef.current.duration;
-            const percentage = (currentProgress / duration) * 100;
+        const currentProgress = Math.floor(state.playedSeconds);
+        const completed = state.played > 0.9; // Consider 90% as completed
+
+        // Only update state & db if significant change (e.g. 5 seconds diff or newly completed)
+        if (Math.abs(currentProgress - progress) >= 5 || (completed && !isCompleted)) {
+            setProgress(currentProgress);
+            if (completed) setIsCompleted(true);
             
-            // Mark as completed if > 90% watched
-            const completed = percentage > 90;
+            await supabase
+                .from('knowledge_watch_history')
+                .upsert({
+                    user_id: userId,
+                    video_id: video.id,
+                    progress_seconds: currentProgress,
+                    is_completed: completed || isCompleted,
+                    updated_at: new Date().toISOString()
+                }, { onConflict: 'user_id,video_id' });
+        }
+    };
 
-            if (currentProgress !== progress || completed !== isCompleted) {
-                setProgress(currentProgress);
-                if (completed) setIsCompleted(true);
-                
-                await supabase
-                    .from('knowledge_watch_history')
-                    .upsert({
-                        user_id: userId,
-                        video_id: video.id,
-                        progress_seconds: currentProgress,
-                        is_completed: completed,
-                        updated_at: new Date().toISOString()
-                    }, { onConflict: 'user_id,video_id' });
-            }
-        }, 5000); // every 5 seconds
+    const handleReady = () => {
+        if (!hasSeeked && progress > 0 && !isCompleted && playerRef.current) {
+            playerRef.current.seekTo(progress, 'seconds');
+            setHasSeeked(true);
+        }
+    };
 
-        return () => clearInterval(interval);
-    }, [userId, video.id, progress, isCompleted, supabase]);
+    const handleEnded = async () => {
+        setIsCompleted(true);
+        if (userId) {
+            await supabase
+                .from('knowledge_watch_history')
+                .upsert({
+                    user_id: userId,
+                    video_id: video.id,
+                    progress_seconds: Math.floor(playerRef.current?.getDuration() || video.duration || 0),
+                    is_completed: true,
+                    updated_at: new Date().toISOString()
+                }, { onConflict: 'user_id,video_id' });
+        }
+    };
 
     return (
         <div className="w-full bg-black rounded-2xl overflow-hidden aspect-video shadow-lg relative">
-            <video
-                ref={videoRef}
-                src={video.url}
-                poster={video.thumbnail_url || undefined}
-                controls
-                controlsList="nodownload"
-                className="w-full h-full object-contain"
-                onEnded={async () => {
-                    setIsCompleted(true);
-                    if (userId) {
-                        await supabase
-                            .from('knowledge_watch_history')
-                            .upsert({
-                                user_id: userId,
-                                video_id: video.id,
-                                progress_seconds: Math.floor(videoRef.current?.duration || 0),
-                                is_completed: true,
-                                updated_at: new Date().toISOString()
-                            }, { onConflict: 'user_id,video_id' });
+            <ReactPlayer
+                ref={playerRef}
+                url={video.url}
+                width="100%"
+                height="100%"
+                controls={true}
+                onProgress={handleProgress}
+                onReady={handleReady}
+                onEnded={handleEnded}
+                progressInterval={5000}
+                config={{
+                    youtube: {
+                        playerVars: { modestbranding: 1 }
                     }
                 }}
             />
