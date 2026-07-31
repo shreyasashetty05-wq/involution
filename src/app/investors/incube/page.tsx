@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { Search, Activity, ArrowUpDown, MapPin, Calendar, Users, GraduationCap, ChevronRight, Bookmark, Share2 } from "lucide-react";
 
@@ -22,6 +22,9 @@ export default function IncubeSearch() {
     const [allStartups, setAllStartups] = useState<any[]>([]);
     const [results, setResults] = useState<any[]>([]);
     const [isLoadingData, setIsLoadingData] = useState(true);
+
+    const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const isInitialMount = useRef(true);
 
     const techOptions = ["AI / ML", "Web Application", "Mobile App", "IoT", "Cloud", "Blockchain", "Robotics", "Data Science", "Other"];
     const industryOptions = ["Artificial Intelligence", "Healthcare", "Education", "Agriculture", "FinTech", "SaaS", "Cyber Security", "E-commerce", "Robotics", "IoT", "Environment", "Social Impact", "Other"];
@@ -46,6 +49,14 @@ export default function IncubeSearch() {
         fetchStartups();
     }, []);
 
+    useEffect(() => {
+        if (isInitialMount.current) {
+            isInitialMount.current = false;
+            return;
+        }
+        handleSearch();
+    }, [filters]);
+
     const toggleTech = (t: string) => {
         setFilters(prev => ({
             ...prev,
@@ -55,7 +66,9 @@ export default function IncubeSearch() {
 
     const handleSearch = () => {
         setIsSearching(true);
-        setTimeout(() => {
+        if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+
+        searchTimeoutRef.current = setTimeout(() => {
             const filtered = allStartups.filter(s => {
                 const searchStr = filters.keyword.toLowerCase();
                 const keywordMatch = !searchStr ||
@@ -122,6 +135,9 @@ export default function IncubeSearch() {
                                         placeholder="Search ideas, keywords..."
                                         className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800"
                                         value={filters.keyword} onChange={(e) => setFilters({ ...filters, keyword: e.target.value })}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter') handleSearch();
+                                        }}
                                     />
                                 </div>
                             </div>
