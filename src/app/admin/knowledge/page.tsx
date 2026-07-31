@@ -5,6 +5,7 @@ import { createClient } from '@/utils/supabase/client';
 import { KnowledgeVideo } from '@/lib/types/knowledge';
 import Link from 'next/link';
 import { Plus, Edit, Trash2, Eye, PlayCircle, Loader2 } from 'lucide-react';
+import { extractYouTubeId, getYouTubeThumbnail } from '@/utils/youtube';
 
 export default function AdminKnowledgeHubPage() {
     const [videos, setVideos] = useState<KnowledgeVideo[]>([]);
@@ -100,8 +101,8 @@ export default function AdminKnowledgeHubPage() {
                                         <td className="p-4">
                                             <div className="flex items-center gap-4">
                                                 <div className="w-20 h-12 bg-slate-200 rounded overflow-hidden relative shrink-0">
-                                                    {video.thumbnail_url ? (
-                                                        <img src={video.thumbnail_url} alt="" className="w-full h-full object-cover" />
+                                                    {(video.thumbnail_url || extractYouTubeId(video.url)) ? (
+                                                        <img src={video.thumbnail_url || getYouTubeThumbnail(extractYouTubeId(video.url)!)} alt="" className="w-full h-full object-cover" />
                                                     ) : (
                                                         <PlayCircle className="size-6 text-slate-400 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
                                                     )}

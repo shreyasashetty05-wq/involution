@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { formatRelativeTime } from '@/utils/timeHelper';
 import { KnowledgeVideo } from '@/lib/types/knowledge';
 import { PlayCircle, CheckCircle2 } from 'lucide-react';
+import { extractYouTubeId, getYouTubeThumbnail } from '@/utils/youtube';
 
 interface VideoCardProps {
     video: KnowledgeVideo;
@@ -10,22 +11,15 @@ interface VideoCardProps {
 }
 
 export default function VideoCard({ video, watchHistory }: VideoCardProps) {
-    const formatDuration = (seconds: number) => {
-        const m = Math.floor(seconds / 60);
-        const s = Math.floor(seconds % 60);
-        return `${m}:${s < 10 ? '0' : ''}${s}`;
-    };
-
-    const progressPercentage = watchHistory && video.duration
-        ? Math.min(100, (watchHistory.progress_seconds / video.duration) * 100)
-        : 0;
+    const videoId = extractYouTubeId(video.url);
+    const thumbnailUrl = video.thumbnail_url || (videoId ? getYouTubeThumbnail(videoId) : null);
 
     return (
         <Link href={`/knowledge/${video.id}`} className="group flex flex-col bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
             <div className="relative aspect-video bg-slate-100 overflow-hidden">
-                {video.thumbnail_url ? (
+                {thumbnailUrl ? (
                     <Image 
-                        src={video.thumbnail_url} 
+                        src={thumbnailUrl} 
                         alt={video.title}
                         fill
                         className="object-cover group-hover:scale-105 transition-transform duration-500"
@@ -36,20 +30,9 @@ export default function VideoCard({ video, watchHistory }: VideoCardProps) {
                     </div>
                 )}
                 
-                {video.duration && (
-                    <div className="absolute bottom-2 right-2 bg-black/70 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
-                        {formatDuration(video.duration)}
-                    </div>
-                )}
-                
-                {/* Watch Progress Bar */}
-                {watchHistory && !watchHistory.is_completed && progressPercentage > 0 && (
-                    <div className="absolute bottom-0 left-0 w-full h-1 bg-white/30">
-                        <div 
-                            className="h-full bg-emerald-500" 
-                            style={{ width: `${progressPercentage}%` }}
-                        />
-                    </div>
+                {/* Watch Progress Indicator */}
+                {watchHistory?.is_completed && (
+                    <div className="absolute bottom-0 left-0 w-full h-1 bg-emerald-500" />
                 )}
             </div>
 

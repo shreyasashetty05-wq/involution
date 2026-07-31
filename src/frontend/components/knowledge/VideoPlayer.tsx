@@ -58,18 +58,23 @@ export default function VideoPlayer({ video, initialWatchHistory, userId }: Vide
                 .upsert({
                     user_id: userId,
                     video_id: video.id,
-                    progress_seconds: Math.floor(playerRef.current?.getDuration() || video.duration || 0),
+                    progress_seconds: Math.floor(playerRef.current?.getDuration() || 0),
                     is_completed: true,
                     updated_at: new Date().toISOString()
                 }, { onConflict: 'user_id,video_id' });
         }
     };
 
+    // ReactPlayer prefers watch URLs to load the YT API properly
+    const playerUrl = video.url.includes('/embed/') 
+        ? `https://www.youtube.com/watch?v=${video.url.split('/embed/')[1].split('?')[0]}`
+        : video.url;
+
     return (
         <div className="w-full bg-black rounded-2xl overflow-hidden aspect-video shadow-lg relative">
             <ReactPlayer
                 ref={playerRef}
-                url={video.url}
+                url={playerUrl}
                 width="100%"
                 height="100%"
                 controls={true}

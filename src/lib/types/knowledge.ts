@@ -10,7 +10,6 @@ export interface KnowledgeVideo {
     description: string;
     url: string;
     thumbnail_url: string | null;
-    duration: number | null;
     category_id: string | null;
     tags: string[];
     views: number;
