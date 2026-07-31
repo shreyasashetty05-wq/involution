@@ -7,7 +7,7 @@ import { formatRelativeTime } from "@/utils/timeHelper";
 import { createClient } from "@/utils/supabase/client";
 
 interface Agreement { id: string; startup: string; date: string; amount: string; equity: string; status: string; }
-interface ActiveChat { id: string; startupId: string; startup: string; lastMessage: string; time: string; unread: number; isRejected?: boolean; }
+interface ActiveChat { id: string; startupId: string; startup: string; lastMessage: string; time: string; unread: number; isRejected?: boolean; logo?: string; }
 interface PortfolioStats { totalCapital: string; activeStartups: number; }
 
 export default function InvestorDashboard() {

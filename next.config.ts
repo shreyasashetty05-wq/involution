@@ -23,6 +23,22 @@ const nextConfig: any = {
         protocol: "https",
         hostname: "lh3.googleusercontent.com", // Google OAuth profile pictures
       },
+      {
+        protocol: "https",
+        hostname: "img.youtube.com", // YouTube thumbnails
+      },
+      {
+        protocol: "https",
+        hostname: "ktnoogfclgvwzmscefjc.supabase.co", // Supabase Storage
+      },
+      {
+        protocol: "https",
+        hostname: "ui-avatars.com", // Fallback avatars
+      },
+      {
+        protocol: "https",
+        hostname: "logo.clearbit.com", // Startup logos fallback
+      }
     ],
   },
 };
