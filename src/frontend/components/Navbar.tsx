@@ -172,6 +172,7 @@ export default function Navbar() {
                                 <Link href="/admin/financial-verification" className="hover:text-emerald-700 transition-colors font-bold text-emerald-600">Financial Verification</Link>
                                 <Link href="/admin/investors" className="hover:text-emerald-700 transition-colors font-bold text-emerald-600">Investor Verification</Link>
                                 <Link href="/admin/users" className="hover:text-emerald-700 transition-colors">Users</Link>
+                                <Link href="/admin/knowledge" className="hover:text-emerald-700 transition-colors font-bold text-emerald-600">Manage Knowledge Hub</Link>
                             </>
                         ) : role === "investor" ? (
                             <>
@@ -187,6 +188,10 @@ export default function Navbar() {
                             <Link href="/investors" className="hover:text-emerald-700 transition-colors">Investors</Link>
                             <Link href="/incube" className="hover:text-emerald-700 transition-colors">Incube</Link>
                         </>
+                    )}
+
+                    {isAuthenticated && (
+                        <Link href="/knowledge" className="hover:text-emerald-700 transition-colors font-bold">Knowledge Hub</Link>
                     )}
 
                     <Link href="/rules" className="hover:text-emerald-700 transition-colors">Rules & FAQ</Link>
