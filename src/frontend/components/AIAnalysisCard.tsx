@@ -132,8 +132,8 @@ export function AIAnalysisCard({
             <div className="grid lg:grid-cols-[280px_1fr] gap-6 mb-6">
                 
                 {/* Score Card */}
-                <div className="bg-[#111827] border border-slate-800 rounded-3xl p-6 flex flex-col items-center justify-center relative overflow-hidden shadow-inner">
-                    <div className="absolute top-4 left-4">
+                <div className="bg-[#111827] border border-slate-800 rounded-3xl p-6 flex flex-col items-center justify-center relative overflow-hidden shadow-inner hover:-translate-y-1 hover:shadow-xl hover:border-slate-700 transition-all duration-300 group">
+                    <div className="absolute top-4 left-4 transition-transform group-hover:scale-110 duration-300">
                         <Star className="w-5 h-5 text-indigo-500 opacity-50" />
                     </div>
                     
@@ -162,7 +162,7 @@ export function AIAnalysisCard({
                 </div>
 
                 {/* Executive Summary Card */}
-                <div className="bg-[#111827] border border-slate-800 rounded-3xl p-6 md:p-8 flex flex-col justify-between">
+                <div className="bg-[#111827] border border-slate-800 rounded-3xl p-6 md:p-8 flex flex-col justify-between hover:-translate-y-1 hover:shadow-xl hover:border-slate-700 transition-all duration-300 group">
                     <div>
                         <h3 className="text-base font-bold text-slate-200 mb-4 flex items-center gap-2">
                             <FileText className="w-5 h-5 text-indigo-400" /> Executive Summary
@@ -239,7 +239,7 @@ export function AIAnalysisCard({
                     <h3 className="text-base font-bold text-slate-200 mb-4 flex items-center gap-2">
                         <Activity className="w-5 h-5 text-indigo-400" /> Score Breakdown
                     </h3>
-                    <div className="grid md:grid-cols-2 gap-x-8 gap-y-5 bg-[#111827] border border-slate-800 rounded-3xl p-6 md:p-8">
+                    <div className="grid md:grid-cols-2 gap-x-8 gap-y-5 bg-[#111827] border border-slate-800 rounded-3xl p-6 md:p-8 hover:-translate-y-1 hover:shadow-xl hover:border-slate-700 transition-all duration-300">
                         {Object.entries(breakdownMap).map(([key, config]) => {
                             const val = scoreBreakdown[key] || 0;
                             const percent = (val / config.max) * 100;
@@ -272,8 +272,8 @@ export function AIAnalysisCard({
             <div className="grid md:grid-cols-2 gap-6">
                 
                 {/* Strengths */}
-                <div className="bg-[#062417] border border-[#064e3b]/60 rounded-3xl p-6 shadow-inner relative overflow-hidden">
-                    <div className="absolute -bottom-4 -right-4 opacity-10">
+                <div className="bg-[#062417] border border-[#064e3b]/60 rounded-3xl p-6 shadow-inner relative overflow-hidden hover:-translate-y-1 hover:shadow-lg hover:shadow-emerald-900/20 hover:border-[#064e3b] transition-all duration-300 group">
+                    <div className="absolute -bottom-4 -right-4 opacity-10 transition-transform group-hover:scale-110 duration-500">
                         <ShieldCheck className="w-32 h-32 text-emerald-500" />
                     </div>
                     <h3 className="text-base font-bold text-emerald-400 mb-4 flex items-center gap-2">
@@ -290,8 +290,8 @@ export function AIAnalysisCard({
                 </div>
 
                 {/* Improvement Areas */}
-                <div className="bg-[#2c1c0a] border border-[#78350f]/60 rounded-3xl p-6 shadow-inner relative overflow-hidden">
-                    <div className="absolute -bottom-4 -right-4 opacity-10">
+                <div className="bg-[#2c1c0a] border border-[#78350f]/60 rounded-3xl p-6 shadow-inner relative overflow-hidden hover:-translate-y-1 hover:shadow-lg hover:shadow-orange-900/20 hover:border-[#78350f] transition-all duration-300 group">
+                    <div className="absolute -bottom-4 -right-4 opacity-10 transition-transform group-hover:scale-110 duration-500">
                         <Target className="w-32 h-32 text-orange-500" />
                     </div>
                     <h3 className="text-base font-bold text-orange-400 mb-4 flex items-center gap-2">
@@ -310,8 +310,8 @@ export function AIAnalysisCard({
                 </div>
 
                 {/* Risks */}
-                <div className="bg-[#2a0e12] border border-[#7f1d1d]/60 rounded-3xl p-6 shadow-inner">
-                    <h3 className="text-base font-bold text-red-400 mb-4 flex items-center gap-2">
+                <div className="bg-[#2a0e12] border border-[#7f1d1d]/60 rounded-3xl p-6 shadow-inner hover:-translate-y-1 hover:shadow-lg hover:shadow-red-900/20 hover:border-[#7f1d1d] transition-all duration-300 group">
+                    <h3 className="text-base font-bold text-red-400 mb-4 flex items-center gap-2 transition-transform group-hover:translate-x-1 duration-300">
                         <AlertTriangle className="w-5 h-5 fill-red-400/20" /> Top Risks
                     </h3>
                     <div className="space-y-3">
@@ -325,9 +325,9 @@ export function AIAnalysisCard({
                 </div>
 
                 {/* AI Recommendation */}
-                <div className="bg-[#1e1b4b]/60 border border-[#4c1d95]/60 rounded-3xl p-6 shadow-inner flex flex-col justify-between">
+                <div className="bg-[#1e1b4b]/60 border border-[#4c1d95]/60 rounded-3xl p-6 shadow-inner flex flex-col justify-between hover:-translate-y-1 hover:shadow-lg hover:shadow-indigo-900/20 hover:border-[#4c1d95] transition-all duration-300 group">
                     <div>
-                        <h3 className="text-base font-bold text-indigo-300 mb-4 flex items-center gap-2">
+                        <h3 className="text-base font-bold text-indigo-300 mb-4 flex items-center gap-2 transition-transform group-hover:translate-x-1 duration-300">
                             <Star className="w-5 h-5 text-indigo-400" /> {type === 'startup' ? 'AI Recommendation' : 'Incubation Recommendation'}
                         </h3>
                         <div className="flex gap-4 items-start">
@@ -342,11 +342,31 @@ export function AIAnalysisCard({
                             </div>
                         </div>
                     </div>
-                    <div className="mt-6 flex">
-                        <button className="flex items-center gap-2 text-xs font-bold text-indigo-300 hover:text-white transition-colors bg-indigo-950/50 hover:bg-indigo-900 px-4 py-2 rounded-xl border border-indigo-800/50 w-full justify-between">
-                            <span className="flex items-center gap-2"><FileText className="w-4 h-4" /> View Detailed Report</span>
-                            <ChevronRight className="w-4 h-4" />
-                        </button>
+                    <div className="mt-6 pt-5 border-t border-[#4c1d95]/40 flex justify-between items-center px-2 opacity-80">
+                        {/* Abstract AI Processing Visual (Textless) */}
+                        <div className="flex gap-1 items-center h-4">
+                            <div className="w-1.5 h-1.5 bg-indigo-600/60 rounded-full animate-pulse" style={{ animationDelay: '0ms' }}></div>
+                            <div className="w-1.5 h-2.5 bg-indigo-500/80 rounded-full animate-pulse" style={{ animationDelay: '150ms' }}></div>
+                            <div className="w-1.5 h-4 bg-indigo-400 rounded-full animate-pulse" style={{ animationDelay: '300ms' }}></div>
+                            <div className="w-1.5 h-2 bg-indigo-500/80 rounded-full animate-pulse" style={{ animationDelay: '450ms' }}></div>
+                        </div>
+                        
+                        <div className="flex items-center gap-2 flex-1 px-6">
+                            <div className="h-px bg-gradient-to-r from-transparent via-indigo-500/30 to-transparent flex-1"></div>
+                            <div className="relative flex items-center justify-center">
+                                <div className="absolute w-6 h-6 rounded-full border border-indigo-500/20 animate-[spin_3s_linear_infinite]"></div>
+                                <div className="absolute w-4 h-4 rounded-full border border-indigo-400/40 animate-[spin_2s_linear_infinite_reverse]"></div>
+                                <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 shadow-[0_0_8px_rgba(129,140,248,0.9)]"></div>
+                            </div>
+                            <div className="h-px bg-gradient-to-r from-transparent via-indigo-500/30 to-transparent flex-1"></div>
+                        </div>
+
+                        <div className="flex gap-1 items-center h-4">
+                            <div className="w-1.5 h-2 bg-indigo-500/80 rounded-full animate-pulse" style={{ animationDelay: '450ms' }}></div>
+                            <div className="w-1.5 h-4 bg-indigo-400 rounded-full animate-pulse" style={{ animationDelay: '300ms' }}></div>
+                            <div className="w-1.5 h-2.5 bg-indigo-500/80 rounded-full animate-pulse" style={{ animationDelay: '150ms' }}></div>
+                            <div className="w-1.5 h-1.5 bg-indigo-600/60 rounded-full animate-pulse" style={{ animationDelay: '0ms' }}></div>
+                        </div>
                     </div>
                 </div>
             </div>

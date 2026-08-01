@@ -157,7 +157,8 @@ Monthly Revenue: ${record.revenue || 'N/A'}
 Monthly Expenses: ${record.financials_monthly?.expenses || 'N/A'}
 Monthly Profit: ${record.financials_monthly?.profit || 'N/A'}
 Cash in Bank: ${record.financials_monthly?.cashInBank || 'N/A'}
-Burn Rate: ${record.burn || 'N/A'}
+Gross Burn Rate: ${record.financials_monthly?.grossBurnRate || 'N/A'}
+Net Burn Rate: ${record.burn || record.financials_monthly?.monthlyBurnRate || 'N/A'}
 Customers: ${record.growth_metrics?.totalCustomers || 'N/A'}
 Monthly Active Users: ${record.growth_metrics?.mau || 'N/A'}
 Growth Rate: ${record.growth_metrics?.momGrowthRate || 'N/A'}

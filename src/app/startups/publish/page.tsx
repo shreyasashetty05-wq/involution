@@ -22,6 +22,41 @@ const Input = (props: any) => (
     <input className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 transition-all font-medium disabled:opacity-70 disabled:bg-slate-50 disabled:cursor-not-allowed" {...props} />
 );
 
+const FormattedNumberInput = ({ value, onChange, max, decimals, ...props }: any) => {
+    const formatNumber = (val: string | number) => {
+        if (val === null || val === undefined || val === "") return "";
+        const strVal = val.toString();
+        const isNegative = strVal.startsWith('-');
+        const cleanStr = isNegative ? strVal.slice(1) : strVal;
+        const parts = cleanStr.split('.');
+        if (parts[0]) {
+            const intVal = parts[0].replace(/\D/g, '');
+            if (intVal) {
+                parts[0] = Number(intVal).toLocaleString('en-IN');
+            }
+        }
+        return (isNegative ? '-' : '') + parts.join('.');
+    };
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        let rawVal = e.target.value.replace(/,/g, '');
+        if (!/^-?\d*\.?\d*$/.test(rawVal)) return;
+        if (decimals !== undefined && rawVal.includes('.')) {
+            const parts = rawVal.split('.');
+            if (parts[1].length > decimals) return;
+        }
+        if (max !== undefined && rawVal !== '' && rawVal !== '.' && rawVal !== '-') {
+            if (Number(rawVal) > max) return;
+        }
+        const newEvent = { ...e, target: { ...e.target, value: rawVal } };
+        if (onChange) onChange(newEvent as any);
+    };
+
+    return (
+        <Input type="text" value={formatNumber(value)} onChange={handleChange} {...props} />
+    );
+};
+
 const Select = ({ children, ...props }: any) => (
     <select className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 transition-all appearance-none font-medium" {...props}>
         {children}
@@ -154,6 +189,7 @@ export default function StartupPublishForm() {
         monthlyExpenses: "",
         monthlyProfitLoss: "",
         cashInBank: "",
+        grossBurnRate: "",
         monthlyBurnRate: "",
         runway: "",
 
@@ -213,14 +249,23 @@ export default function StartupPublishForm() {
         const cash = Number(formData.cashInBank) || 0;
 
         const profitLoss = rev - exp;
-        const burnRate = Math.max(0, exp - rev);
-        const runwayValue = burnRate > 0 ? (cash / burnRate) : (cash > 0 ? 999 : 0);
+        const grossBurn = exp;
+        let netBurn = exp - rev;
+        if (netBurn <= 0) netBurn = 0;
+        
+        let runwayStr = "0";
+        if (netBurn > 0) {
+            runwayStr = (cash / netBurn).toFixed(1);
+        } else {
+            runwayStr = "Cash Flow Positive";
+        }
 
         setFormData(prev => ({
             ...prev,
             monthlyProfitLoss: profitLoss.toString(),
-            monthlyBurnRate: burnRate.toString(),
-            runway: runwayValue.toFixed(1)
+            grossBurnRate: grossBurn.toString(),
+            monthlyBurnRate: netBurn.toString(),
+            runway: runwayStr
         }));
     }, [formData.monthlyRevenue, formData.monthlyExpenses, formData.cashInBank]);
 
@@ -548,9 +593,9 @@ export default function StartupPublishForm() {
                 <div className="bg-white border border-slate-200 p-6 md:p-8 rounded-2xl shadow-sm">
                     <SectionHeader num="5" title="Investment Details" />
                     <div className="grid md:grid-cols-3 gap-6 mb-8">
-                        <div><Label required>Investment Required (₹)</Label><Input type="number" required placeholder="e.g. 5000000" value={formData.investmentRequired} onChange={(e: any) => updateField('investmentRequired', e.target.value)} /></div>
-                        <div><Label required>Equity Offered (%)</Label><Input type="number" required placeholder="e.g. 10" value={formData.equityOffered} onChange={(e: any) => updateField('equityOffered', e.target.value)} /></div>
-                        <div><Label required>Current Valuation (₹)</Label><Input type="number" required disabled className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-800 font-bold" value={formData.currentValuation} placeholder="Auto-calculated" /></div>
+                        <div><Label required>Investment Required (₹)</Label><FormattedNumberInput required placeholder="e.g. 5000000" value={formData.investmentRequired} onChange={(e: any) => updateField('investmentRequired', e.target.value)} /></div>
+                        <div><Label required>Equity Offered (%)</Label><FormattedNumberInput required placeholder="e.g. 10" max={100} decimals={2} value={formData.equityOffered} onChange={(e: any) => updateField('equityOffered', e.target.value)} /></div>
+                        <div><Label required>Current Valuation (₹)</Label><FormattedNumberInput required disabled className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-800 font-bold" value={formData.currentValuation} placeholder="Auto-calculated" /></div>
                     </div>
                     <div>
                         <Label required>Use of Funds</Label>
@@ -568,13 +613,14 @@ export default function StartupPublishForm() {
                 {/* 6. Financial Details */}
                 <div className="bg-white border border-slate-200 p-6 md:p-8 rounded-2xl shadow-sm">
                     <SectionHeader num="6" title="Financial Details (Monthly)" />
-                    <div className="grid md:grid-cols-3 gap-6">
-                        <div><Label required>Monthly Revenue (₹)</Label><Input type="number" required placeholder="e.g. 500000" value={formData.monthlyRevenue} onChange={(e: any) => updateField('monthlyRevenue', e.target.value)} /></div>
-                        <div><Label required>Monthly Expenses (₹)</Label><Input type="number" required placeholder="e.g. 300000" value={formData.monthlyExpenses} onChange={(e: any) => updateField('monthlyExpenses', e.target.value)} /></div>
-                        <div><Label required>Monthly Profit / Loss (₹)</Label><Input type="number" disabled className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-800 font-bold" value={formData.monthlyProfitLoss} placeholder="Auto-calculated" /></div>
-                        <div><Label required>Cash in Bank (₹)</Label><Input type="number" required placeholder="e.g. 10000000" value={formData.cashInBank} onChange={(e: any) => updateField('cashInBank', e.target.value)} /></div>
-                        <div><Label required>Monthly Burn Rate (₹)</Label><Input type="number" disabled className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-800 font-bold" value={formData.monthlyBurnRate} placeholder="Auto-calculated" /></div>
-                        <div><Label required>Runway (Months)</Label><Input type="text" disabled className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-800 font-bold" value={formData.runway === '999' ? '∞' : formData.runway} placeholder="Auto-calculated" /></div>
+                    <div className="grid md:grid-cols-4 gap-6">
+                        <div><Label required>Monthly Revenue (₹)</Label><FormattedNumberInput required placeholder="e.g. 500000" value={formData.monthlyRevenue} onChange={(e: any) => updateField('monthlyRevenue', e.target.value)} /></div>
+                        <div><Label required>Monthly Expenses (₹)</Label><FormattedNumberInput required placeholder="e.g. 300000" value={formData.monthlyExpenses} onChange={(e: any) => updateField('monthlyExpenses', e.target.value)} /></div>
+                        <div><Label required>Monthly Profit / Loss (₹)</Label><FormattedNumberInput disabled className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-800 font-bold" value={formData.monthlyProfitLoss} placeholder="Auto-calculated" /></div>
+                        <div><Label required>Cash in Bank (₹)</Label><FormattedNumberInput required placeholder="e.g. 10000000" value={formData.cashInBank} onChange={(e: any) => updateField('cashInBank', e.target.value)} /></div>
+                        <div><Label required>Gross Burn Rate (₹)</Label><FormattedNumberInput disabled className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-800 font-bold" value={formData.grossBurnRate} placeholder="Auto-calculated" /></div>
+                        <div><Label required>Net Burn Rate (₹)</Label><FormattedNumberInput disabled className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-800 font-bold" value={formData.monthlyBurnRate} placeholder="Auto-calculated" /></div>
+                        <div className="md:col-span-2"><Label required>Estimated Cash Runway</Label><Input type="text" disabled className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-800 font-bold" value={formData.runway} placeholder="Auto-calculated" /></div>
                     </div>
                 </div>
 
@@ -582,11 +628,11 @@ export default function StartupPublishForm() {
                 <div className="bg-white border border-slate-200 p-6 md:p-8 rounded-2xl shadow-sm">
                     <SectionHeader num="7" title="Growth Metrics" />
                     <div className="grid md:grid-cols-3 gap-6">
-                        <div><Label required>Total Customers</Label><Input type="number" required placeholder="e.g. 1000" value={formData.totalCustomers} onChange={(e: any) => updateField('totalCustomers', e.target.value)} /></div>
-                        <div><Label required>Monthly Active Users</Label><Input type="number" required placeholder="e.g. 5000" value={formData.monthlyActiveUsers} onChange={(e: any) => updateField('monthlyActiveUsers', e.target.value)} /></div>
-                        <div><Label required>Monthly Growth (%)</Label><Input type="number" required placeholder="e.g. 20" value={formData.monthlyGrowth} onChange={(e: any) => updateField('monthlyGrowth', e.target.value)} /></div>
-                        <div><Label required>Customer Retention (%)</Label><Input type="number" required placeholder="e.g. 80" value={formData.customerRetention} onChange={(e: any) => updateField('customerRetention', e.target.value)} /></div>
-                        <div><Label required>Repeat Customers (%)</Label><Input type="number" required placeholder="e.g. 60" value={formData.repeatCustomers} onChange={(e: any) => updateField('repeatCustomers', e.target.value)} /></div>
+                        <div><Label required>Total Customers</Label><FormattedNumberInput required placeholder="e.g. 1000" value={formData.totalCustomers} onChange={(e: any) => updateField('totalCustomers', e.target.value)} /></div>
+                        <div><Label required>Monthly Active Users</Label><FormattedNumberInput required placeholder="e.g. 5000" value={formData.monthlyActiveUsers} onChange={(e: any) => updateField('monthlyActiveUsers', e.target.value)} /></div>
+                        <div><Label required>Monthly Growth (%)</Label><FormattedNumberInput required placeholder="e.g. 20" value={formData.monthlyGrowth} onChange={(e: any) => updateField('monthlyGrowth', e.target.value)} /></div>
+                        <div><Label required>Customer Retention (%)</Label><FormattedNumberInput required placeholder="e.g. 80" max={100} decimals={2} value={formData.customerRetention} onChange={(e: any) => updateField('customerRetention', e.target.value)} /></div>
+                        <div><Label required>Repeat Customers (%)</Label><FormattedNumberInput required placeholder="e.g. 60" max={100} decimals={2} value={formData.repeatCustomers} onChange={(e: any) => updateField('repeatCustomers', e.target.value)} /></div>
                     </div>
                 </div>
 

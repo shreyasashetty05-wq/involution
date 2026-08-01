@@ -11,7 +11,9 @@ export interface FinancialMetrics {
     monthlyProfit: number;
     cashInBank: number;
     monthlyBurnRate: number;
-    runway: number | "Infinite"; // "Infinite" if profitable or burn rate is 0
+    grossBurnRate: number;
+    netBurnRate: number;
+    runway: number | "Cash Flow Positive" | "Profitable" | string; // "Cash Flow Positive" if profitable or burn rate is 0
     profitMargin: number;
     revenueGrowth: number;
     hasVerifiedData: boolean;
@@ -46,13 +48,16 @@ export function calculateFinancialMetrics(startup: any, requireApproved: boolean
         // As per the plan to eliminate static fake data, we return 0s if no verified data exists.
         // The UI should handle `hasVerifiedData === false` appropriately.
         const staticFin = startup?.financials_monthly || {};
+        const staticNetBurn = Number(staticFin.monthlyBurnRate || startup?.burn || 0);
         return {
             monthlyRevenue: Number(staticFin.monthlyRevenue || startup?.revenue || 0),
             monthlyExpenses: Number(staticFin.monthlyExpenses || 0),
             monthlyProfit: Number(staticFin.monthlyProfit || 0),
             cashInBank: Number(staticFin.cashInBank || 0),
-            monthlyBurnRate: Number(staticFin.monthlyBurnRate || startup?.burn || 0),
-            runway: Number(staticFin.runway || 0),
+            monthlyBurnRate: staticNetBurn,
+            grossBurnRate: Number(staticFin.grossBurnRate || staticFin.monthlyExpenses || 0),
+            netBurnRate: staticNetBurn,
+            runway: staticFin.runway === "∞" || staticFin.runway === "Cash Flow Positive" ? "Cash Flow Positive" : Number(staticFin.runway || 0),
             profitMargin: 0,
             revenueGrowth: 0,
             hasVerifiedData: false
@@ -73,22 +78,19 @@ export function calculateFinancialMetrics(startup: any, requireApproved: boolean
     
     const cashInBank = Number(latestUpdate.cashInBank) || 0;
 
-    // 4. Calculate Burn Rate (Only positive if cash flow is negative)
-    // Formula: Monthly Expenses - Monthly Revenue (when negative cash flow exists)
-    // If profit > 0, burn rate is technically 0.
-    let burnRate = 0;
-    if (profit < 0) {
-        burnRate = Math.abs(profit); // Effectively Expenses - Revenue
+    // 4. Calculate Gross and Net Burn Rates
+    const grossBurnRate = expenses;
+    let netBurnRate = expenses - revenue;
+    if (netBurnRate <= 0) {
+        netBurnRate = 0;
     }
 
     // 5. Calculate Runway (Months)
-    // Formula: Available Cash ÷ Monthly Burn
-    let runway: number | "Infinite" = 0;
-    if (burnRate > 0) {
-        runway = Number((cashInBank / burnRate).toFixed(1));
-    } else if (cashInBank > 0) {
-        // If they have cash but no burn (profitable), runway is conceptually infinite.
-        runway = "Infinite";
+    let runway: number | string = 0;
+    if (netBurnRate > 0) {
+        runway = Number((cashInBank / netBurnRate).toFixed(1));
+    } else {
+        runway = "Cash Flow Positive";
     }
 
     // 6. Calculate Profit Margin
@@ -116,7 +118,9 @@ export function calculateFinancialMetrics(startup: any, requireApproved: boolean
         monthlyExpenses: expenses,
         monthlyProfit: profit,
         cashInBank: cashInBank,
-        monthlyBurnRate: burnRate,
+        monthlyBurnRate: netBurnRate,
+        grossBurnRate: grossBurnRate,
+        netBurnRate: netBurnRate,
         runway: runway,
         profitMargin: profitMargin,
         revenueGrowth: revenueGrowth,

@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { ArrowLeft, MessageSquare, Briefcase, TrendingUp, Presentation, CheckCircle2, Factory, LineChart, AlertTriangle, Activity, BrainCircuit, ShieldCheck, Scale, HeartPulse, Clock, Calendar, Users, FileText, ChevronRight, Globe, Target, MapPin, Zap, Info, Building2, UserCircle2, Linkedin, Banknote, ShieldAlert, X, ChevronDown, Download, Share2, Play, Bot, MessageCircle, Bookmark, Bell, Copy } from "lucide-react";
+import { ArrowLeft, MessageSquare, Briefcase, TrendingUp, Presentation, CheckCircle2, Factory, LineChart, AlertTriangle, Activity, BrainCircuit, ShieldCheck, Scale, HeartPulse, Clock, Calendar, Users, FileText, ChevronRight, ChevronLeft, Globe, Target, MapPin, Zap, Info, Building2, UserCircle2, Linkedin, Banknote, ShieldAlert, X, ChevronDown, Download, Share2, Play, Bot, MessageCircle, Bookmark, Bell, Copy } from "lucide-react";
 import { formatRelativeTime } from "@/utils/timeHelper";
 import { LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import AIChat from "@/frontend/components/AIChat";
@@ -21,7 +21,8 @@ export default function StartupProfile() {
     const [startup, setStartup] = useState<Record<string, any> | null>(null);
     const [loading, setLoading] = useState(true);
     
-    const [playingVideoIdx, setPlayingVideoIdx] = useState<number | null>(null);
+    const [activeVideoIdx, setActiveVideoIdx] = useState(0);
+    const [isVideoPlaying, setIsVideoPlaying] = useState(false);
     const [chartTimeframe, setChartTimeframe] = useState("Monthly");
     const [showAllUpdates, setShowAllUpdates] = useState(false);
 
@@ -446,7 +447,7 @@ export default function StartupProfile() {
                             <p className="text-slate-500 text-sm max-w-md mx-auto">This startup has not yet submitted or received verification for its monthly financial updates.</p>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
+                        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
                             <div className="bg-white border border-slate-200 p-4 rounded-2xl shadow-sm text-center relative overflow-hidden group">
                                 <div className="absolute top-0 left-0 w-full h-1 bg-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                                 <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 flex items-center justify-center gap-1">
@@ -486,17 +487,24 @@ export default function StartupProfile() {
                             <div className="bg-white border border-slate-200 p-4 rounded-2xl shadow-sm text-center relative overflow-hidden group">
                                 <div className="absolute top-0 left-0 w-full h-1 bg-amber-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                                 <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 flex items-center justify-center gap-1">
-                                    Burn Rate
+                                    Gross Burn Rate
                                 </p>
-                                <p className="text-lg font-black text-slate-900 font-mono">{formatCurrency(dynamicFinancials.monthlyBurnRate)}</p>
+                                <p className="text-lg font-black text-slate-900 font-mono">{formatCurrency(dynamicFinancials.grossBurnRate)}</p>
                             </div>
                             <div className="bg-white border border-slate-200 p-4 rounded-2xl shadow-sm text-center relative overflow-hidden group">
-                                <div className="absolute top-0 left-0 w-full h-1 bg-amber-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                <div className="absolute top-0 left-0 w-full h-1 bg-orange-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                                 <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 flex items-center justify-center gap-1">
-                                    Runway
+                                    Net Burn Rate
+                                </p>
+                                <p className="text-lg font-black text-slate-900 font-mono">{formatCurrency(dynamicFinancials.netBurnRate)}</p>
+                            </div>
+                            <div className="bg-white border border-slate-200 p-4 rounded-2xl shadow-sm text-center relative overflow-hidden group">
+                                <div className="absolute top-0 left-0 w-full h-1 bg-cyan-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 flex items-center justify-center gap-1">
+                                    Estimated Cash Runway
                                 </p>
                                 <p className="text-lg font-black text-slate-900 font-mono">
-                                    {dynamicFinancials.runway === "Infinite" ? "Infinite" : `${dynamicFinancials.runway} Months`}
+                                    {typeof dynamicFinancials.runway === "string" ? dynamicFinancials.runway : `${dynamicFinancials.runway} Months`}
                                 </p>
                             </div>
                             <div className="bg-white border border-slate-200 p-4 rounded-2xl shadow-sm text-center relative overflow-hidden group">
@@ -605,35 +613,44 @@ export default function StartupProfile() {
                             <Presentation className="size-6 text-indigo-500" /> Pitch Media
                         </h2>
                         
-                        <div className="grid md:grid-cols-2 gap-8">
-                            <div className="bg-slate-900 rounded-3xl aspect-video overflow-hidden shadow-lg relative group">
-                                {playingVideoIdx === 0 ? (
-                                    <iframe src={`${startup.videos[0].url}${startup.videos[0].url.includes('?') ? '&' : '?'}autoplay=1`} title={startup.videos[0].title} className="w-full h-full border-0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen></iframe>
-                                ) : (
-                                    <div className="absolute inset-0 cursor-pointer flex items-center justify-center" onClick={() => setPlayingVideoIdx(0)}>
-                                        <img src={startup.videos[0].thumb} alt={startup.videos[0].title} className="absolute inset-0 w-full h-full object-cover opacity-60 mix-blend-overlay group-hover:opacity-80 transition-opacity" />
-                                        <div className="size-16 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center relative z-10 group-hover:scale-110 transition-transform">
-                                            <Play className="size-6 text-white ml-1 fill-white" />
-                                        </div>
-                                        <div className="absolute top-4 left-6 z-10"><p className="text-white font-bold text-sm tracking-wide">{startup.videos[0].title}</p></div>
+                        <div className="relative bg-black rounded-3xl aspect-video overflow-hidden shadow-lg w-full max-w-5xl mx-auto group">
+                            {isVideoPlaying ? (
+                                <iframe 
+                                    src={`${startup.videos[activeVideoIdx].url}${startup.videos[activeVideoIdx].url.includes('?') ? '&' : '?'}autoplay=1&rel=0&modestbranding=1`} 
+                                    title={startup.videos[activeVideoIdx].title} 
+                                    className="w-full h-full border-0" 
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                    allowFullScreen
+                                ></iframe>
+                            ) : (
+                                <div className="absolute inset-0 cursor-pointer flex items-center justify-center" onClick={() => setIsVideoPlaying(true)}>
+                                    <img src={startup.videos[activeVideoIdx].thumb} alt={startup.videos[activeVideoIdx].title} className="absolute inset-0 w-full h-full object-cover" />
+                                    <div className="size-20 rounded-full bg-red-600/90 backdrop-blur-sm flex items-center justify-center relative z-10 hover:scale-110 hover:bg-red-600 transition-all shadow-[0_0_20px_rgba(220,38,38,0.5)]">
+                                        <Play className="size-8 text-white ml-1 fill-white" />
                                     </div>
-                                )}
-                            </div>
+                                </div>
+                            )}
                             
                             {startup.videos.length > 1 && (
-                                <div className="grid grid-cols-2 gap-4">
-                                    {startup.videos.slice(1).map((vid: any, idx: number) => (
-                                        <div key={idx} className="bg-slate-900 rounded-2xl aspect-video overflow-hidden shadow-sm relative group cursor-pointer" onClick={() => window.open(vid.url, '_blank')}>
-                                            <img src={vid.thumb} alt={vid.title} className="absolute inset-0 w-full h-full object-cover opacity-60 mix-blend-overlay group-hover:opacity-80 transition-opacity" />
-                                            <div className="absolute inset-0 flex items-center justify-center">
-                                                <div className="size-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center relative z-10">
-                                                    <Play className="size-4 text-white ml-0.5 fill-white" />
-                                                </div>
-                                            </div>
-                                            <div className="absolute bottom-2 left-3 z-10"><p className="text-white font-bold text-[10px] tracking-wide truncate pr-2">{vid.title}</p></div>
-                                        </div>
-                                    ))}
-                                </div>
+                                <>
+                                    <button 
+                                        onClick={(e) => { e.stopPropagation(); setActiveVideoIdx((prev) => (prev > 0 ? prev - 1 : startup.videos.length - 1)); setIsVideoPlaying(false); }}
+                                        className="absolute left-4 top-1/2 -translate-y-1/2 size-12 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-indigo-600 transition-colors backdrop-blur-md opacity-0 group-hover:opacity-100 z-20"
+                                    >
+                                        <ChevronLeft className="size-7" />
+                                    </button>
+                                    <button 
+                                        onClick={(e) => { e.stopPropagation(); setActiveVideoIdx((prev) => (prev < startup.videos.length - 1 ? prev + 1 : 0)); setIsVideoPlaying(false); }}
+                                        className="absolute right-4 top-1/2 -translate-y-1/2 size-12 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-indigo-600 transition-colors backdrop-blur-md opacity-0 group-hover:opacity-100 z-20"
+                                    >
+                                        <ChevronRight className="size-7" />
+                                    </button>
+                                    <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2.5 z-20">
+                                        {startup.videos.map((_: any, idx: number) => (
+                                            <div key={idx} className={`size-2.5 rounded-full transition-colors shadow-sm ${idx === activeVideoIdx ? 'bg-indigo-500' : 'bg-white/60'}`}></div>
+                                        ))}
+                                    </div>
+                                </>
                             )}
                         </div>
                     </section>
