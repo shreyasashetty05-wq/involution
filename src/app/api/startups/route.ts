@@ -17,7 +17,7 @@ export async function GET(req: Request) {
         const { searchParams } = new URL(req.url);
         const type = searchParams.get('type');
 
-        let query = supabase.from("startups").select("*");
+        let query = supabase.from("startups").select("*").neq("portfolio_status", "Portfolio Management");
         if (type === 'student') {
             query = query.eq("is_student", true);
         } else if (type === 'regular') {

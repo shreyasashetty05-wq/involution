@@ -6,6 +6,8 @@ import { FileText, MessageSquare, TrendingUp, Eye, CheckCircle2, ShieldCheck, Ac
 import { formatRelativeTime } from "@/utils/timeHelper";
 import { useToast } from "@/components/ui/ToastProvider";
 import { calculateFinancialMetrics } from "@/utils/financialMetrics";
+import PortfolioPreferenceModal from "@/components/portfolio/PortfolioPreferenceModal";
+import PortfolioReminderCard from "@/components/portfolio/PortfolioReminderCard";
 
 interface StartupDashboardClientProps {
     myStartups: any[];
@@ -16,6 +18,30 @@ export default function StartupDashboardClient({ myStartups }: StartupDashboardC
     const [activeDeals, setActiveDeals] = useState<any[]>([]);
     const [agreements, setAgreements] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [localStartups, setLocalStartups] = useState<any[]>(myStartups);
+
+    useEffect(() => {
+        setLocalStartups(myStartups);
+    }, [myStartups]);
+
+    const handlePortfolioPreference = async (startupId: string, status: string, dismissDays?: number) => {
+        try {
+            const res = await fetch(`/api/startups/${startupId}/portfolio/settings`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ portfolio_status: status, dismiss_reminder_days: dismissDays })
+            });
+            const json = await res.json();
+            if (json.success) {
+                toast.success('Fundraising preference updated successfully.');
+                setLocalStartups(prev => prev.map(s => s._id === startupId || s.id === startupId ? { ...s, portfolio_status: status, reminder_dismissed_until: json.data.reminder_dismissed_until } : s));
+            } else {
+                toast.error(json.error || 'Failed to update preference.');
+            }
+        } catch (err) {
+            toast.error('An error occurred.');
+        }
+    };
 
     useEffect(() => {
         const fetchDeals = async () => {
@@ -33,14 +59,14 @@ export default function StartupDashboardClient({ myStartups }: StartupDashboardC
             }
         };
 
-        if (myStartups.length > 0) {
+        if (localStartups.length > 0) {
             fetchDeals();
             const intervalId = setInterval(() => fetchDeals(), 5000);
             return () => clearInterval(intervalId);
         } else {
             setIsLoading(false);
         }
-    }, [myStartups]);
+    }, [localStartups]);
 
     const calculateGrowthScore = (startup: any) => {
         let score = 30; // base score
@@ -79,7 +105,7 @@ export default function StartupDashboardClient({ myStartups }: StartupDashboardC
 
     return (
         <div className="container mx-auto px-4 md:px-6 py-12 max-w-7xl min-h-[calc(100vh-80px)] bg-slate-50/50">
-            {myStartups.length === 0 ? (
+            {localStartups.length === 0 ? (
                 <div className="bg-white border-2 border-slate-200 rounded-3xl shadow-sm p-12 text-center border-dashed max-w-2xl mx-auto mt-20">
                     <div className="size-24 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6">
                         <Rocket className="size-12 text-emerald-500" />
@@ -91,7 +117,7 @@ export default function StartupDashboardClient({ myStartups }: StartupDashboardC
                     </Link>
                 </div>
             ) : (
-                myStartups.map((myStartup, idx) => {
+                localStartups.map((myStartup, idx) => {
                     const { score: growthScore, actions: growthActions } = calculateGrowthScore(myStartup);
                     const dynamicFinancials = calculateFinancialMetrics(myStartup, true);
                     
@@ -100,9 +126,32 @@ export default function StartupDashboardClient({ myStartups }: StartupDashboardC
                         return sum + (Number(amountStr) || 0);
                     }, 0);
                     const fundingProgress = Math.min(100, Math.round((securedAmount / myStartup.requested) * 100)) || 0;
+                    
+                    const hasCompletedInvestment = agreements.length > 0;
+                    const needsDecision = hasCompletedInvestment && (!myStartup.portfolio_status || myStartup.portfolio_status === 'Pending Decision');
+                    
+                    let showReminder = false;
+                    if (hasCompletedInvestment && myStartup.portfolio_status === 'Decide Later') {
+                        if (!myStartup.reminder_dismissed_until || new Date(myStartup.reminder_dismissed_until) < new Date()) {
+                            showReminder = true;
+                        }
+                    }
 
                     return (
                         <div key={myStartup._id || myStartup.id} className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
+                            {needsDecision && (
+                                <PortfolioPreferenceModal 
+                                    startupName={myStartup.name}
+                                    onSelectPreference={(pref, days) => handlePortfolioPreference(myStartup._id || myStartup.id, pref, days)}
+                                />
+                            )}
+                            
+                            {showReminder && (
+                                <PortfolioReminderCard 
+                                    onSelectPreference={(pref, days) => handlePortfolioPreference(myStartup._id || myStartup.id, pref, days)}
+                                />
+                            )}
+                            
                             {/* Header Area */}
                             <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-4 gap-6 bg-white p-6 md:p-8 rounded-3xl border border-slate-200 shadow-sm relative overflow-hidden">
                                 <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none"><Rocket className="size-40 text-emerald-600" /></div>

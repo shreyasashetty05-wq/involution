@@ -176,7 +176,8 @@ export default function Navbar() {
                             </>
                         ) : role === "investor" ? (
                             <>
-                                <Link href="/investors/dashboard" className="hover:text-emerald-700 transition-colors">Portfolio</Link>
+                                <Link href="/investors/dashboard" className="hover:text-emerald-700 transition-colors">Overview</Link>
+                                <Link href="/investors/portfolio" className="hover:text-emerald-700 transition-colors font-bold text-emerald-600">My Portfolio</Link>
                                 <Link href="/investors/search" className="hover:text-emerald-700 transition-colors">Startups</Link>
                                 <Link href="/investors/incube" className="hover:text-emerald-700 transition-colors">Incube</Link>
                             </>
