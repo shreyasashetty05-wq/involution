@@ -1,4 +1,4 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, Type } from "@google/genai";
 import fs from "fs";
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_KYC_API_KEY });
@@ -55,16 +55,21 @@ Respond strictly in JSON format:
             ],
             config: {
                 temperature: 0.1,
-                responseMimeType: "application/json"
+                responseMimeType: "application/json",
+                responseSchema: {
+                    type: Type.OBJECT,
+                    properties: {
+                        valid: { type: Type.BOOLEAN },
+                        reason: { type: Type.STRING }
+                    }
+                }
             }
         });
 
         const resultText = response.text;
         if (!resultText) throw new Error("Empty response from AI");
 
-        // Clean up markdown code blocks if the AI includes them
-        const cleanedText = resultText.replace(/```json/g, "").replace(/```/g, "").trim();
-        const result = JSON.parse(cleanedText);
+        const result = JSON.parse(resultText);
         return {
             valid: result.valid === true,
             reason: result.reason
