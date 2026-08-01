@@ -21,7 +21,10 @@ export function useGoogleAuth(role: string) {
             provider: "google",
             options: {
                 // Pass role in URL params to guarantee it survives cross-origin OAuth redirects in production
-                redirectTo: `${window.location.origin}/api/auth/callback?role=${encodeURIComponent(role)}`
+                redirectTo: `${window.location.origin}/api/auth/callback?role=${encodeURIComponent(role)}`,
+                queryParams: {
+                    prompt: 'select_account'
+                }
             }
         });
         if (authError) {
