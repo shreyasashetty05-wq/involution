@@ -54,7 +54,7 @@ export async function GET(req: Request) {
             stage: doc.current_stage,
             requested: doc.ask_amount,
             equity: doc.equity_offered,
-            score: doc.ai_match_score,
+            score: doc.ai_analysis_timestamp ? doc.ai_analysis_score : doc.ai_match_score,
             investorCount: dealCountMap[doc.id] || 0
         }));
 

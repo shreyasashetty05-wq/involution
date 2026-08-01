@@ -39,7 +39,10 @@ export async function POST(req: Request) {
         const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || `${proto}://${host}`;
         fetch(`${baseUrl}/api/ai-analyze`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+                'Content-Type': 'application/json',
+                'Cookie': req.headers.get('cookie') || ''
+            },
             body: JSON.stringify({ startupId: newStartup.id }),
         }).catch(err => console.error("Failed to trigger initial AI Analysis:", err));
 

@@ -6,6 +6,7 @@ import { createClient } from "@/utils/supabase/client";
 import { Loader2, ShieldCheck, PlayCircle, GraduationCap, Users, Lightbulb, CheckCircle, Share2, MapPin, Activity, Video, FileText, Calendar } from "lucide-react";
 import Link from "next/link";
 import Navbar from "@/frontend/components/Navbar";
+import { AIAnalysisCard } from "@/frontend/components/AIAnalysisCard";
 
 export default function IncubeExploreIdea() {
     const { id } = useParams();
@@ -430,55 +431,16 @@ export default function IncubeExploreIdea() {
                 )}
 
                 {/* AI STUDENT ANALYSIS */}
-                <div className="bg-slate-900 rounded-[32px] border border-slate-800 p-10 shadow-2xl text-white relative overflow-hidden">
-                    <div className="absolute top-0 right-0 p-8 opacity-10"><Activity className="size-64" /></div>
-                    <h2 className="text-2xl font-bold mb-10 flex items-center gap-3 relative z-10">
-                        <Activity className="size-6 text-blue-400" /> AI Student Analysis
-                    </h2>
-                    
-                    <div className="grid md:grid-cols-6 gap-8 relative z-10 items-center border-b border-slate-800 pb-10 mb-10">
-                        <div className="col-span-1 flex flex-col items-center justify-center border-r border-slate-800 pr-8">
-                            <div className="relative size-32 mb-4">
-                                <svg className="size-full -rotate-90">
-                                    <circle cx="64" cy="64" r="56" stroke="rgba(255,255,255,0.1)" strokeWidth="12" fill="transparent" />
-                                    <circle cx="64" cy="64" r="56" stroke="currentColor" strokeWidth="12" fill="transparent" strokeDasharray="352" strokeDashoffset={352 - (352 * application.ai_match_score) / 100} className="text-blue-400" />
-                                </svg>
-                                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                    <span className="text-4xl font-bold">{application.ai_match_score}</span>
-                                </div>
-                            </div>
-                            <span className="text-sm font-bold text-blue-400 uppercase tracking-wider text-center">AI Match Score</span>
-                        </div>
-                        
-                        <div className="col-span-5 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-                            <div>
-                                <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Innovation Score</div>
-                                <div className="text-3xl font-bold mb-1 text-emerald-400">{application.innovation_score}</div>
-                                <div className="text-xs font-semibold text-emerald-500">Excellent</div>
-                            </div>
-                            <div>
-                                <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Feasibility</div>
-                                <div className="text-3xl font-bold mb-1 text-purple-400">{application.feasibility_score}</div>
-                                <div className="text-xs font-semibold text-purple-500">Very Good</div>
-                            </div>
-                            <div>
-                                <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Market Potential</div>
-                                <div className="text-3xl font-bold mb-1 text-amber-400">{application.incubation_readiness}</div>
-                                <div className="text-xs font-semibold text-amber-500">Excellent</div>
-                            </div>
-                            <div>
-                                <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Incubation Readiness</div>
-                                <div className="text-3xl font-bold mb-1 text-blue-400">{application.incubation_readiness}</div>
-                                <div className="text-xs font-semibold text-blue-500">Excellent</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="relative z-10">
-                        <div className="text-xs font-bold text-emerald-400 mb-3 uppercase tracking-wider">AI Recommendation</div>
-                        <p className="text-slate-300 leading-relaxed text-lg">{application.ai_recommendation || "This student idea shows high potential for incubation. The combination of early stage validation and high innovation score makes it a prime candidate for early stage support and mentorship."}</p>
-                    </div>
-                </div>
+                <AIAnalysisCard 
+                    type="incubation"
+                    score={application.ai_analysis_timestamp ? application.ai_analysis_score : (application.ai_match_score || 0)}
+                    executiveSummary={application.ai_executive_summary || application.ai_recommendation || ""}
+                    strengths={application.ai_strengths || []}
+                    weaknesses={application.ai_weaknesses || []}
+                    businessRisks={application.ai_business_risks || []}
+                    improvementSuggestions={application.ai_improvement_suggestions || []}
+                    investmentReadiness={application.ai_investment_readiness || ""}
+                />
 
             </div>
         </div>

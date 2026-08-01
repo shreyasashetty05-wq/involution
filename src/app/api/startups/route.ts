@@ -62,6 +62,7 @@ export async function GET(req: Request) {
             ...doc,
             _id: doc.id,
             ownerEmail: doc.owner_email,
+            score: doc.ai_analysis_timestamp ? doc.ai_analysis_score : doc.score,
             businessModel: doc.business_model,
             isStudent: doc.is_student,
             financialUpdates: doc.financial_updates,

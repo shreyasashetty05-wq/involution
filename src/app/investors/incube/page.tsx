@@ -306,12 +306,12 @@ export default function IncubeSearch() {
                                                 <div className="flex items-center gap-4 bg-slate-50 border border-slate-100 p-3 rounded-2xl">
                                                     <div className="flex flex-col items-end">
                                                         <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">AI Match</span>
-                                                        <span className="text-emerald-600 text-[10px] font-bold border border-emerald-200 bg-emerald-50 px-2 py-0.5 rounded-md mt-1">Incubation Ready</span>
+                                                        <span className={`${startup.score >= 80 ? 'text-emerald-600 border-emerald-200 bg-emerald-50' : startup.score >= 50 ? 'text-orange-600 border-orange-200 bg-orange-50' : 'text-red-600 border-red-200 bg-red-50'} text-[10px] font-bold border px-2 py-0.5 rounded-md mt-1`}>{startup.score >= 80 ? 'Incubation Ready' : startup.score >= 50 ? 'Promising' : 'Not Ready'}</span>
                                                     </div>
                                                     <div className="relative size-14">
                                                         <svg className="size-full -rotate-90">
                                                             <circle cx="28" cy="28" r="24" stroke="currentColor" strokeWidth="4" fill="transparent" className="text-slate-200" />
-                                                            <circle cx="28" cy="28" r="24" stroke="currentColor" strokeWidth="4" fill="transparent" strokeDasharray="150" strokeDashoffset={150 - (150 * startup.score) / 100} className="text-emerald-500" />
+                                                            <circle cx="28" cy="28" r="24" stroke="currentColor" strokeWidth="4" fill="transparent" strokeDasharray="150" strokeDashoffset={150 - (150 * startup.score) / 100} className={`${startup.score >= 80 ? 'text-emerald-500' : startup.score >= 50 ? 'text-orange-500' : 'text-red-500'} transition-all duration-1000`} />
                                                         </svg>
                                                         <div className="absolute inset-0 flex items-center justify-center">
                                                             <span className="text-xl font-bold text-slate-900">{startup.score}</span>

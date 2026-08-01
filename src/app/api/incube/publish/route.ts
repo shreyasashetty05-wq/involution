@@ -34,12 +34,6 @@ export async function POST(req: Request) {
             }
         }
 
-        // Mock AI Evaluation
-        const matchScore = Math.floor(Math.random() * 30) + 70; // 70 to 99
-        const innovationScore = Math.floor(Math.random() * 20) + 80;
-        const readiness = Math.floor(Math.random() * 40) + 60;
-        const feasibility = Math.floor(Math.random() * 25) + 75;
-
         const applicationPayload = {
             owner_email: user.email,
             full_name: body.fullName,
@@ -112,13 +106,6 @@ export async function POST(req: Request) {
             account_number: body.accountNumber || null,
             ifsc_code: body.ifscCode || null,
             
-            // AI Analysis
-            ai_match_score: matchScore,
-            innovation_score: innovationScore,
-            incubation_readiness: readiness,
-            feasibility_score: feasibility,
-            ai_recommendation: "Strong potential in target market with high feasibility.",
-            
             status: 'pending'
         };
 
@@ -161,6 +148,23 @@ export async function POST(req: Request) {
             description: "Your Incubation application has been successfully submitted and is under review.",
             link: `/incube/dashboard`
         });
+
+        // Fire and forget AI Analysis trigger
+        const host =
+            req.headers.get("x-forwarded-host") ??
+            req.headers.get("host") ??
+            new URL(req.url).host;
+        const proto =
+            req.headers.get("x-forwarded-proto") ?? new URL(req.url).protocol.replace(":", "");
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || `${proto}://${host}`;
+        fetch(`${baseUrl}/api/ai-analyze`, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Cookie': req.headers.get('cookie') || '' 
+            },
+            body: JSON.stringify({ type: 'incubation', incubationId: data.id }),
+        }).catch(err => console.error("Failed to trigger initial AI Analysis:", err));
 
         return NextResponse.json({ success: true, data }, { status: 200 });
     } catch (error: any) {

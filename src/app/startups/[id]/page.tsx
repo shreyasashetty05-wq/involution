@@ -7,6 +7,7 @@ import { ArrowLeft, MessageSquare, Briefcase, TrendingUp, Presentation, CheckCir
 import { formatRelativeTime } from "@/utils/timeHelper";
 import { LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import AIChat from "@/frontend/components/AIChat";
+import { AIAnalysisCard } from "@/frontend/components/AIAnalysisCard";
 import { calculateFinancialMetrics } from "@/utils/financialMetrics";
 
 const formatCurrency = (val: number | string) => {
@@ -513,45 +514,16 @@ export default function StartupProfile() {
 
                 {/* 6. AI Startup Analysis */}
                 <section>
-                    <div className="bg-[#0b1021] rounded-3xl p-8 md:p-10 text-white relative overflow-hidden shadow-2xl">
-                        <div className="absolute top-0 right-0 p-12 opacity-5 pointer-events-none"><BrainCircuit className="size-64" /></div>
-                        
-                        <h2 className="text-xl font-bold mb-8 flex items-center gap-2"><BrainCircuit className="size-6 text-indigo-400" /> AI Startup Analysis</h2>
-                        
-                        <div className="flex flex-col md:flex-row gap-8 items-center relative z-10">
-                            <div className="flex flex-col items-center justify-center size-40 rounded-full border-[6px] border-emerald-400 bg-[#121936] shrink-0 shadow-[0_0_30px_rgba(52,211,153,0.2)]">
-                                <span className="text-5xl font-black text-white">92</span>
-                                <span className="text-[10px] uppercase font-bold tracking-widest text-emerald-400 mt-1">Match Score</span>
-                            </div>
-
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 flex-1 w-full">
-                                <div>
-                                    <p className="text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Business Strength</p>
-                                    <p className="text-lg font-bold text-white flex items-center gap-2"><CheckCircle2 className="size-4 text-emerald-400" /> Strong</p>
-                                </div>
-                                <div>
-                                    <p className="text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Risk Level</p>
-                                    <p className="text-lg font-bold text-white flex items-center gap-2"><AlertTriangle className="size-4 text-emerald-400" /> Low</p>
-                                </div>
-                                <div>
-                                    <p className="text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Financial Health</p>
-                                    <p className="text-lg font-bold text-white flex items-center gap-2"><HeartPulse className="size-4 text-emerald-400" /> Healthy</p>
-                                </div>
-                                <div>
-                                    <p className="text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Growth Potential</p>
-                                    <p className="text-lg font-bold text-white flex items-center gap-2"><TrendingUp className="size-4 text-emerald-400" /> High</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="mt-8 pt-8 border-t border-white/10 relative z-10">
-                            <h4 className="font-bold text-indigo-300 mb-3 uppercase text-sm tracking-wider">AI Recommendation</h4>
-                            <p className="text-slate-300 text-base leading-relaxed max-w-4xl">
-                                Strong financial performance with healthy profit margins and low operational risk. The startup's consistent revenue growth and manageable burn rate provide a solid foundation. The team holds significant relevant industry experience. Suitable for Seed & Series A investors.
-                            </p>
-                            <span className="inline-block mt-4 px-3 py-1.5 bg-indigo-500/20 border border-indigo-500/30 text-indigo-300 text-xs font-bold rounded-lg">Suitable for Seed & Series A Investors</span>
-                        </div>
-                    </div>
+                    <AIAnalysisCard 
+                        type="startup"
+                        score={startup.ai_analysis_timestamp ? startup.ai_analysis_score : (startup.score || 0)}
+                        executiveSummary={startup.ai_executive_summary || startup.analysis || ""}
+                        strengths={startup.ai_strengths || []}
+                        weaknesses={startup.ai_weaknesses || []}
+                        businessRisks={startup.ai_business_risks || []}
+                        improvementSuggestions={startup.ai_improvement_suggestions || []}
+                        investmentReadiness={startup.ai_investment_readiness || ""}
+                    />
                 </section>
 
                 <div className="grid md:grid-cols-2 gap-8">

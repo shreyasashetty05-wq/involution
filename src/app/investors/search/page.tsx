@@ -539,14 +539,14 @@ export default function AISearchEngine() {
                                                 <div className="relative size-20">
                                                     <svg className="size-full -rotate-90">
                                                         <circle cx="40" cy="40" r="36" stroke="currentColor" strokeWidth="6" fill="transparent" className="text-slate-100" />
-                                                        <circle cx="40" cy="40" r="36" stroke="currentColor" strokeWidth="6" fill="transparent" strokeDasharray="226" strokeDashoffset={226 - (226 * Math.min(100, startup.score)) / 100} className="text-emerald-500 transition-all duration-1000" />
+                                                        <circle cx="40" cy="40" r="36" stroke="currentColor" strokeWidth="6" fill="transparent" strokeDasharray="226" strokeDashoffset={226 - (226 * Math.min(100, (startup.ai_analysis_timestamp ? startup.ai_analysis_score : (startup.score || 0)))) / 100} className={`${(startup.ai_analysis_timestamp ? startup.ai_analysis_score : (startup.score || 0)) >= 80 ? 'text-emerald-500' : (startup.ai_analysis_timestamp ? startup.ai_analysis_score : (startup.score || 0)) >= 50 ? 'text-orange-500' : 'text-red-500'} transition-all duration-1000`} />
                                                     </svg>
                                                     <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                                        <span className="text-2xl font-black text-slate-900">{startup.score}</span>
+                                                        <span className="text-2xl font-black text-slate-900">{startup.ai_analysis_timestamp ? startup.ai_analysis_score : (startup.score || 0)}</span>
                                                     </div>
                                                 </div>
                                                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-3">AI Match</span>
-                                                <span className="text-xs font-bold text-emerald-600 mt-0.5">{startup.score >= 80 ? 'High Match' : startup.score >= 50 ? 'Medium Match' : 'Low Match'}</span>
+                                                <span className={`text-xs font-bold mt-0.5 ${(startup.ai_analysis_timestamp ? startup.ai_analysis_score : (startup.score || 0)) >= 80 ? 'text-emerald-600' : (startup.ai_analysis_timestamp ? startup.ai_analysis_score : (startup.score || 0)) >= 50 ? 'text-orange-600' : 'text-red-600'}`}>{(startup.ai_analysis_timestamp ? startup.ai_analysis_score : (startup.score || 0)) >= 80 ? 'High Match' : (startup.ai_analysis_timestamp ? startup.ai_analysis_score : (startup.score || 0)) >= 50 ? 'Medium Match' : 'Low Match'}</span>
                                             </div>
                                         </div>
 
