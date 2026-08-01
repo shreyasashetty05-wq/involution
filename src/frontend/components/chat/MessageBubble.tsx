@@ -31,15 +31,15 @@ export function MessageBubble({
             className={`flex gap-3 w-full group ${isUser ? 'justify-end' : 'justify-start'}`}
         >
             {!isUser && (
-                <div className="size-8 rounded-full bg-[#1E293B] border border-[#334155] flex items-center justify-center shrink-0 mt-1 shadow-sm">
-                    <Bot className="size-4 text-[#10B981]" />
+                <div className="size-8 rounded-full bg-[#0f0a29] border border-[#ec4899]/50 flex items-center justify-center shrink-0 mt-1 shadow-[0_0_10px_rgba(236,72,153,0.3)]">
+                    <Bot className="size-4 text-[#ec4899]" />
                 </div>
             )}
             
             <div className={`flex flex-col gap-1 max-w-[85%] ${isUser ? 'items-end' : 'items-start'}`}>
                 <div className={`px-5 py-4 text-sm leading-relaxed shadow-sm ${
                     isUser 
-                        ? 'bg-gradient-to-br from-[#3B82F6] to-[#2563EB] text-[#F8FAFC] rounded-2xl rounded-tr-sm' 
+                        ? 'bg-gradient-to-br from-[#8b5cf6] to-[#ec4899] text-[#F8FAFC] rounded-2xl rounded-tr-sm shadow-[0_0_15px_rgba(236,72,153,0.3)]' 
                         : 'bg-transparent text-[#F8FAFC] w-full'
                 }`}>
                     {typeof content === 'string' && !isUser ? (
@@ -52,7 +52,7 @@ export function MessageBubble({
                 </div>
 
                 <div className={`flex items-center gap-2 mt-0.5 w-full ${isUser ? 'justify-end pr-1' : 'ml-1'}`}>
-                    <span className="text-[10px] text-[#94A3B8] font-medium px-1">{time}</span>
+                    <span className="text-[10px] text-[#8b5cf6] font-medium px-1">{time}</span>
                     
                     {!isUser && onCopy && onRegenerate && onLike && onDislike && onShare && (
                         <MessageActions 
@@ -66,7 +66,7 @@ export function MessageBubble({
                         />
                     )}
                     {isUser && (
-                        <span className="text-[10px] text-[#3B82F6]">✓</span>
+                        <span className="text-[10px] text-[#38bdf8]">✓</span>
                     )}
                 </div>
             </div>

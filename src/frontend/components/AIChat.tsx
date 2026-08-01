@@ -177,7 +177,7 @@ export default function AIChat({ startupId }: AIChatProps) {
     };
 
     return (
-        <div className="w-full h-full flex flex-col bg-[#0F172A] border border-[#334155] rounded-[24px] overflow-hidden shadow-2xl font-sans relative">
+        <div className="w-full h-full flex flex-col bg-[#0a0520] border-2 border-[#ec4899]/30 rounded-[24px] overflow-hidden shadow-[0_0_30px_rgba(236,72,153,0.15)] font-sans relative">
             <ChatHeader 
                 onNewChat={() => setMessages([{ role: 'ai', content: INITIAL_MESSAGE, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }])}
                 onClearChat={() => setMessages([])}

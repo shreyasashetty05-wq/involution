@@ -7,6 +7,7 @@ import { ArrowLeft, MessageSquare, Briefcase, TrendingUp, Presentation, CheckCir
 import { formatRelativeTime } from "@/utils/timeHelper";
 import { LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import AIChat from "@/frontend/components/AIChat";
+import { PlasmaBotButton } from "@/frontend/components/chat/PlasmaBotButton";
 import { calculateFinancialMetrics } from "@/utils/financialMetrics";
 
 const formatCurrency = (val: number | string) => {
@@ -816,28 +817,7 @@ export default function StartupProfile() {
                 )}
 
                 {/* Floating Action Button */}
-                <button 
-                    onClick={() => setShowChat(!showChat)}
-                    className="size-14 rounded-full bg-slate-900 hover:bg-slate-800 text-white shadow-xl flex items-center justify-center transition-transform hover:scale-110 active:scale-95 pointer-events-auto relative group"
-                >
-                    {showChat ? (
-                        <X className="size-6" />
-                    ) : (
-                        <div className="relative">
-                            <Bot className="size-6" />
-                            <span className="absolute -top-1 -right-1 flex h-3 w-3">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                                <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
-                            </span>
-                        </div>
-                    )}
-                    
-                    {!showChat && (
-                        <span className="absolute right-full mr-4 top-1/2 -translate-y-1/2 px-3 py-1.5 bg-slate-900 text-white text-xs font-bold rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-lg pointer-events-none hidden md:block">
-                            Ask InVolution AI
-                        </span>
-                    )}
-                </button>
+                <PlasmaBotButton isOpen={showChat} onClick={() => setShowChat(!showChat)} />
             </div>
             {/* Share Modal */}
             {isShareModalOpen && (

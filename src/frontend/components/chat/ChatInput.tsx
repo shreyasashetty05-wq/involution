@@ -94,7 +94,7 @@ export function ChatInput({ onSubmit, isLoading, quickPrompts }: ChatInputProps)
     };
 
     return (
-        <div className="p-4 sm:p-6 bg-gradient-to-t from-[#0F172A] via-[#0F172A]/90 to-transparent shrink-0">
+        <div className="p-4 sm:p-6 bg-gradient-to-t from-[#0a0520] via-[#0a0520]/90 to-transparent shrink-0">
             {quickPrompts && quickPrompts.length > 0 && (
                 <div className="mb-4 max-w-4xl mx-auto w-full">
                     <QuickPromptChips 
@@ -106,7 +106,7 @@ export function ChatInput({ onSubmit, isLoading, quickPrompts }: ChatInputProps)
             )}
             
             <div className="max-w-4xl mx-auto w-full">
-                <div className="bg-[#1E293B] border border-[#334155] rounded-[24px] shadow-lg transition-all focus-within:border-[#3B82F6]/70 focus-within:ring-1 focus-within:ring-[#3B82F6]/30 relative">
+                <div className="bg-[#0f0a29] border border-[#38bdf8]/30 rounded-[24px] shadow-[0_0_15px_rgba(236,72,153,0.1)] transition-all focus-within:border-[#38bdf8]/70 focus-within:ring-1 focus-within:ring-[#38bdf8]/30 relative">
                     <FileChips files={files} onRemove={handleRemoveFile} />
                     
                     <form 
@@ -134,7 +134,7 @@ export function ChatInput({ onSubmit, isLoading, quickPrompts }: ChatInputProps)
                             disabled={isLoading}
                             rows={1}
                             className={`flex-1 bg-transparent text-[#F8FAFC] resize-none overflow-y-auto max-h-[200px] py-2.5 px-2 focus:outline-none text-[15px] leading-relaxed scrollbar-hide ${
-                                isListening ? "placeholder:text-[#10B981] animate-pulse" : "placeholder:text-[#94A3B8]"
+                                isListening ? "placeholder:text-[#ec4899] animate-pulse" : "placeholder:text-[#8b5cf6]"
                             }`}
                             style={{ minHeight: '44px' }}
                         />
@@ -142,7 +142,7 @@ export function ChatInput({ onSubmit, isLoading, quickPrompts }: ChatInputProps)
                         <button
                             type="submit"
                             disabled={(!displayValue.trim() && files.length === 0) || isLoading}
-                            className="mb-1 p-2.5 ml-1 bg-[#10B981] hover:bg-[#059669] disabled:bg-[#334155] disabled:text-[#94A3B8] text-white rounded-full transition-colors flex items-center justify-center shrink-0 shadow-sm relative group"
+                            className="mb-1 p-2.5 ml-1 bg-gradient-to-r from-[#8b5cf6] to-[#ec4899] hover:from-[#7c3aed] hover:to-[#db2777] disabled:from-[#1E293B] disabled:to-[#1E293B] disabled:text-[#94A3B8] text-white rounded-full transition-all flex items-center justify-center shrink-0 shadow-[0_0_10px_rgba(236,72,153,0.4)] relative group"
                             title="Send Message"
                         >
                             <ArrowUp className="size-4" strokeWidth={3} />
