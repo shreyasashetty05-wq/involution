@@ -10,7 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowDown } from 'lucide-react';
 
 interface AIChatProps {
-    startupId: string;
+    startupId?: string;
 }
 
 interface Message {
@@ -68,7 +68,7 @@ export default function AIChat({ startupId }: AIChatProps) {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    startupId,
+                    startupId: startupId || 'global',
                     module: 'chat',
                     context: index > 0 && typeof messages[index - 1].content === 'string' ? messages[index - 1].content : '',
                     aiResponse: typeof msg.content === 'string' ? msg.content : 'Rich Content',
@@ -106,7 +106,7 @@ export default function AIChat({ startupId }: AIChatProps) {
             const res = await fetch('/api/ai-chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ startupId, question: userMessage })
+                body: JSON.stringify({ startupId: startupId || 'global', question: userMessage })
             });
 
             const data = await res.json();

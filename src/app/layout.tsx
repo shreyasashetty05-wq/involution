@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Outfit } from "next/font/google";
 import Navbar from "@/frontend/components/Navbar";
+import GlobalChatbot from "@/frontend/components/GlobalChatbot";
 import { ToastProvider } from "@/components/ui/ToastProvider";
 import { ModalProvider } from "@/components/ui/ModalProvider";
 import "./globals.css";
@@ -35,6 +36,7 @@ export default function RootLayout({
           <ModalProvider>
             <Navbar />
             <main className="grow pt-20">{children}</main>
+            <GlobalChatbot />
           </ModalProvider>
         </ToastProvider>
       </body>

@@ -6,7 +6,7 @@ import { createClient } from "@/utils/supabase/client";
 import { useEffect, useState } from "react";
 import { User } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
-import { Bell } from "lucide-react";
+import { Bell, Video, Calendar } from "lucide-react";
 import { formatRelativeTime } from "@/utils/timeHelper";
 
 const supabase = createClient();
@@ -222,40 +222,53 @@ export default function Navbar() {
                                     )}
                                 </button>
                                 {showNotifications && (
-                                    <div className="absolute right-0 mt-3 w-80 md:w-96 bg-white border border-slate-200 rounded-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2">
-                                        <div className="p-4 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
-                                            <h3 className="font-bold text-slate-900 flex items-center gap-2">Notifications</h3>
-                                            {unreadCount > 0 && (
-                                                <button onClick={markAllAsRead} className="text-xs font-bold text-emerald-600 hover:text-emerald-700 transition-colors">Mark all as read</button>
-                                            )}
+                                    <div className="absolute right-0 mt-4 w-[360px] md:w-[420px] bg-white/95 backdrop-blur-xl border border-slate-200/60 rounded-2xl shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] z-50 overflow-hidden animate-in fade-in zoom-in-95 slide-in-from-top-4 duration-200 ease-out">
+                                        <div className="px-5 py-4 border-b border-slate-100/50 bg-white/50 flex justify-between items-center">
+                                            <h3 className="text-base font-bold text-slate-900 tracking-tight">Notifications</h3>
+                                            <button className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 transition-colors">Mark all as read</button>
                                         </div>
-                                        <div className="max-h-96 overflow-y-auto divide-y divide-slate-50 custom-scrollbar">
-                                            {notifications.length === 0 ? (
-                                                <div className="p-6 text-center text-slate-500 text-sm">No new notifications.</div>
-                                            ) : (
-                                                notifications.map(n => {
-                                                    const isRead = n.is_read;
-                                                    return (
-                                                    <div key={n.id} className={`p-4 transition-colors relative group ${isRead ? 'bg-white' : 'bg-emerald-50/30'}`}>
-                                                        {!isRead && <div className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500"></div>}
-                                                        <div className="flex justify-between items-start mb-1">
-                                                            <Link href={n.link} onClick={() => {markAsRead(n.id); setShowNotifications(false);}} className="font-bold text-sm text-slate-900 hover:text-emerald-600 transition-colors pr-6">
-                                                                {n.title}
-                                                            </Link>
-                                                        </div>
-                                                        <p className="text-xs text-slate-600 mb-2">{n.description}</p>
-                                                        <div className="flex justify-between items-center mt-2">
-                                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{formatRelativeTime(new Date(n.created_at))}</span>
-                                                            {!isRead && (
-                                                                <button onClick={() => markAsRead(n.id)} className="text-[10px] font-bold text-emerald-600 opacity-0 group-hover:opacity-100 transition-opacity">Mark as read</button>
-                                                            )}
-                                                        </div>
+                                        <div className="flex flex-col max-h-[400px] overflow-y-auto">
+                                            {/* Example 1: Meeting Started (Unread) */}
+                                            <div className="p-5 flex gap-4 hover:bg-slate-50/80 transition-colors cursor-pointer relative bg-white/40 border-b border-slate-50/50 group">
+                                                <div className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]"></div>
+                                                <div className="flex-shrink-0 mt-0.5">
+                                                    <div className="size-10 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
+                                                        <Video className="size-5" />
                                                     </div>
-                                                )})
-                                            )}
+                                                </div>
+                                                <div className="flex-1">
+                                                    <div className="flex justify-between items-start mb-1">
+                                                        <h4 className="text-sm font-bold text-slate-900">Meeting Started</h4>
+                                                        <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">Now</span>
+                                                    </div>
+                                                    <p className="text-sm text-slate-500 leading-snug">The quarterly review meeting has started.</p>
+                                                    <button className="mt-3 w-full py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-lg transition-colors shadow-sm">
+                                                        Join Meeting
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            {/* Example 2: Meeting Scheduled (Read) */}
+                                            <div className="p-5 flex gap-4 hover:bg-slate-50/80 transition-colors cursor-pointer bg-white/40 group">
+                                                <div className="absolute left-0 top-0 bottom-0 w-1 bg-transparent"></div>
+                                                <div className="flex-shrink-0 mt-0.5">
+                                                    <div className="size-10 bg-slate-100 text-slate-500 rounded-xl flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
+                                                        <Calendar className="size-5" />
+                                                    </div>
+                                                </div>
+                                                <div className="flex-1">
+                                                    <div className="flex justify-between items-start mb-1">
+                                                        <h4 className="text-sm font-bold text-slate-700">Meeting Scheduled</h4>
+                                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">2h ago</span>
+                                                    </div>
+                                                    <p className="text-sm text-slate-500 leading-snug">Project kick-off scheduled for tomorrow at 10:00 AM.</p>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div className="p-3 border-t border-slate-100 text-center bg-slate-50">
-                                            <Link href="/notifications" className="text-xs font-bold text-slate-500 hover:text-slate-700">View All Notifications</Link>
+                                        <div className="p-3 border-t border-slate-100/50 bg-slate-50/50 text-center">
+                                            <Link href="/notifications" className="text-xs font-bold text-slate-500 hover:text-slate-800 transition-colors">
+                                                View all notifications
+                                            </Link>
                                         </div>
                                     </div>
                                 )}

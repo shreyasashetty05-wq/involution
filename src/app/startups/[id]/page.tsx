@@ -7,7 +7,7 @@ import { ArrowLeft, MessageSquare, Briefcase, TrendingUp, Presentation, CheckCir
 import { formatRelativeTime } from "@/utils/timeHelper";
 import { LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import AIChat from "@/frontend/components/AIChat";
-import { PlasmaBotButton } from "@/frontend/components/chat/PlasmaBotButton";
+import { calculateFinancialMetrics } from "@/utils/financialMetrics";
 import { calculateFinancialMetrics } from "@/utils/financialMetrics";
 
 const formatCurrency = (val: number | string) => {
@@ -24,7 +24,6 @@ export default function StartupProfile() {
     const [playingVideoIdx, setPlayingVideoIdx] = useState<number | null>(null);
     const [chartTimeframe, setChartTimeframe] = useState("Monthly");
     const [showAllUpdates, setShowAllUpdates] = useState(false);
-    const [showChat, setShowChat] = useState(false);
 
     // Feature States
     const [isFollowing, setIsFollowing] = useState(false);
@@ -799,26 +798,7 @@ export default function StartupProfile() {
                 </section>
             </div>
 
-            {/* Floating AI Chat Widget */}
-            <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end pointer-events-none">
-                {/* Chat Window */}
-                {showChat && (
-                    <div className="mb-4 w-[400px] max-w-[calc(100vw-48px)] shadow-2xl rounded-[24px] overflow-hidden pointer-events-auto transition-all animate-in slide-in-from-bottom-8 fade-in duration-300 relative group/chatwidget">
-                        <button 
-                            onClick={() => setShowChat(false)}
-                            className="absolute top-4 right-4 z-[60] p-1.5 bg-black/20 hover:bg-black/40 text-white rounded-full transition-colors"
-                        >
-                            <X className="size-4" />
-                        </button>
-                        <div className="h-[700px] max-h-[calc(100dvh-120px-env(safe-area-inset-top))]">
-                            <AIChat startupId={idValue as string} />
-                        </div>
-                    </div>
-                )}
 
-                {/* Floating Action Button */}
-                <PlasmaBotButton isOpen={showChat} onClick={() => setShowChat(!showChat)} />
-            </div>
             {/* Share Modal */}
             {isShareModalOpen && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center px-4">
