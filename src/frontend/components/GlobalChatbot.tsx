@@ -11,8 +11,9 @@ export default function GlobalChatbot() {
     const params = useParams();
     const pathname = usePathname();
     
-    // Ignore on login/register pages
-    if (pathname.includes('/login') || pathname.includes('/register') || pathname === '/') {
+    // Only show on startups and incube pages
+    const isAllowedPage = pathname.startsWith('/startups') || pathname.startsWith('/incube');
+    if (!isAllowedPage) {
         return null;
     }
 
