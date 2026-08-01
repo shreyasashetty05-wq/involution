@@ -276,8 +276,8 @@ export default function KYCSubmitPage() {
     const getVerificationTitle = () => {
         const role = user?.user_metadata?.role;
         if (role === "investor") return "Investor verification";
-        if (role === "startup" || role === "incubation") return "Startup verification";
-        if (role === "student") return "Student verification";
+        if (role === "startup") return "Startup verification";
+        if (role === "incubation" || role === "student") return "Student verification";
         return "Secure Identity Verification";
     };
 
