@@ -8,7 +8,6 @@ import { formatRelativeTime } from "@/utils/timeHelper";
 import { LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import AIChat from "@/frontend/components/AIChat";
 import { calculateFinancialMetrics } from "@/utils/financialMetrics";
-import { calculateFinancialMetrics } from "@/utils/financialMetrics";
 
 const formatCurrency = (val: number | string) => {
     if (!val && val !== 0) return "₹0";
