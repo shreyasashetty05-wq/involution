@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
-import { Loader2, ShieldCheck, PlayCircle, GraduationCap, Users, Lightbulb, CheckCircle, Share2, MapPin, Activity, Video, FileText, Calendar } from "lucide-react";
+import { Loader2, ShieldCheck, PlayCircle, GraduationCap, Users, Lightbulb, CheckCircle, Share2, MapPin, Activity, Video, FileText, Calendar, ChevronLeft, ChevronRight, Play } from "lucide-react";
 import Link from "next/link";
 import Navbar from "@/frontend/components/Navbar";
 import { AIAnalysisCard } from "@/frontend/components/AIAnalysisCard";
@@ -15,6 +15,9 @@ export default function IncubeExploreIdea() {
     const [application, setApplication] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [openingDeal, setOpeningDeal] = useState(false);
+    
+    const [activeVideoIdx, setActiveVideoIdx] = useState(0);
+    const [isVideoPlaying, setIsVideoPlaying] = useState(false);
 
     useEffect(() => {
         const fetchIdea = async () => {
@@ -85,6 +88,21 @@ export default function IncubeExploreIdea() {
         return url;
     };
 
+    const getYoutubeThumb = (url: string) => {
+        if (!url) return null;
+        let videoId = "";
+        try {
+            if (url.includes('youtube.com/watch?v=')) {
+                videoId = new URLSearchParams(url.split('?')[1]).get('v') || "";
+            } else if (url.includes('youtu.be/')) {
+                videoId = url.split('youtu.be/')[1].split('?')[0];
+            } else if (url.includes('youtube.com/embed/')) {
+                videoId = url.split('youtube.com/embed/')[1].split('?')[0];
+            }
+        } catch(e) {}
+        return videoId ? `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg` : null;
+    };
+
     return (
         <div className="min-h-screen bg-[#f8faf9] flex flex-col">
             <Navbar />
@@ -141,17 +159,17 @@ export default function IncubeExploreIdea() {
                                 </button>
                             </div>
                             <div className="flex flex-col items-center bg-slate-50 border border-slate-100 p-4 rounded-2xl w-full">
-                                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">AI Match Score</span>
+                                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2 text-center">AI Student Analysis</span>
                                 <div className="relative size-20">
                                     <svg className="size-full -rotate-90">
                                         <circle cx="40" cy="40" r="34" stroke="currentColor" strokeWidth="8" fill="transparent" className="text-slate-200" />
-                                        <circle cx="40" cy="40" r="34" stroke="currentColor" strokeWidth="8" fill="transparent" strokeDasharray="214" strokeDashoffset={214 - (214 * application.ai_match_score) / 100} className="text-emerald-500" />
+                                        <circle cx="40" cy="40" r="34" stroke="currentColor" strokeWidth="8" fill="transparent" strokeDasharray="214" strokeDashoffset={214 - (214 * (application.ai_analysis_score || application.ai_match_score || 0)) / 100} className="text-emerald-500" />
                                     </svg>
                                     <div className="absolute inset-0 flex items-center justify-center">
-                                        <span className="text-2xl font-bold text-slate-900">{application.ai_match_score}</span>
+                                        <span className="text-2xl font-bold text-slate-900">{application.ai_analysis_score || application.ai_match_score || 0}</span>
                                     </div>
                                 </div>
-                                <span className="text-emerald-600 text-[10px] font-bold mt-2">High Match</span>
+                                <span className="text-emerald-600 text-[10px] font-bold mt-2">AI Verified</span>
                             </div>
                         </div>
                     </div>
@@ -163,9 +181,9 @@ export default function IncubeExploreIdea() {
                         <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2"><Users className="size-5 text-blue-500" /> Founder & Team</h2>
                         <span className="text-sm font-bold text-slate-500">Team Size: {allTeam.length}</span>
                     </div>
-                    <div className="grid md:grid-cols-4 gap-6">
+                    <div className="flex flex-wrap justify-center gap-6">
                         {allTeam.map((member, idx) => (
-                            <div key={idx} className="bg-white border border-slate-200 rounded-2xl p-6 text-center shadow-sm hover:shadow-md transition-shadow">
+                            <div key={idx} className="w-full sm:w-[280px] bg-white border border-slate-200 rounded-2xl p-6 text-center shadow-sm hover:shadow-md transition-shadow">
                                 {member.photoUrl ? (
                                     <img src={member.photoUrl} className="size-24 rounded-2xl object-cover mx-auto mb-4 border border-slate-100" />
                                 ) : (
@@ -386,49 +404,55 @@ export default function IncubeExploreIdea() {
                 </div>
 
                 {/* PITCH VIDEO */}
-                {application.pitch_videos && application.pitch_videos.length > 0 && application.pitch_videos[0] !== "" && (
-                    <div className="bg-white rounded-3xl border border-slate-200 p-8 shadow-sm">
-                        <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2"><Video className="size-5 text-blue-500" /> Pitch Video</h2>
-                        <div className="grid md:grid-cols-3 gap-6">
-                            <div className="md:col-span-2">
-                                <div className="aspect-video bg-slate-900 rounded-2xl overflow-hidden shadow-md">
-                                    {getEmbedUrl(application.pitch_videos[0]) ? (
-                                        <iframe 
-                                            src={getEmbedUrl(application.pitch_videos[0])!} 
-                                            className="w-full h-full" 
-                                            allowFullScreen 
-                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                        ></iframe>
-                                    ) : (
-                                        <div className="w-full h-full flex items-center justify-center text-slate-400 font-bold">Unsupported Video Format</div>
-                                    )}
-                                </div>
-                            </div>
-                            {application.pitch_videos.length > 1 && (
-                                <div className="space-y-4">
-                                    <h3 className="font-bold text-slate-900 text-sm">Additional Pitch Videos</h3>
-                                    <div className="space-y-4">
-                                        {application.pitch_videos.slice(1).map((v: string, idx: number) => {
-                                            if (v === "") return null;
-                                            return (
-                                                <div key={idx} className="aspect-video bg-slate-100 rounded-xl overflow-hidden relative group border border-slate-200">
-                                                    {getEmbedUrl(v) ? (
-                                                        <iframe src={getEmbedUrl(v)!} className="w-full h-full pointer-events-none" />
-                                                    ) : (
-                                                        <div className="w-full h-full flex items-center justify-center text-xs font-bold text-slate-400 px-4 text-center break-all">{v}</div>
-                                                    )}
-                                                    <a href={v} target="_blank" className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                                        <PlayCircle className="size-10 text-white" />
-                                                    </a>
-                                                </div>
-                                            )
-                                        })}
+                {(() => {
+                    const validVideos = application.pitch_videos ? application.pitch_videos.filter((v: string) => v.trim() !== "") : [];
+                    if (validVideos.length === 0) return null;
+                    return (
+                        <div className="bg-white rounded-3xl border border-slate-200 p-8 shadow-sm">
+                            <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2"><Video className="size-5 text-blue-500" /> Pitch Media</h2>
+                            
+                            <div className="relative bg-black rounded-3xl aspect-video overflow-hidden shadow-lg w-full max-w-5xl mx-auto group">
+                                {isVideoPlaying ? (
+                                    <iframe 
+                                        src={`${getEmbedUrl(validVideos[activeVideoIdx])}${getEmbedUrl(validVideos[activeVideoIdx])?.includes('?') ? '&' : '?'}autoplay=1&rel=0&modestbranding=1`} 
+                                        className="w-full h-full border-0" 
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                        allowFullScreen
+                                    ></iframe>
+                                ) : (
+                                    <div className="absolute inset-0 cursor-pointer flex items-center justify-center" onClick={() => setIsVideoPlaying(true)}>
+                                        <img src={getYoutubeThumb(validVideos[activeVideoIdx]) || ""} className="absolute inset-0 w-full h-full object-cover" />
+                                        <div className="size-20 rounded-full bg-red-600/90 backdrop-blur-sm flex items-center justify-center relative z-10 hover:scale-110 hover:bg-red-600 transition-all shadow-[0_0_20px_rgba(220,38,38,0.5)]">
+                                            <Play className="size-8 text-white ml-1 fill-white" />
+                                        </div>
                                     </div>
-                                </div>
-                            )}
+                                )}
+                                
+                                {validVideos.length > 1 && (
+                                    <>
+                                        <button 
+                                            onClick={(e) => { e.stopPropagation(); setActiveVideoIdx((prev) => (prev > 0 ? prev - 1 : validVideos.length - 1)); setIsVideoPlaying(false); }}
+                                            className="absolute left-4 top-1/2 -translate-y-1/2 size-12 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-blue-600 transition-colors backdrop-blur-md opacity-0 group-hover:opacity-100 z-20"
+                                        >
+                                            <ChevronLeft className="size-7" />
+                                        </button>
+                                        <button 
+                                            onClick={(e) => { e.stopPropagation(); setActiveVideoIdx((prev) => (prev < validVideos.length - 1 ? prev + 1 : 0)); setIsVideoPlaying(false); }}
+                                            className="absolute right-4 top-1/2 -translate-y-1/2 size-12 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-blue-600 transition-colors backdrop-blur-md opacity-0 group-hover:opacity-100 z-20"
+                                        >
+                                            <ChevronRight className="size-7" />
+                                        </button>
+                                        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2.5 z-20">
+                                            {validVideos.map((_: any, idx: number) => (
+                                                <div key={idx} className={`size-2.5 rounded-full transition-colors shadow-sm ${idx === activeVideoIdx ? 'bg-blue-500' : 'bg-white/60'}`}></div>
+                                            ))}
+                                        </div>
+                                    </>
+                                )}
+                            </div>
                         </div>
-                    </div>
-                )}
+                    );
+                })()}
 
                 {/* AI STUDENT ANALYSIS */}
                 <AIAnalysisCard 

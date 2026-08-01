@@ -23,28 +23,42 @@ export default function Navbar() {
 
     useEffect(() => {
         const fetchUser = async () => {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user?.email) {
-                const { data } = await supabase.from('user_roles').select('role').eq('email', user.email).maybeSingle();
-                if (data?.role) {
-                    setDbRole(data.role);
+            try {
+                const { data, error } = await supabase.auth.getUser();
+                if (error) console.error("Auth fetch error:", error);
+                const user = data?.user;
+                if (user?.email) {
+                    const { data: roleData, error: roleError } = await supabase.from('user_roles').select('role').eq('email', user.email).maybeSingle();
+                    if (roleError) console.error("Role fetch error:", roleError);
+                    if (roleData?.role) {
+                        setDbRole(roleData.role);
+                    }
                 }
+                setUser(user || null);
+            } catch (err) {
+                console.error("Failed to fetch user in Navbar:", err);
+            } finally {
+                setLoading(false);
             }
-            setUser(user);
-            setLoading(false);
         };
         fetchUser();
 
         const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-            const currentUser = session?.user ?? null;
-            if (currentUser?.email) {
-                const { data } = await supabase.from('user_roles').select('role').eq('email', currentUser.email).maybeSingle();
-                setDbRole(data?.role || null);
-            } else {
-                setDbRole(null);
+            try {
+                const currentUser = session?.user ?? null;
+                if (currentUser?.email) {
+                    const { data, error } = await supabase.from('user_roles').select('role').eq('email', currentUser.email).maybeSingle();
+                    if (error) console.error("Role fetch error on auth change:", error);
+                    setDbRole(data?.role || null);
+                } else {
+                    setDbRole(null);
+                }
+                setUser(currentUser);
+            } catch (err) {
+                console.error("Failed to handle auth state change:", err);
+            } finally {
+                setLoading(false);
             }
-            setUser(currentUser);
-            setLoading(false);
         });
 
         return () => subscription.unsubscribe();

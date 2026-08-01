@@ -30,6 +30,41 @@ const Input = (props: any) => (
     <input className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 transition-all font-medium text-sm disabled:opacity-70 disabled:bg-slate-100 disabled:cursor-not-allowed" {...props} />
 );
 
+const FormattedNumberInput = ({ value, onChange, max, decimals, ...props }: any) => {
+    const formatNumber = (val: string | number) => {
+        if (val === null || val === undefined || val === "") return "";
+        const strVal = val.toString();
+        const isNegative = strVal.startsWith('-');
+        const cleanStr = isNegative ? strVal.slice(1) : strVal;
+        const parts = cleanStr.split('.');
+        if (parts[0]) {
+            const intVal = parts[0].replace(/\D/g, '');
+            if (intVal) {
+                parts[0] = Number(intVal).toLocaleString('en-IN');
+            }
+        }
+        return (isNegative ? '-' : '') + parts.join('.');
+    };
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        let rawVal = e.target.value.replace(/,/g, '');
+        if (!/^-?\d*\.?\d*$/.test(rawVal)) return;
+        if (decimals !== undefined && rawVal.includes('.')) {
+            const parts = rawVal.split('.');
+            if (parts[1].length > decimals) return;
+        }
+        if (max !== undefined && rawVal !== '' && rawVal !== '.' && rawVal !== '-') {
+            if (Number(rawVal) > max) return;
+        }
+        const newEvent = { ...e, target: { ...e.target, value: rawVal } };
+        if (onChange) onChange(newEvent as any);
+    };
+
+    return (
+        <Input type="text" value={formatNumber(value)} onChange={handleChange} {...props} />
+    );
+};
+
 const Select = ({ children, ...props }: any) => (
     <select className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:bg-white focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 transition-all appearance-none font-medium text-sm" {...props}>
         {children}
@@ -585,11 +620,11 @@ export default function IncubationForm() {
                                         <div className="grid grid-cols-2 gap-6">
                                             <div>
                                                 <Label required subtitle="Value must be greater than 0">Funding Required (₹)</Label>
-                                                <Input type="number" min="1" required value={formData.askAmount} onChange={(e:any)=>updateField('askAmount', e.target.value)} />
+                                                <FormattedNumberInput required value={formData.askAmount} onChange={(e:any)=>updateField('askAmount', e.target.value)} />
                                             </div>
                                             <div>
                                                 <Label required subtitle="Min: 0% - Max: 100% (e.g. 2.5%)">Equity Offered for Incubation (%)</Label>
-                                                <Input type="number" min="0" max="100" step="0.01" required value={formData.equityOffered} onChange={(e:any)=>updateField('equityOffered', e.target.value)} />
+                                                <FormattedNumberInput required max={100} decimals={2} value={formData.equityOffered} onChange={(e:any)=>updateField('equityOffered', e.target.value)} />
                                             </div>
                                         </div>
                                         
