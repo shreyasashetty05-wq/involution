@@ -13,7 +13,10 @@ const eslintConfig = [
   {
     rules: {
       "react/no-unescaped-entities": "warn",
-      "react-hooks/set-state-in-effect": "warn"
+      "react-hooks/set-state-in-effect": "warn",
+      "react-hooks/purity": "warn",
+      "react-hooks/immutability": "warn",
+      "react-hooks/static-components": "warn"
     }
   }
 ];
