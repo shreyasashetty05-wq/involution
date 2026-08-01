@@ -436,10 +436,11 @@ export default function IncubeExploreIdea() {
                     score={application.ai_analysis_timestamp ? application.ai_analysis_score : (application.ai_match_score || 0)}
                     executiveSummary={application.ai_executive_summary || application.ai_recommendation || ""}
                     strengths={application.ai_strengths || []}
-                    weaknesses={application.ai_weaknesses || []}
-                    businessRisks={application.ai_business_risks || []}
-                    improvementSuggestions={application.ai_improvement_suggestions || []}
-                    investmentReadiness={application.ai_investment_readiness || ""}
+                    improvements={application.ai_improvement_suggestions || []}
+                    risks={application.ai_business_risks || []}
+                    recommendation={application.ai_recommendation || ""}
+                    confidence={application.ai_confidence || "Medium"}
+                    scoreBreakdown={application.ai_score_breakdown}
                 />
 
             </div>

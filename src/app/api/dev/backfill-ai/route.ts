@@ -18,7 +18,7 @@ export async function GET(req: Request) {
         const { data: startups, error: startupError } = await supabase
             .from("startups")
             .select("id")
-            .or('ai_analysis_score.is.null,ai_analysis_score.eq.0');
+            .or('ai_confidence.is.null,ai_score_breakdown.is.null,ai_analysis_score.is.null,ai_analysis_score.eq.0');
 
         if (startupError) throw startupError;
 
@@ -26,7 +26,7 @@ export async function GET(req: Request) {
         const { data: incubations, error: incubeError } = await supabase
             .from("incubation_applications")
             .select("id")
-            .or('ai_analysis_score.is.null,ai_analysis_score.eq.0');
+            .or('ai_confidence.is.null,ai_score_breakdown.is.null,ai_analysis_score.is.null,ai_analysis_score.eq.0');
 
         if (incubeError) throw incubeError;
 

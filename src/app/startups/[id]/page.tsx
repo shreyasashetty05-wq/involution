@@ -519,10 +519,11 @@ export default function StartupProfile() {
                         score={startup.ai_analysis_timestamp ? startup.ai_analysis_score : (startup.score || 0)}
                         executiveSummary={startup.ai_executive_summary || startup.analysis || ""}
                         strengths={startup.ai_strengths || []}
-                        weaknesses={startup.ai_weaknesses || []}
-                        businessRisks={startup.ai_business_risks || []}
-                        improvementSuggestions={startup.ai_improvement_suggestions || []}
-                        investmentReadiness={startup.ai_investment_readiness || ""}
+                        improvements={startup.ai_improvement_suggestions || []}
+                        risks={startup.ai_business_risks || []}
+                        recommendation={startup.ai_recommendation || ""}
+                        confidence={startup.ai_confidence || "Medium"}
+                        scoreBreakdown={startup.ai_score_breakdown}
                     />
                 </section>
 
