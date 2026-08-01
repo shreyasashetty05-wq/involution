@@ -13,6 +13,7 @@ interface AIAnalysisProps {
     recommendation: string;
     confidence: string;
     scoreBreakdown?: Record<string, number>;
+    stage?: string;
 }
 
 export function AIAnalysisCard({
@@ -24,7 +25,8 @@ export function AIAnalysisCard({
     risks,
     recommendation,
     confidence,
-    scoreBreakdown
+    scoreBreakdown,
+    stage
 }: AIAnalysisProps) {
     
     // 1. Determine Score Colors & Labels
@@ -40,21 +42,21 @@ export function AIAnalysisCard({
         strokeColor = "#10b981"; // Dark Green/Emerald
         textColor = "text-emerald-500";
         bgColor = "bg-emerald-500/10";
-        label = type === 'startup' ? "Exceptional" : "Exceptional";
+        label = type === 'startup' ? "Exceptional Startup" : "Exceptional Potential";
         riskLevel = "Low";
     } else if (score >= 80) {
         ringColor = "text-emerald-400";
         strokeColor = "#34d399"; // Green
         textColor = "text-emerald-400";
         bgColor = "bg-emerald-400/10";
-        label = type === 'startup' ? "Strong" : "Strong";
+        label = type === 'startup' ? "Strong Startup" : "Strong Potential";
         riskLevel = "Low";
     } else if (score >= 70) {
         ringColor = "text-yellow-400";
         strokeColor = "#facc15"; // Yellow
         textColor = "text-yellow-400";
         bgColor = "bg-yellow-400/10";
-        label = type === 'startup' ? "Good" : "Good";
+        label = type === 'startup' ? "Good Startup" : "Good Potential";
         riskLevel = "Medium";
     } else if (score >= 60) {
         ringColor = "text-orange-400";
@@ -107,11 +109,18 @@ export function AIAnalysisCard({
             
             {/* Top Header Section */}
             <div className="flex items-center justify-between mb-8">
-                <div className="flex items-center gap-3">
-                    <BrainCircuit className="w-6 h-6 text-indigo-400" />
-                    <h2 className="text-xl font-bold text-white tracking-wide">
-                        {type === 'startup' ? 'AI Startup Analysis' : 'AI Student Analysis'}
-                    </h2>
+                <div>
+                    <div className="flex items-center gap-3">
+                        <Star className="w-6 h-6 text-indigo-400 fill-indigo-400" />
+                        <h2 className="text-xl font-bold text-white tracking-wide">
+                            {type === 'startup' ? 'AI Startup Analysis' : 'AI Student Analysis'}
+                        </h2>
+                    </div>
+                    <p className="text-slate-400 text-sm mt-1">
+                        {type === 'startup' 
+                            ? "Intelligent evaluation of your startup's investment potential" 
+                            : "AI-powered evaluation of student startup idea and incubation potential"}
+                    </p>
                 </div>
                 <div className="flex items-center gap-2 text-xs font-semibold text-slate-400 bg-slate-800/50 px-3 py-1.5 rounded-lg border border-slate-700/50">
                     <FileText className="w-3.5 h-3.5" />
@@ -120,7 +129,7 @@ export function AIAnalysisCard({
             </div>
 
             {/* Top Cards: Score & Executive Summary */}
-            <div className="grid lg:grid-cols-[300px_1fr] gap-6 mb-6">
+            <div className="grid lg:grid-cols-[280px_1fr] gap-6 mb-6">
                 
                 {/* Score Card */}
                 <div className="bg-[#111827] border border-slate-800 rounded-3xl p-6 flex flex-col items-center justify-center relative overflow-hidden shadow-inner">
@@ -128,7 +137,7 @@ export function AIAnalysisCard({
                         <Star className="w-5 h-5 text-indigo-500 opacity-50" />
                     </div>
                     
-                    <div className="relative flex items-center justify-center w-40 h-40 mb-4">
+                    <div className="relative flex items-center justify-center w-40 h-40 mb-4 mt-2">
                         <svg className="w-full h-full transform -rotate-90">
                             <circle cx="80" cy="80" r="54" stroke="currentColor" strokeWidth="8" fill="transparent" className="text-slate-800" />
                             <circle 
@@ -165,27 +174,58 @@ export function AIAnalysisCard({
 
                     {/* Mini Badges row */}
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-6">
+                        
+                        {type === 'startup' ? (
+                            <>
+                                <div className="bg-[#0f172a] border border-slate-800/80 rounded-xl p-3 flex flex-col items-center justify-center text-center">
+                                    <div className="flex items-center gap-1.5 mb-1.5 text-xs font-bold text-slate-400">
+                                        <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" /> Investment Readiness
+                                    </div>
+                                    <span className={`text-sm font-bold ${score >= 80 ? 'text-emerald-400' : (score >= 60 ? 'text-yellow-400' : 'text-orange-400')}`}>
+                                        {score >= 80 ? 'Ready' : (score >= 60 ? 'Nearly Ready' : 'Not Ready')}
+                                    </span>
+                                </div>
+                                <div className="bg-[#0f172a] border border-slate-800/80 rounded-xl p-3 flex flex-col items-center justify-center text-center">
+                                    <div className="flex items-center gap-1.5 mb-1.5 text-xs font-bold text-slate-400">
+                                        <AlertTriangle className="w-3.5 h-3.5 text-orange-400" /> Risk Level
+                                    </div>
+                                    <span className={`text-sm font-bold ${riskLevel === 'Low' ? 'text-emerald-400' : (riskLevel === 'Medium' ? 'text-yellow-400' : 'text-orange-400')}`}>{riskLevel}</span>
+                                </div>
+                                <div className="bg-[#0f172a] border border-slate-800/80 rounded-xl p-3 flex flex-col items-center justify-center text-center">
+                                    <div className="flex items-center gap-1.5 mb-1.5 text-xs font-bold text-slate-400">
+                                        <Activity className="w-3.5 h-3.5 text-blue-500" /> Business Quality
+                                    </div>
+                                    <span className={`text-sm font-bold ${score >= 70 ? 'text-blue-400' : 'text-slate-400'}`}>{score >= 80 ? 'Good' : (score >= 60 ? 'Average' : 'Poor')}</span>
+                                </div>
+                            </>
+                        ) : (
+                            <>
+                                <div className="bg-[#0f172a] border border-slate-800/80 rounded-xl p-3 flex flex-col items-center justify-center text-center">
+                                    <div className="flex items-center gap-1.5 mb-1.5 text-xs font-bold text-slate-400">
+                                        <Rocket className="w-3.5 h-3.5 text-emerald-500" /> Incubation Readiness
+                                    </div>
+                                    <span className={`text-sm font-bold ${score >= 60 ? 'text-emerald-400' : 'text-orange-400'}`}>
+                                        {score >= 60 ? 'Suitable' : 'Not Suitable'}
+                                    </span>
+                                </div>
+                                <div className="bg-[#0f172a] border border-slate-800/80 rounded-xl p-3 flex flex-col items-center justify-center text-center">
+                                    <div className="flex items-center gap-1.5 mb-1.5 text-xs font-bold text-slate-400">
+                                        <Lightbulb className="w-3.5 h-3.5 text-yellow-500" /> Idea Stage
+                                    </div>
+                                    <span className="text-sm font-bold text-yellow-500">{stage || 'Idea Stage'}</span>
+                                </div>
+                                <div className="bg-[#0f172a] border border-slate-800/80 rounded-xl p-3 flex flex-col items-center justify-center text-center">
+                                    <div className="flex items-center gap-1.5 mb-1.5 text-xs font-bold text-slate-400">
+                                        <ShieldCheck className="w-3.5 h-3.5 text-blue-500" /> Risk Level
+                                    </div>
+                                    <span className={`text-sm font-bold ${riskLevel === 'Low' ? 'text-emerald-400' : (riskLevel === 'Medium' ? 'text-yellow-400' : 'text-orange-400')}`}>{riskLevel}</span>
+                                </div>
+                            </>
+                        )}
+
                         <div className="bg-[#0f172a] border border-slate-800/80 rounded-xl p-3 flex flex-col items-center justify-center text-center">
                             <div className="flex items-center gap-1.5 mb-1.5 text-xs font-bold text-slate-400">
-                                <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" /> Readiness
-                            </div>
-                            <span className={`text-sm font-bold ${textColor}`}>{score >= 80 ? 'Ready' : (score >= 60 ? 'Nearly Ready' : 'Not Ready')}</span>
-                        </div>
-                        <div className="bg-[#0f172a] border border-slate-800/80 rounded-xl p-3 flex flex-col items-center justify-center text-center">
-                            <div className="flex items-center gap-1.5 mb-1.5 text-xs font-bold text-slate-400">
-                                <AlertTriangle className="w-3.5 h-3.5 text-orange-400" /> Risk Level
-                            </div>
-                            <span className={`text-sm font-bold ${riskLevel === 'Low' ? 'text-emerald-400' : (riskLevel === 'Medium' ? 'text-yellow-400' : 'text-orange-400')}`}>{riskLevel}</span>
-                        </div>
-                        <div className="bg-[#0f172a] border border-slate-800/80 rounded-xl p-3 flex flex-col items-center justify-center text-center">
-                            <div className="flex items-center gap-1.5 mb-1.5 text-xs font-bold text-slate-400">
-                                <Activity className="w-3.5 h-3.5 text-blue-500" /> Quality
-                            </div>
-                            <span className={`text-sm font-bold ${score >= 70 ? 'text-blue-400' : 'text-slate-400'}`}>{score >= 80 ? 'Good' : (score >= 60 ? 'Average' : 'Poor')}</span>
-                        </div>
-                        <div className="bg-[#0f172a] border border-slate-800/80 rounded-xl p-3 flex flex-col items-center justify-center text-center">
-                            <div className="flex items-center gap-1.5 mb-1.5 text-xs font-bold text-slate-400">
-                                <Target className="w-3.5 h-3.5 text-purple-500" /> Confidence
+                                <Target className="w-3.5 h-3.5 text-purple-500" /> Confidence Level
                             </div>
                             <span className="text-sm font-bold text-purple-400">{confidence || 'Medium'}</span>
                         </div>

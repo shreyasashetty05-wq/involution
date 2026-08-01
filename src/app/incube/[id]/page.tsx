@@ -441,6 +441,7 @@ export default function IncubeExploreIdea() {
                     recommendation={application.ai_recommendation || ""}
                     confidence={application.ai_confidence || "Medium"}
                     scoreBreakdown={application.ai_score_breakdown}
+                    stage={application.current_stage || "Idea Stage"}
                 />
 
             </div>
