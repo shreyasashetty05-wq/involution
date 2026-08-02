@@ -123,11 +123,32 @@ export const publishStartup = async (supabase: SupabaseClient, body: any, ownerE
         ifsc_code: body.ifscCode
     };
 
-    const { data, error } = await supabase
+    const { data: existingStartup } = await supabase
         .from("startups")
-        .insert(newStartupData)
-        .select()
-        .single();
+        .select("id")
+        .eq("owner_email", ownerEmail)
+        .maybeSingle();
+
+    let data, error;
+
+    if (existingStartup) {
+        const response = await supabase
+            .from("startups")
+            .update(newStartupData)
+            .eq("id", existingStartup.id)
+            .select()
+            .single();
+        data = response.data;
+        error = response.error;
+    } else {
+        const response = await supabase
+            .from("startups")
+            .insert(newStartupData)
+            .select()
+            .single();
+        data = response.data;
+        error = response.error;
+    }
 
     if (error) throw error;
     

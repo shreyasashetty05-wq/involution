@@ -99,9 +99,97 @@ export default function StartupPublishForm() {
                     }
                 }
 
-                // If user is an incubation founder, try to pre-fill existing images to prevent duplicate uploads
-                if (currentUser?.user_metadata?.role === 'incubation') {
-                    const { data: incubeData, error: incubeError } = await supabase
+                // Fetch existing startup data for editing
+                const { data: startupData, error: startupError } = await supabase
+                    .from('startups')
+                    .select('*')
+                    .eq('owner_email', currentUser.email)
+                    .order('created_at', { ascending: false })
+                    .limit(1)
+                    .maybeSingle();
+
+                if (startupData && !startupError) {
+                    setIsEditMode(true);
+                    setFormData(prev => ({
+                        ...prev,
+                        logoPreview: startupData.basic_info?.logoUrl || prev.logoPreview,
+                        logoUrl: startupData.basic_info?.logoUrl || "",
+                        startupName: startupData.name || "",
+                        startupTagline: startupData.basic_info?.startupTagline || "",
+
+                        founderName: startupData.basic_info?.founderName || prev.founderName,
+                        founderAge: startupData.basic_info?.founderAge?.toString() || "",
+                        founderRole: startupData.basic_info?.founderRole || "Founder",
+                        founderPhotoPreview: startupData.basic_info?.founderPhotoUrl || prev.founderPhotoPreview,
+                        founderPhotoUrl: startupData.basic_info?.founderPhotoUrl || "",
+                        founderLinkedin: startupData.basic_info?.founderLinkedin || "",
+                        teamMembers: startupData.basic_info?.teamMembersData && startupData.basic_info.teamMembersData.length > 0 
+                            ? startupData.basic_info.teamMembersData.map((t: any) => ({
+                                photo: null,
+                                photoPreview: t.photoUrl || "",
+                                photoUrl: t.photoUrl || "",
+                                name: t.name || "",
+                                role: t.role || "",
+                                linkedin: t.linkedin || ""
+                              }))
+                            : prev.teamMembers,
+
+                        industry: startupData.business_info?.industry || "FinTech",
+                        companyType: startupData.business_info?.companyType || "Private Ltd",
+                        startupStage: startupData.business_info?.startupStage || "Seed",
+                        yearFounded: startupData.business_info?.yearFounded || new Date().getFullYear().toString(),
+                        headquarters: startupData.business_info?.headquarters || "",
+                        website: startupData.business_info?.website || "",
+
+                        businessModel: startupData.business_info?.businessModel || "B2B",
+                        revenueModel: startupData.business_info?.revenueModel || "Subscription",
+                        targetMarket: startupData.business_info?.targetMarket || "",
+                        problemStatement: startupData.business_info?.problemStatement || "",
+                        solution: startupData.business_info?.solution || "",
+                        uvp: startupData.business_info?.uvp || "",
+                        competitors: startupData.business_info?.competitors || "",
+                        startupDescription: startupData.desc || "",
+
+                        investmentRequired: startupData.investment_details?.investmentRequired?.toString() || "",
+                        equityOffered: startupData.investment_details?.equityOffered?.toString() || "",
+                        currentValuation: startupData.investment_details?.currentValuation?.toString() || "",
+                        useOfFunds: startupData.investment_details?.useOfFunds || prev.useOfFunds,
+
+                        monthlyRevenue: startupData.financials_monthly?.monthlyRevenue?.toString() || "",
+                        monthlyExpenses: startupData.financials_monthly?.monthlyExpenses?.toString() || "",
+                        monthlyProfitLoss: startupData.financials_monthly?.monthlyProfitLoss?.toString() || "",
+                        cashInBank: startupData.financials_monthly?.cashInBank?.toString() || "",
+                        grossBurnRate: startupData.financials_monthly?.grossBurnRate?.toString() || "",
+                        monthlyBurnRate: startupData.financials_monthly?.monthlyBurnRate?.toString() || "",
+                        runway: startupData.financials_monthly?.runway?.toString() || "",
+
+                        totalCustomers: startupData.growth_metrics?.totalCustomers?.toString() || "",
+                        monthlyActiveUsers: startupData.growth_metrics?.monthlyActiveUsers?.toString() || "",
+                        monthlyGrowth: startupData.growth_metrics?.monthlyGrowth?.toString() || "",
+                        customerRetention: startupData.growth_metrics?.customerRetention?.toString() || "",
+                        repeatCustomers: startupData.growth_metrics?.repeatCustomers?.toString() || "",
+
+                        verification: startupData.credibility?.verification || prev.verification,
+
+                        pendingLegalCases: startupData.risk_disclosure?.pendingLegalCases || false,
+                        outstandingLoans: startupData.risk_disclosure?.outstandingLoans || false,
+                        previousFundingRaised: startupData.risk_disclosure?.previousFundingRaised || false,
+                        fundingAmount: startupData.risk_disclosure?.fundingAmount?.toString() || "",
+                        investorName: startupData.risk_disclosure?.investorName || "",
+                        fundingRound: startupData.risk_disclosure?.fundingRound || "",
+
+                        pitchVideos: startupData.videos?.length > 0 ? startupData.videos.map((v:any) => v.url?.replace('https://www.youtube.com/embed/', 'https://youtu.be/')) : [""],
+
+                        paymentMethod: startupData.payment_method || "UPI",
+                        upiId: startupData.upi_id || "",
+                        accountHolderName: startupData.account_holder_name || "",
+                        bankName: startupData.bank_name || "",
+                        accountNumber: startupData.account_number || "",
+                        ifscCode: startupData.ifsc_code || ""
+                    }));
+                } else if (currentUser?.user_metadata?.role === 'incubation') {
+                    // If user is an incubation founder migrating to startup, pre-fill some fields
+                    const { data: incubeData } = await supabase
                         .from('incubation_applications')
                         .select('idea_logo_url, founder_photo_url, team_members')
                         .eq('owner_email', currentUser.email)
@@ -109,14 +197,13 @@ export default function StartupPublishForm() {
                         .limit(1)
                         .maybeSingle();
                     
-                    if (!incubeError && incubeData) {
+                    if (incubeData) {
                         setFormData(prev => ({
                             ...prev,
                             logoPreview: incubeData.idea_logo_url || prev.logoPreview,
                             logoUrl: incubeData.idea_logo_url || "",
                             founderPhotoPreview: incubeData.founder_photo_url || prev.founderPhotoPreview,
                             founderPhotoUrl: incubeData.founder_photo_url || "",
-                            // Optionally map team members if they exist
                             teamMembers: incubeData.team_members && incubeData.team_members.length > 0 
                                 ? incubeData.team_members.map((t: any) => ({
                                     photo: null,
@@ -138,6 +225,8 @@ export default function StartupPublishForm() {
     const [saving, setSaving] = useState(false);
     const [success, setSuccess] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [isEditMode, setIsEditMode] = useState(false);
+    const [deletedFiles, setDeletedFiles] = useState<string[]>([]);
 
     // Form State
     const [formData, setFormData] = useState({
@@ -295,13 +384,16 @@ export default function StartupPublishForm() {
             const previewUrl = URL.createObjectURL(file);
             
             if (field === 'logo') {
+                if (formData.logoUrl) setDeletedFiles(prev => [...prev, formData.logoUrl]);
                 updateField('logo', file);
                 updateField('logoPreview', previewUrl);
             } else if (field === 'founder') {
+                if (formData.founderPhotoUrl) setDeletedFiles(prev => [...prev, formData.founderPhotoUrl]);
                 updateField('founderPhoto', file);
                 updateField('founderPhotoPreview', previewUrl);
             } else if (field === 'team' && index !== undefined) {
                 const newTeam = [...formData.teamMembers];
+                if (newTeam[index].photoUrl) setDeletedFiles(prev => [...prev, newTeam[index].photoUrl!]);
                 newTeam[index].photo = file;
                 newTeam[index].photoPreview = previewUrl;
                 updateField('teamMembers', newTeam);
@@ -363,7 +455,8 @@ export default function StartupPublishForm() {
                 logoUrl: uploadedLogo,
                 founderPhotoUrl: uploadedFounder,
                 teamMembersData: uploadedTeam.map(t => ({ name: t.name, role: t.role, linkedin: t.linkedin, photoUrl: t.photoPreview })),
-                isStudent: false
+                isStudent: false,
+                deletedFiles: deletedFiles
             };
 
             const res = await fetch('/api/startups/publish', {
@@ -392,8 +485,8 @@ export default function StartupPublishForm() {
                     <div className="size-24 bg-emerald-50 border border-emerald-200 rounded-full flex items-center justify-center mb-8 mx-auto">
                         <Save className="size-12 text-emerald-600" />
                     </div>
-                    <h2 className="text-3xl font-bold text-slate-900 mb-4">Profile Published!</h2>
-                    <p className="text-slate-500 max-w-md mx-auto text-lg">Your startup is now live. Investors can discover and review your profile.</p>
+                    <h2 className="text-3xl font-bold text-slate-900 mb-4">{isEditMode ? "Profile Updated!" : "Profile Published!"}</h2>
+                    <p className="text-slate-500 max-w-md mx-auto text-lg">{isEditMode ? "Your startup profile has been successfully updated." : "Your startup is now live. Investors can discover and review your profile."}</p>
                     <button onClick={() => router.push('/investors/search')} className="mt-10 px-10 py-4 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700 transition-colors shadow-lg">
                         View Startups
                     </button>
@@ -405,8 +498,8 @@ export default function StartupPublishForm() {
     return (
         <div className="container mx-auto px-4 md:px-6 py-12 max-w-5xl min-h-screen bg-slate-50/50">
             <div className="mb-10">
-                <h1 className="text-4xl font-bold text-slate-900 mb-2">Publish Your Startup</h1>
-                <p className="text-slate-500">Complete your startup profile to make it visible to investors. All information is securely stored and verified before being displayed.</p>
+                <h1 className="text-4xl font-bold text-slate-900 mb-2">{isEditMode ? "Edit Your Startup Profile" : "Publish Your Startup"}</h1>
+                <p className="text-slate-500">{isEditMode ? "Update your startup profile information. Your AI score will be automatically recalculated upon saving." : "Complete your startup profile to make it visible to investors. All information is securely stored and verified before being displayed."}</p>
                 <div className="text-right text-xs text-red-500 mt-2 font-medium">* Required fields</div>
             </div>
 
@@ -755,7 +848,7 @@ export default function StartupPublishForm() {
                         </div>
                     </label>
                     <button type="submit" disabled={saving || !formData.confirmed} className="w-full md:w-auto px-10 py-4 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg whitespace-nowrap">
-                        {saving ? <><Loader2 className="size-5 animate-spin" /> Publishing...</> : "Publish Startup Profile"}
+                        {saving ? <><Loader2 className="size-5 animate-spin" /> {isEditMode ? "Updating..." : "Publishing..."}</> : (isEditMode ? "Update Startup Profile" : "Publish Startup Profile")}
                     </button>
                 </div>
             </form>

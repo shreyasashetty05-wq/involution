@@ -108,6 +108,8 @@ export default function IncubationForm() {
     const [saving, setSaving] = useState(false);
     const [success, setSuccess] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [isEditMode, setIsEditMode] = useState(false);
+    const [deletedFiles, setDeletedFiles] = useState<string[]>([]);
 
     // Initial Form State
     const [formData, setFormData] = useState({
@@ -155,35 +157,124 @@ export default function IncubationForm() {
             const { data: { user: currentUser } } = await supabase.auth.getUser();
             setUser(currentUser);
             if (currentUser?.email) {
-                // Fetch from KYC documents table first
-                const { data: kycData, error } = await supabase
-                    .from('kyc_documents')
-                    .select('name')
-                    .eq('email', currentUser.email)
+                // Fetch existing incubation data for editing
+                const { data: incubeData, error: incubeError } = await supabase
+                    .from('incubation_applications')
+                    .select('*')
+                    .eq('owner_email', currentUser.email)
                     .order('created_at', { ascending: false })
                     .limit(1)
                     .maybeSingle();
 
-                if (error) console.error("KYC fetch error:", error);
+                if (incubeData && !incubeError) {
+                    setIsEditMode(true);
+                    setFormData(prev => ({
+                        ...prev,
+                        fullName: incubeData.full_name || "",
+                        email: incubeData.email || currentUser.email || "",
+                        phoneNumber: incubeData.phone_number || "",
+                        city: incubeData.city || "",
+                        state: incubeData.state || "",
+                        shortBio: incubeData.short_bio || "",
+                        linkedinUrl: incubeData.linkedin_url || "",
+                        githubUrl: incubeData.github_url || "",
+                        founderPhotoPreview: incubeData.founder_photo_url || prev.founderPhotoPreview,
+                        founderPhotoUrl: incubeData.founder_photo_url || "",
+                        
+                        teamMembers: incubeData.team_members && incubeData.team_members.length > 0 
+                            ? incubeData.team_members.map((t: any) => ({
+                                photo: null,
+                                photoPreview: t.photoUrl || "",
+                                photoUrl: t.photoUrl || "",
+                                name: t.name || "",
+                                role: t.role || "",
+                                bio: t.short_bio || t.bio || ""
+                              }))
+                            : prev.teamMembers,
 
-                if (kycData?.name) {
-                    setFormData(prev => ({ 
-                        ...prev, 
-                        email: currentUser.email || "",
-                        fullName: kycData.name 
+                        institutionName: incubeData.institution_name || "",
+                        educationType: incubeData.education_type || "",
+                        course: incubeData.course || "",
+                        branch: incubeData.branch || "",
+                        semester: incubeData.semester || "",
+                        graduationYear: incubeData.graduation_year || "",
+                        schoolClass: incubeData.school_class || "",
+                        schoolBoard: incubeData.school_board || "",
+                        diplomaCourse: incubeData.diploma_course || "",
+                        diplomaBranch: incubeData.diploma_branch || "",
+                        studentIdUrl: incubeData.student_id_url || "",
+
+                        ideaLogoPreview: incubeData.idea_logo_url || prev.ideaLogoUrl, // Added for preview
+                        ideaLogoUrl: incubeData.idea_logo_url || "",
+                        projectName: incubeData.project_name || "",
+                        tagline: incubeData.tagline || "",
+                        industry: incubeData.industry || "",
+                        problemStatement: incubeData.problem_statement || "",
+                        solutionDescription: incubeData.solution_description || "",
+                        innovationUsp: incubeData.innovation_usp || "",
+                        targetUsers: incubeData.target_users || "",
+                        currentStage: incubeData.current_stage || "",
+
+                        prototypeAvailable: incubeData.prototype_available || false,
+                        prototypeLink: incubeData.prototype_link || "",
+                        githubRepo: incubeData.github_repo || "",
+                        website: incubeData.website || "",
+                        technologyUsed: incubeData.technology_used || [],
+
+                        validatedIdea: incubeData.test_users_count ? true : false,
+                        testUsersCount: incubeData.test_users_count || "",
+                        pilotTesting: incubeData.pilot_testing || "",
+                        mentorFeedback: incubeData.mentor_feedback || "",
+                        hackathonParticipation: incubeData.hackathon_participation || "",
+                        prototypeDemo: incubeData.prototype_demo || "",
+                        otherValidation: incubeData.other_validation || "",
+
+                        supportNeeded: incubeData.support_needed || [],
+                        fundingRequired: incubeData.funding_required || false,
+                        askAmount: incubeData.ask_amount?.toString() || "",
+                        equityOffered: incubeData.equity_offered?.toString() || "",
+                        fundUtilization: incubeData.fund_utilization || [],
+
+                        pitchVideos: incubeData.pitch_videos?.length > 0 ? incubeData.pitch_videos : [""],
+
+                        paymentMethod: incubeData.payment_method || "upi",
+                        upiId: incubeData.upi_id || "",
+                        accountHolderName: incubeData.account_holder_name || "",
+                        bankName: incubeData.bank_name || "",
+                        accountNumber: incubeData.account_number || "",
+                        ifscCode: incubeData.ifsc_code || ""
                     }));
-                    setIsKycVerified(true);
-                } else if (currentUser?.user_metadata?.kycStatus === 'Approved') {
-                    const kycName = currentUser.user_metadata.kyc_name;
-                    if (kycName) {
-                        setFormData(prev => ({ ...prev, fullName: kycName }));
-                        setIsKycVerified(true);
-                    }
                 } else {
-                    setFormData(prev => ({ 
-                        ...prev, 
-                        email: currentUser.email || ""
-                    }));
+                    // Fetch from KYC documents table first if no existing application
+                    const { data: kycData, error } = await supabase
+                        .from('kyc_documents')
+                        .select('name')
+                        .eq('email', currentUser.email)
+                        .order('created_at', { ascending: false })
+                        .limit(1)
+                        .maybeSingle();
+
+                    if (error) console.error("KYC fetch error:", error);
+
+                    if (kycData?.name) {
+                        setFormData(prev => ({ 
+                            ...prev, 
+                            email: currentUser.email || "",
+                            fullName: kycData.name 
+                        }));
+                        setIsKycVerified(true);
+                    } else if (currentUser?.user_metadata?.kycStatus === 'Approved') {
+                        const kycName = currentUser.user_metadata.kyc_name;
+                        if (kycName) {
+                            setFormData(prev => ({ ...prev, fullName: kycName, email: currentUser.email || "" }));
+                            setIsKycVerified(true);
+                        }
+                    } else {
+                        setFormData(prev => ({ 
+                            ...prev, 
+                            email: currentUser.email || ""
+                        }));
+                    }
                 }
             }
         };
@@ -213,9 +304,11 @@ export default function IncubationForm() {
             const previewUrl = URL.createObjectURL(file);
             
             if (field === 'founder') {
+                if (formData.founderPhotoUrl) setDeletedFiles(prev => [...prev, formData.founderPhotoUrl]);
                 updateField('founderPhoto', file);
                 updateField('founderPhotoPreview', previewUrl);
             } else if (field === 'logo') {
+                if (formData.ideaLogoUrl) setDeletedFiles(prev => [...prev, formData.ideaLogoUrl]);
                 updateField('ideaLogoPhoto', file);
                 updateField('ideaLogoUrl', previewUrl);
             }
@@ -228,6 +321,7 @@ export default function IncubationForm() {
             if (file.size > 5 * 1024 * 1024) return alert("File size exceeds 5 MB limit.");
             const previewUrl = URL.createObjectURL(file);
             const newTeam = [...formData.teamMembers];
+            if ((newTeam[index] as any).photoUrl) setDeletedFiles(prev => [...prev, (newTeam[index] as any).photoUrl]);
             newTeam[index].photo = file;
             newTeam[index].photoPreview = previewUrl;
             updateField('teamMembers', newTeam);
@@ -299,7 +393,8 @@ export default function IncubationForm() {
                 ...formData,
                 founderPhotoUrl: uploadedFounder,
                 ideaLogoUrl: uploadedLogo,
-                teamMembersData: uploadedTeam.map(t => ({ name: t.name, role: t.role, short_bio: t.bio, photoUrl: t.photoPreview }))
+                teamMembersData: uploadedTeam.map(t => ({ name: t.name, role: t.role, short_bio: t.bio, photoUrl: t.photoPreview })),
+                deletedFiles: deletedFiles
             };
 
             const res = await fetch('/api/incube/publish', {
@@ -329,8 +424,8 @@ export default function IncubationForm() {
                     <div className="size-24 bg-green-50 border border-green-100 rounded-full flex items-center justify-center mb-8 mx-auto">
                         <CheckCircle2 className="size-12 text-green-600" />
                     </div>
-                    <h2 className="text-3xl font-bold text-slate-900 mb-4">Application Submitted!</h2>
-                    <p className="text-slate-500 text-lg mb-8">Thank you for applying to the incubation program. Your idea is now under review and you can track your status from your dashboard.</p>
+                    <h2 className="text-3xl font-bold text-slate-900 mb-4">{isEditMode ? "Application Updated!" : "Application Submitted!"}</h2>
+                    <p className="text-slate-500 text-lg mb-8">{isEditMode ? "Your incubation application has been successfully updated." : "Thank you for applying to the incubation program. Your idea is now under review and you can track your status from your dashboard."}</p>
                     <button onClick={() => router.push('/incube/dashboard')} className="px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-colors shadow-md hover:shadow-lg">
                         Go to Dashboard
                     </button>
@@ -349,8 +444,8 @@ export default function IncubationForm() {
                         <Rocket className="size-8 text-white" />
                     </div>
                     <div>
-                        <h1 className="text-3xl md:text-4xl font-bold text-slate-900">Incubation Application Form</h1>
-                        <p className="text-slate-500 mt-1">Fill in the details below to apply for our incubation program.</p>
+                        <h1 className="text-3xl md:text-4xl font-bold text-slate-900">{isEditMode ? "Edit Incubation Application" : "Incubation Application Form"}</h1>
+                        <p className="text-slate-500 mt-1">{isEditMode ? "Update your incubation application. Your AI score will be automatically recalculated upon saving." : "Fill in the details below to apply for our incubation program."}</p>
                     </div>
                 </div>
 
@@ -710,7 +805,6 @@ export default function IncubationForm() {
                         </div>
                     </div>
 
-                    {/* SUBMIT */}
                     <div className="flex justify-center pt-6">
                         <button 
                             type="submit" 
@@ -718,7 +812,7 @@ export default function IncubationForm() {
                             className={`px-12 py-4 rounded-xl font-bold text-lg flex items-center gap-2 transition-all shadow-md 
                                 ${saving || !declarationsValid ? 'bg-slate-300 text-slate-500 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 text-white hover:shadow-lg'}`}
                         >
-                            {saving ? <><Loader2 className="size-5 animate-spin" /> Submitting Application...</> : 'Submit Application'}
+                            {saving ? <><Loader2 className="size-5 animate-spin" /> {isEditMode ? "Updating..." : "Submitting Application..."}</> : (isEditMode ? "Update Application" : "Submit Application")}
                         </button>
                     </div>
 

@@ -109,11 +109,46 @@ export async function POST(req: Request) {
             status: 'pending'
         };
 
-        const { data, error } = await supabase
+        const { data: existingApp } = await supabase
             .from("incubation_applications")
-            .insert(applicationPayload)
-            .select()
-            .single();
+            .select("id")
+            .eq("owner_email", user.email)
+            .maybeSingle();
+
+        let data, error;
+
+        if (existingApp) {
+            const response = await supabase
+                .from("incubation_applications")
+                .update(applicationPayload)
+                .eq("id", existingApp.id)
+                .select()
+                .single();
+            data = response.data;
+            error = response.error;
+        } else {
+            const response = await supabase
+                .from("incubation_applications")
+                .insert(applicationPayload)
+                .select()
+                .single();
+            data = response.data;
+            error = response.error;
+        }
+
+        if (body.deletedFiles && Array.isArray(body.deletedFiles) && body.deletedFiles.length > 0) {
+            const pathsToRemove = body.deletedFiles.map((url: string) => {
+                const parts = url.split('/incubation/');
+                return parts.length > 1 ? parts[1] : null;
+            }).filter((p: string | null) => p !== null);
+
+            if (pathsToRemove.length > 0) {
+                const { error: deleteError } = await supabase.storage.from('incubation').remove(pathsToRemove);
+                if (deleteError) {
+                    console.error("Failed to delete old files from storage:", deleteError);
+                }
+            }
+        }
 
         if (error) {
             console.error("Supabase Insert Error:", {

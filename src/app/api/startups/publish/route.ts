@@ -29,6 +29,21 @@ export async function POST(req: Request) {
 
         const newStartup = await publishStartup(supabase, body, user.email);
 
+        if (body.deletedFiles && Array.isArray(body.deletedFiles) && body.deletedFiles.length > 0) {
+            // Extract file paths from URLs
+            const pathsToRemove = body.deletedFiles.map((url: string) => {
+                const parts = url.split('/startups/');
+                return parts.length > 1 ? parts[1] : null;
+            }).filter((p: string | null) => p !== null);
+
+            if (pathsToRemove.length > 0) {
+                const { error: deleteError } = await supabase.storage.from('startups').remove(pathsToRemove);
+                if (deleteError) {
+                    console.error("Failed to delete old files from storage:", deleteError);
+                }
+            }
+        }
+
         // Fire and forget AI Analysis trigger
         const host =
             req.headers.get("x-forwarded-host") ??
