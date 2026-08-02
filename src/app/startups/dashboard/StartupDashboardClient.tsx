@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { FileText, MessageSquare, TrendingUp, Eye, CheckCircle2, ShieldCheck, Activity, Users, Star, BarChart3, Clock, LineChart, Bookmark, Bell, HeartPulse, BrainCircuit, Rocket, Target, Award, Copy, Share2, AlertTriangle, Scale } from "lucide-react";
+import { FileText, MessageSquare, TrendingUp, Eye, CheckCircle2, ShieldCheck, Activity, Users, Star, BarChart3, Clock, LineChart, Bookmark, Bell, HeartPulse, BrainCircuit, Rocket, Target, Award, Copy, Share2, AlertTriangle, Scale, Edit3 } from "lucide-react";
 import { formatRelativeTime } from "@/utils/timeHelper";
 import { useToast } from "@/components/ui/ToastProvider";
 import { calculateFinancialMetrics } from "@/utils/financialMetrics";
@@ -175,11 +175,14 @@ export default function StartupDashboardClient({ myStartups }: StartupDashboardC
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-3 w-full md:w-auto relative z-10">
+                                    <Link href="/startups/publish" className="flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-3 bg-white border border-slate-200 hover:border-blue-300 text-slate-700 hover:text-blue-700 font-bold rounded-xl transition-all shadow-sm">
+                                        <Edit3 className="size-4" /> Edit Profile
+                                    </Link>
                                     <button onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/startups/${myStartup._id || myStartup.id}`); toast.success('✅ Public link copied to clipboard.'); }} className="flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-3 bg-white border border-slate-200 hover:border-emerald-300 text-slate-700 hover:text-emerald-700 font-bold rounded-xl transition-all shadow-sm">
                                         <Copy className="size-4" /> Share Link
                                     </button>
                                     <Link href={`/startups/${myStartup._id || myStartup.id}`} className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl transition-all shadow-md">
-                                        <Eye className="size-4" /> View Public Profile
+                                        <Eye className="size-4" /> View published profile
                                     </Link>
                                 </div>
                             </div>

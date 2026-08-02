@@ -25,7 +25,9 @@ export default function Navbar() {
         const fetchUser = async () => {
             try {
                 const { data, error } = await supabase.auth.getUser();
-                if (error) console.error("Auth fetch error:", error);
+                if (error && !error.message.includes("Auth session missing")) {
+                    console.error("Auth fetch error:", error);
+                }
                 const user = data?.user;
                 if (user?.email) {
                     const { data: roleData, error: roleError } = await supabase.from('user_roles').select('role').eq('email', user.email).maybeSingle();
