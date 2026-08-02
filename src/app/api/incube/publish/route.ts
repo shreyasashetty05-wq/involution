@@ -184,6 +184,27 @@ export async function POST(req: Request) {
             link: `/incube/dashboard`
         });
 
+        // Notify Followers if this is an update
+        if (existingApp) {
+            const { data: follows } = await supabase
+                .from('startup_follows')
+                .select('investor_email')
+                .eq('startup_id', data.id);
+            
+            if (follows && follows.length > 0) {
+                const notificationsToInsert = follows.map(f => ({
+                    user_email: f.investor_email,
+                    type: 'profile_updated',
+                    role: 'investor',
+                    title: "✨ Profile Updated",
+                    description: `Student Innovator ${applicationPayload.full_name} updated their profile for ${applicationPayload.project_name}.`,
+                    link: `/incube/${data.id}`,
+                    startup_id: data.id
+                }));
+                await supabase.from('notifications').insert(notificationsToInsert);
+            }
+        }
+
         // Fire and forget AI Analysis trigger
         const host =
             req.headers.get("x-forwarded-host") ??

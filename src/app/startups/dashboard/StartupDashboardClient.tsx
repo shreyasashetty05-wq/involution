@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { FileText, MessageSquare, TrendingUp, Eye, CheckCircle2, ShieldCheck, Activity, Users, Star, BarChart3, Clock, LineChart, Bookmark, Bell, HeartPulse, BrainCircuit, Rocket, Target, Award, Copy, Share2, AlertTriangle, Scale, Edit3 } from "lucide-react";
+import { FileText, MessageSquare, TrendingUp, Eye, CheckCircle2, ShieldCheck, Activity, Users, Star, BarChart3, Clock, LineChart, Bookmark, Bell, HeartPulse, BrainCircuit, Rocket, Target, Award, Copy, Share2, AlertTriangle, Scale, Edit3, Lightbulb } from "lucide-react";
 import { formatRelativeTime } from "@/utils/timeHelper";
 import { useToast } from "@/components/ui/ToastProvider";
 import { calculateFinancialMetrics } from "@/utils/financialMetrics";
@@ -219,34 +219,116 @@ export default function StartupDashboardClient({ myStartups }: StartupDashboardC
                                 {/* Left Column: Actionable Cards */}
                                 <div className="lg:col-span-2 space-y-6">
                                     
-                                    {/* Startup Growth Score */}
-                                    <div className="bg-gradient-to-br from-indigo-900 to-slate-900 border border-indigo-800 rounded-3xl p-6 shadow-lg relative overflow-hidden flex flex-col md:flex-row items-center gap-6">
-                                        <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none"></div>
-                                        
-                                        <div className="relative shrink-0 text-center">
-                                            <div className="relative size-32 flex items-center justify-center">
-                                                <svg className="absolute inset-0 size-full -rotate-90">
-                                                    <circle cx="64" cy="64" r="56" stroke="rgba(255,255,255,0.1)" strokeWidth="8" fill="none" />
-                                                    <circle cx="64" cy="64" r="56" stroke="#818cf8" strokeWidth="8" fill="none" strokeDasharray="351.8" strokeDashoffset={351.8 - (351.8 * growthScore) / 100} className="transition-all duration-1000 ease-out drop-shadow-[0_0_10px_rgba(129,140,248,0.5)]" />
-                                                </svg>
-                                                <div className="flex flex-col items-center">
-                                                    <span className="text-4xl font-bold text-white font-mono">{growthScore}</span>
-                                                    <span className="text-[10px] text-indigo-200 uppercase font-bold tracking-widest mt-1">Growth Score</span>
+                                    {/* AI Startup Analysis */}
+                                    <div className="bg-[#111827] border border-slate-800 rounded-3xl shadow-xl overflow-hidden mb-6">
+                                        {/* Header */}
+                                        <div className="p-6 md:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-800">
+                                            <div>
+                                                <h3 className="text-xl font-bold text-white flex items-center gap-2 mb-1">
+                                                    <Star className="size-6 text-indigo-400 fill-indigo-400" /> AI Startup Analysis
+                                                </h3>
+                                                <p className="text-slate-400 text-sm">Intelligent evaluation of your startup's investment potential</p>
+                                            </div>
+                                            {myStartup.ai_analysis_timestamp && (
+                                                <div className="flex items-center gap-2 bg-slate-800/50 border border-slate-700/50 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-300">
+                                                    <FileText className="size-3.5" /> Generated on {new Date(myStartup.ai_analysis_timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="p-6 md:p-8 grid md:grid-cols-3 gap-6 border-b border-slate-800">
+                                            {/* Score Ring */}
+                                            <div className="bg-[#172033] border border-slate-800 rounded-2xl p-6 flex flex-col items-center justify-center">
+                                                <div className="relative size-40 flex items-center justify-center mb-6">
+                                                    <svg className="absolute inset-0 size-full -rotate-90">
+                                                        <circle cx="80" cy="80" r="68" stroke="rgba(255,255,255,0.05)" strokeWidth="12" fill="none" />
+                                                        <circle cx="80" cy="80" r="68" stroke="#10b981" strokeWidth="12" fill="none" strokeDasharray="427.2" strokeDashoffset={427.2 - (427.2 * (myStartup.ai_analysis_score || 0)) / 100} className="transition-all duration-1000 ease-out" strokeLinecap="round" />
+                                                    </svg>
+                                                    <div className="flex flex-col items-center">
+                                                        <div className="flex items-baseline text-white">
+                                                            <span className="text-5xl font-bold font-mono leading-none">{myStartup.ai_analysis_score || 0}</span>
+                                                        </div>
+                                                        <span className="text-sm font-bold text-slate-500 font-mono mt-1">/100</span>
+                                                    </div>
+                                                </div>
+                                                <div className="px-4 py-1.5 rounded-full border border-emerald-500/30 text-emerald-400 font-bold text-sm mb-3 text-center">
+                                                    {myStartup.ai_analysis_score >= 80 ? 'Strong Startup' : myStartup.ai_analysis_score >= 60 ? 'Good Potential' : 'Needs Work'}
+                                                </div>
+                                                <p className="text-xs text-slate-400 font-medium">Investment Readiness Score</p>
+                                            </div>
+
+                                            {/* Executive Summary & Tags */}
+                                            <div className="md:col-span-2 bg-[#172033] border border-slate-800 rounded-2xl p-6 md:p-8 flex flex-col justify-between">
+                                                <div>
+                                                    <h4 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
+                                                        <FileText className="size-4 text-indigo-400" /> Executive Summary
+                                                    </h4>
+                                                    <p className="text-sm text-slate-300 leading-relaxed font-medium">
+                                                        {myStartup.ai_executive_summary || "No executive summary generated yet. Continue updating your profile to unlock this feature."}
+                                                    </p>
+                                                </div>
+                                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-8">
+                                                    <div className="bg-[#111827] border border-slate-800 rounded-xl p-4 flex flex-col justify-center">
+                                                        <p className="text-[10px] text-slate-400 uppercase font-bold mb-2 flex items-center justify-center gap-1.5"><ShieldCheck className="size-3 text-emerald-500" /> Investment<br/>Readiness</p>
+                                                        <p className="text-sm font-bold text-emerald-400 text-center">{myStartup.ai_investment_readiness || 'Ready'}</p>
+                                                    </div>
+                                                    <div className="bg-[#111827] border border-slate-800 rounded-xl p-4 flex flex-col justify-center">
+                                                        <p className="text-[10px] text-slate-400 uppercase font-bold mb-2 flex items-center justify-center gap-1.5"><AlertTriangle className="size-3 text-orange-500" /> Risk Level</p>
+                                                        <p className="text-sm font-bold text-orange-400 text-center">{myStartup.ai_score_breakdown?.riskAssessment ? (myStartup.ai_score_breakdown.riskAssessment > 70 ? 'Low' : myStartup.ai_score_breakdown.riskAssessment > 40 ? 'Medium' : 'High') : 'Medium'}</p>
+                                                    </div>
+                                                    <div className="bg-[#111827] border border-slate-800 rounded-xl p-4 flex flex-col justify-center">
+                                                        <p className="text-[10px] text-slate-400 uppercase font-bold mb-2 flex items-center justify-center gap-1.5"><Activity className="size-3 text-blue-500" /> Business Quality</p>
+                                                        <p className="text-sm font-bold text-blue-400 text-center">{myStartup.ai_score_breakdown?.businessQuality || 'Good'}</p>
+                                                    </div>
+                                                    <div className="bg-[#111827] border border-slate-800 rounded-xl p-4 flex flex-col justify-center">
+                                                        <p className="text-[10px] text-slate-400 uppercase font-bold mb-2 flex items-center justify-center gap-1.5"><Target className="size-3 text-purple-500" /> Confidence Level</p>
+                                                        <p className="text-sm font-bold text-purple-400 text-center">{myStartup.ai_confidence || 'Medium'}</p>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
-                                        
-                                        <div className="flex-1 relative z-10 w-full">
-                                            <h3 className="text-xl font-bold text-white mb-2 flex items-center gap-2"><Award className="size-5 text-indigo-400"/> Maximize Your Visibility</h3>
-                                            <p className="text-indigo-100 text-sm mb-4">A higher Growth Score pushes your startup to the top of the AI Matchmaking Engine. Complete the actions below to improve your score.</p>
+
+                                        {/* Score Breakdown */}
+                                        <div className="p-6 md:p-8 bg-[#111827]">
+                                            <h3 className="text-base font-bold text-white mb-6 flex items-center gap-2">
+                                                <Activity className="size-5 text-indigo-400" /> Score Breakdown
+                                            </h3>
                                             
-                                            <div className="space-y-2">
-                                                {growthActions.map((action, i) => (
-                                                    <div key={i} className="bg-white/10 border border-white/10 p-3 rounded-xl flex items-start gap-3 backdrop-blur-sm">
-                                                        {growthScore === 100 ? <CheckCircle2 className="size-4 text-emerald-400 shrink-0 mt-0.5" /> : <TrendingUp className="size-4 text-indigo-300 shrink-0 mt-0.5" />}
-                                                        <p className="text-sm text-white font-medium">{action}</p>
-                                                    </div>
-                                                ))}
+                                            <div className="grid md:grid-cols-2 gap-x-12 gap-y-6">
+                                                {[
+                                                    { label: 'Founder & Team', key: 'founderAndTeam', max: 15, icon: <ShieldCheck className="size-4 text-emerald-400" /> },
+                                                    { label: 'Business Idea', key: 'businessIdea', max: 20, icon: <Lightbulb className="size-4 text-yellow-400" /> },
+                                                    { label: 'Market Opportunity', key: 'marketOpportunity', max: 15, icon: <TrendingUp className="size-4 text-purple-400" /> },
+                                                    { label: 'Business Model', key: 'businessModel', max: 15, icon: <Target className="size-4 text-blue-400" /> },
+                                                    { label: 'Financial Health', key: 'financialHealth', max: 15, icon: <Activity className="size-4 text-orange-400" /> },
+                                                    { label: 'Growth Potential', key: 'growthPotential', max: 10, icon: <TrendingUp className="size-4 text-emerald-400" /> },
+                                                    { label: 'Business Verification', key: 'businessVerification', max: 5, icon: <ShieldCheck className="size-4 text-blue-400" /> },
+                                                    { label: 'Risk Assessment', key: 'riskAssessment', max: 5, icon: <AlertTriangle className="size-4 text-red-400" /> }
+                                                ].map((config, idx) => {
+                                                    const val = myStartup.ai_score_breakdown?.[config.key] || 0;
+                                                    const percent = (val / config.max) * 100;
+                                                    
+                                                    let pbColor = "bg-red-500";
+                                                    if (percent >= 80) pbColor = "bg-emerald-500";
+                                                    else if (percent >= 60) pbColor = "bg-yellow-500";
+                                                    else if (percent >= 40) pbColor = "bg-orange-500";
+
+                                                    return (
+                                                        <div key={idx} className="flex items-center justify-between gap-4">
+                                                            <div className="flex items-center gap-3 w-48">
+                                                                {config.icon}
+                                                                <span className="text-sm font-medium text-slate-300 truncate">{config.label}</span>
+                                                            </div>
+                                                            <div className="flex-1 h-2 bg-slate-800 rounded-full overflow-hidden">
+                                                                <div className={`h-full rounded-full ${pbColor} transition-all duration-700`} style={{ width: `${percent}%` }}></div>
+                                                            </div>
+                                                            <div className="w-16 text-right font-mono text-sm">
+                                                                <span className="font-bold text-white">{val} </span>
+                                                                <span className="text-slate-500">/ {config.max}</span>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
                                             </div>
                                         </div>
                                     </div>

@@ -110,83 +110,80 @@ export default function StartupPublishForm() {
 
                 if (startupData && !startupError) {
                     setIsEditMode(true);
-                    setFormData(prev => ({
-                        ...prev,
-                        logoPreview: startupData.basic_info?.logoUrl || prev.logoPreview,
-                        logoUrl: startupData.basic_info?.logoUrl || "",
-                        startupName: startupData.name || "",
-                        startupTagline: startupData.basic_info?.startupTagline || "",
+                    
+                    // 1. Flatten all JSON columns from Supabase
+                    const flattenedData: any = {};
+                    const jsonColumns = ['basic_info', 'business_info', 'investment_details', 'financials_monthly', 'growth_metrics', 'credibility', 'risk_disclosure'];
+                    
+                    jsonColumns.forEach(col => {
+                        if (startupData[col] && typeof startupData[col] === 'object') {
+                            Object.keys(startupData[col]).forEach(key => {
+                                if (startupData[col][key] !== undefined && startupData[col][key] !== null) {
+                                    flattenedData[key] = startupData[col][key];
+                                }
+                            });
+                        }
+                    });
 
-                        founderName: startupData.basic_info?.founderName || prev.founderName,
-                        founderAge: startupData.basic_info?.founderAge?.toString() || "",
-                        founderRole: startupData.basic_info?.founderRole || "Founder",
-                        founderPhotoPreview: startupData.basic_info?.founderPhotoUrl || prev.founderPhotoPreview,
-                        founderPhotoUrl: startupData.basic_info?.founderPhotoUrl || "",
-                        founderLinkedin: startupData.basic_info?.founderLinkedin || "",
-                        teamMembers: startupData.basic_info?.teamMembersData && startupData.basic_info.teamMembersData.length > 0 
-                            ? startupData.basic_info.teamMembersData.map((t: any) => ({
+                    // 2. Map standard top-level columns 
+                    const topLevelMappings: Record<string, string> = {
+                        name: 'startupName',
+                        desc: 'startupDescription',
+                        payment_method: 'paymentMethod',
+                        upi_id: 'upiId',
+                        account_holder_name: 'accountHolderName',
+                        bank_name: 'bankName',
+                        account_number: 'accountNumber',
+                        ifsc_code: 'ifscCode'
+                    };
+                    
+                    Object.keys(topLevelMappings).forEach(dbKey => {
+                        if (startupData[dbKey] !== undefined && startupData[dbKey] !== null) {
+                            flattenedData[topLevelMappings[dbKey]] = startupData[dbKey];
+                        }
+                    });
+
+                    // 3. Update form state dynamically
+                    setFormData(prev => {
+                        const newState = { ...prev };
+                        
+                        // Merge all flattened fields automatically
+                        Object.keys(flattenedData).forEach(key => {
+                            if (key in newState) {
+                                if (typeof newState[key as keyof typeof newState] === 'string' && typeof flattenedData[key] !== 'string') {
+                                    (newState as any)[key] = String(flattenedData[key]);
+                                } else if (typeof flattenedData[key] === 'object' && !Array.isArray(flattenedData[key])) {
+                                    (newState as any)[key] = { ...(newState as any)[key], ...flattenedData[key] };
+                                } else {
+                                    (newState as any)[key] = flattenedData[key];
+                                }
+                            } else {
+                                // Automatically support newly added fields even if not in initial state
+                                (newState as any)[key] = flattenedData[key];
+                            }
+                        });
+
+                        // 4. Handle Media & Array Exceptions (Overrides)
+                        if (flattenedData.logoUrl) newState.logoPreview = flattenedData.logoUrl;
+                        if (flattenedData.founderPhotoUrl) newState.founderPhotoPreview = flattenedData.founderPhotoUrl;
+                        
+                        if (flattenedData.teamMembersData && flattenedData.teamMembersData.length > 0) {
+                            newState.teamMembers = flattenedData.teamMembersData.map((t: any) => ({
                                 photo: null,
                                 photoPreview: t.photoUrl || "",
                                 photoUrl: t.photoUrl || "",
                                 name: t.name || "",
                                 role: t.role || "",
                                 linkedin: t.linkedin || ""
-                              }))
-                            : prev.teamMembers,
+                            }));
+                        }
+                        
+                        if (startupData.videos && startupData.videos.length > 0) {
+                            newState.pitchVideos = startupData.videos.map((v:any) => v.url?.replace('https://www.youtube.com/embed/', 'https://youtu.be/'));
+                        }
 
-                        industry: startupData.business_info?.industry || "FinTech",
-                        companyType: startupData.business_info?.companyType || "Private Ltd",
-                        startupStage: startupData.business_info?.startupStage || "Seed",
-                        yearFounded: startupData.business_info?.yearFounded || new Date().getFullYear().toString(),
-                        headquarters: startupData.business_info?.headquarters || "",
-                        website: startupData.business_info?.website || "",
-
-                        businessModel: startupData.business_info?.businessModel || "B2B",
-                        revenueModel: startupData.business_info?.revenueModel || "Subscription",
-                        targetMarket: startupData.business_info?.targetMarket || "",
-                        problemStatement: startupData.business_info?.problemStatement || "",
-                        solution: startupData.business_info?.solution || "",
-                        uvp: startupData.business_info?.uvp || "",
-                        competitors: startupData.business_info?.competitors || "",
-                        startupDescription: startupData.desc || "",
-
-                        investmentRequired: startupData.investment_details?.investmentRequired?.toString() || "",
-                        equityOffered: startupData.investment_details?.equityOffered?.toString() || "",
-                        currentValuation: startupData.investment_details?.currentValuation?.toString() || "",
-                        useOfFunds: startupData.investment_details?.useOfFunds || prev.useOfFunds,
-
-                        monthlyRevenue: startupData.financials_monthly?.monthlyRevenue?.toString() || "",
-                        monthlyExpenses: startupData.financials_monthly?.monthlyExpenses?.toString() || "",
-                        monthlyProfitLoss: startupData.financials_monthly?.monthlyProfitLoss?.toString() || "",
-                        cashInBank: startupData.financials_monthly?.cashInBank?.toString() || "",
-                        grossBurnRate: startupData.financials_monthly?.grossBurnRate?.toString() || "",
-                        monthlyBurnRate: startupData.financials_monthly?.monthlyBurnRate?.toString() || "",
-                        runway: startupData.financials_monthly?.runway?.toString() || "",
-
-                        totalCustomers: startupData.growth_metrics?.totalCustomers?.toString() || "",
-                        monthlyActiveUsers: startupData.growth_metrics?.monthlyActiveUsers?.toString() || "",
-                        monthlyGrowth: startupData.growth_metrics?.monthlyGrowth?.toString() || "",
-                        customerRetention: startupData.growth_metrics?.customerRetention?.toString() || "",
-                        repeatCustomers: startupData.growth_metrics?.repeatCustomers?.toString() || "",
-
-                        verification: startupData.credibility?.verification || prev.verification,
-
-                        pendingLegalCases: startupData.risk_disclosure?.pendingLegalCases || false,
-                        outstandingLoans: startupData.risk_disclosure?.outstandingLoans || false,
-                        previousFundingRaised: startupData.risk_disclosure?.previousFundingRaised || false,
-                        fundingAmount: startupData.risk_disclosure?.fundingAmount?.toString() || "",
-                        investorName: startupData.risk_disclosure?.investorName || "",
-                        fundingRound: startupData.risk_disclosure?.fundingRound || "",
-
-                        pitchVideos: startupData.videos?.length > 0 ? startupData.videos.map((v:any) => v.url?.replace('https://www.youtube.com/embed/', 'https://youtu.be/')) : [""],
-
-                        paymentMethod: startupData.payment_method || "UPI",
-                        upiId: startupData.upi_id || "",
-                        accountHolderName: startupData.account_holder_name || "",
-                        bankName: startupData.bank_name || "",
-                        accountNumber: startupData.account_number || "",
-                        ifscCode: startupData.ifsc_code || ""
-                    }));
+                        return newState;
+                    });
                 } else if (currentUser?.user_metadata?.role === 'incubation') {
                     // If user is an incubation founder migrating to startup, pre-fill some fields
                     const { data: incubeData } = await supabase

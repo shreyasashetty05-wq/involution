@@ -75,8 +75,20 @@ export default function InvestorDashboard() {
                 const resStartups = await fetch('/api/startups?type=regular');
                 const jsonStartups = await resStartups.json();
                 
-                if (jsonStartups.success) {
-                    const allStartups = jsonStartups.data;
+                const resIncube = await fetch('/api/incube');
+                const jsonIncube = await resIncube.json();
+                
+                if (jsonStartups.success || jsonIncube.success) {
+                    const allStartups = [
+                        ...(jsonStartups.success ? jsonStartups.data : []),
+                        ...(jsonIncube.success ? jsonIncube.data : [])
+                    ].map(st => ({
+                        ...st,
+                        // Ensure name maps correctly for incube
+                        name: st.name || st.project_name || "Unknown",
+                        sector: st.sector || st.industry || "Unknown",
+                        desc: st.desc || st.description || ""
+                    }));
                     
                     // Filter Followed
                     const followed = allStartups.filter((st: any) => followedIds.includes(st._id || st.id));
@@ -223,8 +235,8 @@ export default function InvestorDashboard() {
                 </div>
                 <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
                     <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity"><Rss className="size-16 text-indigo-600" /></div>
-                    <p className="text-sm font-bold text-slate-500 mb-1 relative z-10 uppercase tracking-wide">Following Startups</p>
-                    <p className="text-2xl font-bold font-mono text-slate-900 relative z-10">{followedStartups.length} <span className="text-sm font-normal text-slate-400">Companies</span></p>
+                    <p className="text-sm font-bold text-slate-500 mb-1 relative z-10 uppercase tracking-wide">Following</p>
+                    <p className="text-2xl font-bold font-mono text-slate-900 relative z-10">{followedStartups.length}</p>
                 </div>
                 <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
                     <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity"><MessageSquare className="size-16 text-blue-500" /></div>
@@ -297,11 +309,11 @@ export default function InvestorDashboard() {
                         </div>
                     </div>
 
-                    {/* Following Startups */}
+                    {/* Following */}
                     <div className="bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden">
                         <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
                             <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                                <Rss className="size-5 text-indigo-500" /> Following Startups
+                                <Rss className="size-5 text-indigo-500" /> Following
                             </h2>
                             <Link href="/investors/search" className="text-sm font-bold text-indigo-600 hover:text-indigo-700 flex items-center gap-1 group">
                                 Discover More <ArrowRight className="size-4 group-hover:translate-x-1 transition-transform" />
@@ -367,8 +379,8 @@ export default function InvestorDashboard() {
                                                         <span className="flex items-center gap-1 bg-purple-50 text-purple-600 px-2 py-1 rounded-lg" title="AI Match"><BrainCircuit className="size-3" /> {s.score || 70}%</span>
                                                         {s.kyc_status === 'Approved' && <span className="flex items-center gap-1 bg-emerald-50 text-emerald-600 px-2 py-1 rounded-lg"><CheckCircle2 className="size-3" /> Verified</span>}
                                                     </div>
-                                                    <Link href={`/startups/${s._id || s.id}`} className="text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg transition-colors w-full sm:w-auto text-center">
-                                                        View Startup
+                                                    <Link href={s.project_name ? `/incube/${s._id || s.id}` : `/startups/${s._id || s.id}`} className="text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg transition-colors w-full sm:w-auto text-center">
+                                                        {s.project_name ? 'View Incube' : 'View Startup'}
                                                     </Link>
                                                 </div>
                                             </div>

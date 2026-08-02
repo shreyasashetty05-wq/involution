@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { Search, Activity, ArrowUpDown, MapPin, Calendar, Users, GraduationCap, ChevronRight, Bookmark, Share2 } from "lucide-react";
+import { Search, Activity, ArrowUpDown, MapPin, Calendar, Users, GraduationCap, ChevronRight, Bookmark, Share2, Bell } from "lucide-react";
+import { useToast } from "@/components/ui/ToastProvider";
 
 export default function IncubeSearch() {
     const [filters, setFilters] = useState({
@@ -23,6 +24,10 @@ export default function IncubeSearch() {
     const [results, setResults] = useState<any[]>([]);
     const [isLoadingData, setIsLoadingData] = useState(true);
 
+    const [savedIds, setSavedIds] = useState<string[]>([]);
+    const [followedIds, setFollowedIds] = useState<string[]>([]);
+    const toast = useToast();
+
     const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const isInitialMount = useRef(true);
 
@@ -35,6 +40,13 @@ export default function IncubeSearch() {
             try {
                 const res = await fetch('/api/incube');
                 const json = await res.json();
+                
+                const s = localStorage.getItem('inv_saved_startups');
+                if (s) setSavedIds(JSON.parse(s));
+                
+                const f = localStorage.getItem('inv_followed_startups');
+                if (f) setFollowedIds(JSON.parse(f));
+
                 if (json.success) {
                     setAllStartups(json.data);
                     const sorted = [...json.data].sort((a: any, b: any) => b.score - a.score);
@@ -56,6 +68,41 @@ export default function IncubeSearch() {
         }
         handleSearch();
     }, [filters]);
+
+    const toggleSave = async (id: string) => {
+        const isSaved = savedIds.includes(id);
+        const next = isSaved ? savedIds.filter(x => x !== id) : [...savedIds, id];
+        setSavedIds(next);
+        localStorage.setItem('inv_saved_startups', JSON.stringify(next));
+        
+        toast.success(isSaved ? 'Removed from saved items' : 'Saved to dashboard');
+
+        await fetch(`/api/incube/${id}/metrics`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'save', delta: isSaved ? -1 : 1 })
+        }).catch(console.error);
+    };
+
+    const toggleFollow = async (id: string) => {
+        const isFollowing = followedIds.includes(id);
+        const next = isFollowing ? followedIds.filter(x => x !== id) : [...followedIds, id];
+        setFollowedIds(next);
+        localStorage.setItem('inv_followed_startups', JSON.stringify(next));
+
+        toast.success(isFollowing ? 'Unfollowed student innovator' : 'Following student innovator');
+
+        await fetch(`/api/incube/${id}/follow`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: isFollowing ? 'unfollow' : 'follow' })
+        }).catch(console.error);
+    };
+
+    const handleShare = (id: string) => {
+        navigator.clipboard.writeText(`${window.location.origin}/incube/${id}`);
+        toast.success("Profile link copied!");
+    };
 
     const toggleTech = (t: string) => {
         setFilters(prev => ({
@@ -300,8 +347,15 @@ export default function IncubeSearch() {
                                             {/* AI Match Top Right */}
                                             <div className="flex flex-col items-end gap-3 shrink-0">
                                                 <div className="flex items-center gap-2">
-                                                    <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"><Bookmark className="size-5" /></button>
-                                                    <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"><Share2 className="size-5" /></button>
+                                                    <button onClick={() => toggleSave(startup._id || startup.id)} className={`p-2 rounded-lg transition-colors ${savedIds.includes(startup._id || startup.id) ? 'text-red-500 bg-red-50 hover:bg-red-100' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'}`} title={savedIds.includes(startup._id || startup.id) ? "Saved" : "Save Profile"}>
+                                                        <Bookmark className={`size-5 ${savedIds.includes(startup._id || startup.id) ? 'fill-current' : ''}`} />
+                                                    </button>
+                                                    <button onClick={() => toggleFollow(startup._id || startup.id)} className={`p-2 rounded-lg transition-colors ${followedIds.includes(startup._id || startup.id) ? 'text-blue-500 bg-blue-50 hover:bg-blue-100' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'}`} title={followedIds.includes(startup._id || startup.id) ? "Following" : "Follow Profile"}>
+                                                        <Bell className={`size-5 ${followedIds.includes(startup._id || startup.id) ? 'fill-current' : ''}`} />
+                                                    </button>
+                                                    <button onClick={() => handleShare(startup._id || startup.id)} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors" title="Share Profile">
+                                                        <Share2 className="size-5" />
+                                                    </button>
                                                 </div>
                                                 <div className="flex items-center gap-4 bg-slate-50 border border-slate-100 p-3 rounded-2xl">
                                                     <div className="flex flex-col items-end">

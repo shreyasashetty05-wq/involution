@@ -168,82 +168,60 @@ export default function IncubationForm() {
 
                 if (incubeData && !incubeError) {
                     setIsEditMode(true);
-                    setFormData(prev => ({
-                        ...prev,
-                        fullName: incubeData.full_name || "",
-                        email: incubeData.email || currentUser.email || "",
-                        phoneNumber: incubeData.phone_number || "",
-                        city: incubeData.city || "",
-                        state: incubeData.state || "",
-                        shortBio: incubeData.short_bio || "",
-                        linkedinUrl: incubeData.linkedin_url || "",
-                        githubUrl: incubeData.github_url || "",
-                        founderPhotoPreview: incubeData.founder_photo_url || prev.founderPhotoPreview,
-                        founderPhotoUrl: incubeData.founder_photo_url || "",
+                    // 1. Generic Snake to Camel Case Mapper
+                    const snakeToCamel = (str: string) => str.replace(/([-_][a-z])/g, group => group.toUpperCase().replace('-', '').replace('_', ''));
+                    
+                    const mappedData: any = {};
+                    Object.keys(incubeData).forEach(key => {
+                        if (incubeData[key] !== null && incubeData[key] !== undefined) {
+                            mappedData[snakeToCamel(key)] = incubeData[key];
+                        }
+                    });
+
+                    // 2. Update form state dynamically
+                    setFormData(prev => {
+                        const newState = { ...prev };
                         
-                        teamMembers: incubeData.team_members && incubeData.team_members.length > 0 
-                            ? incubeData.team_members.map((t: any) => ({
+                        Object.keys(mappedData).forEach(key => {
+                            if (key in newState) {
+                                if (typeof newState[key as keyof typeof newState] === 'string' && typeof mappedData[key] !== 'string') {
+                                    (newState as any)[key] = String(mappedData[key]);
+                                } else {
+                                    (newState as any)[key] = mappedData[key];
+                                }
+                            } else {
+                                // Automatically support newly added fields
+                                (newState as any)[key] = mappedData[key];
+                            }
+                        });
+
+                        // 3. Handle Special Overrides (Media, Arrays, Defaults)
+                        if (mappedData.founderPhotoUrl) newState.founderPhotoPreview = mappedData.founderPhotoUrl;
+                        if (mappedData.ideaLogoUrl) newState.ideaLogoPreview = mappedData.ideaLogoUrl;
+                        
+                        if (mappedData.teamMembers && mappedData.teamMembers.length > 0) {
+                            newState.teamMembers = mappedData.teamMembers.map((t: any) => ({
                                 photo: null,
                                 photoPreview: t.photoUrl || "",
                                 photoUrl: t.photoUrl || "",
                                 name: t.name || "",
                                 role: t.role || "",
                                 bio: t.short_bio || t.bio || ""
-                              }))
-                            : prev.teamMembers,
+                            }));
+                        }
+                        
+                        if (mappedData.pitchVideos && mappedData.pitchVideos.length > 0) {
+                            newState.pitchVideos = mappedData.pitchVideos;
+                        } else {
+                            newState.pitchVideos = [""];
+                        }
+                        
+                        // Derived logic
+                        newState.validatedIdea = mappedData.testUsersCount ? true : false;
+                        if (!newState.paymentMethod) newState.paymentMethod = "upi";
 
-                        institutionName: incubeData.institution_name || "",
-                        educationType: incubeData.education_type || "",
-                        course: incubeData.course || "",
-                        branch: incubeData.branch || "",
-                        semester: incubeData.semester || "",
-                        graduationYear: incubeData.graduation_year || "",
-                        schoolClass: incubeData.school_class || "",
-                        schoolBoard: incubeData.school_board || "",
-                        diplomaCourse: incubeData.diploma_course || "",
-                        diplomaBranch: incubeData.diploma_branch || "",
-                        studentIdUrl: incubeData.student_id_url || "",
-
-                        ideaLogoPreview: incubeData.idea_logo_url || prev.ideaLogoUrl, // Added for preview
-                        ideaLogoUrl: incubeData.idea_logo_url || "",
-                        projectName: incubeData.project_name || "",
-                        tagline: incubeData.tagline || "",
-                        industry: incubeData.industry || "",
-                        problemStatement: incubeData.problem_statement || "",
-                        solutionDescription: incubeData.solution_description || "",
-                        innovationUsp: incubeData.innovation_usp || "",
-                        targetUsers: incubeData.target_users || "",
-                        currentStage: incubeData.current_stage || "",
-
-                        prototypeAvailable: incubeData.prototype_available || false,
-                        prototypeLink: incubeData.prototype_link || "",
-                        githubRepo: incubeData.github_repo || "",
-                        website: incubeData.website || "",
-                        technologyUsed: incubeData.technology_used || [],
-
-                        validatedIdea: incubeData.test_users_count ? true : false,
-                        testUsersCount: incubeData.test_users_count || "",
-                        pilotTesting: incubeData.pilot_testing || "",
-                        mentorFeedback: incubeData.mentor_feedback || "",
-                        hackathonParticipation: incubeData.hackathon_participation || "",
-                        prototypeDemo: incubeData.prototype_demo || "",
-                        otherValidation: incubeData.other_validation || "",
-
-                        supportNeeded: incubeData.support_needed || [],
-                        fundingRequired: incubeData.funding_required || false,
-                        askAmount: incubeData.ask_amount?.toString() || "",
-                        equityOffered: incubeData.equity_offered?.toString() || "",
-                        fundUtilization: incubeData.fund_utilization || [],
-
-                        pitchVideos: incubeData.pitch_videos?.length > 0 ? incubeData.pitch_videos : [""],
-
-                        paymentMethod: incubeData.payment_method || "upi",
-                        upiId: incubeData.upi_id || "",
-                        accountHolderName: incubeData.account_holder_name || "",
-                        bankName: incubeData.bank_name || "",
-                        accountNumber: incubeData.account_number || "",
-                        ifscCode: incubeData.ifsc_code || ""
-                    }));
+                        return newState;
+                    });
                 } else {
                     // Fetch from KYC documents table first if no existing application
                     const { data: kycData, error } = await supabase
