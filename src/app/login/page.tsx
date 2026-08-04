@@ -145,25 +145,32 @@ function LoginContent() {
                     className="absolute bottom-[-10%] left-[-5%] size-[500px] bg-emerald-200/30 rounded-full blur-[120px]" 
                 />
                 
-                {/* Floating Particles */}
-                {[...Array(6)].map((_, i) => (
+                {/* Floating Particles (using fixed values to avoid hydration mismatch) */}
+                {[
+                    { left: "15%", top: "20%", delay: 0.5, dur: 7, x: 15, y: -80 },
+                    { left: "85%", top: "35%", delay: 2.1, dur: 6, x: -20, y: -60 },
+                    { left: "45%", top: "80%", delay: 1.2, dur: 8, x: 25, y: -120 },
+                    { left: "70%", top: "15%", delay: 3.4, dur: 5, x: -10, y: -50 },
+                    { left: "25%", top: "65%", delay: 0.8, dur: 9, x: 10, y: -90 },
+                    { left: "10%", top: "90%", delay: 4.2, dur: 6, x: -15, y: -70 }
+                ].map((particle, i) => (
                     <motion.div
                         key={i}
                         animate={{ 
-                            y: [0, Math.random() * -100 - 50], 
-                            x: [0, Math.random() * 40 - 20],
+                            y: [0, particle.y], 
+                            x: [0, particle.x],
                             opacity: [0, 0.5, 0]
                         }}
                         transition={{ 
-                            duration: Math.random() * 5 + 5, 
+                            duration: particle.dur, 
                             repeat: Infinity, 
-                            delay: Math.random() * 5,
+                            delay: particle.delay,
                             ease: "easeInOut"
                         }}
                         className="absolute size-2 bg-emerald-300 rounded-full blur-[1px]"
                         style={{
-                            left: `${Math.random() * 100}%`,
-                            top: `${Math.random() * 100}%`
+                            left: particle.left,
+                            top: particle.top
                         }}
                     />
                 ))}
