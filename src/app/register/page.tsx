@@ -62,7 +62,18 @@ export default function RegisterPage() {
                 body: JSON.stringify({ email, password, username, role }),
             });
 
-            const data = await res.json();
+            // Check if the response is actually JSON before parsing
+            const contentType = res.headers.get("content-type");
+            let data;
+            if (contentType && contentType.includes("application/json")) {
+                data = await res.json();
+            } else {
+                const text = await res.text();
+                console.error("Non-JSON response from server:", text);
+                setError(`Server returned an invalid response (${res.status}). Check Vercel logs.`);
+                setIsEmailLoading(false);
+                return;
+            }
 
             if (!res.ok) {
                 // Check if it's the generic Zod error
@@ -87,7 +98,8 @@ export default function RegisterPage() {
             }
 
         } catch (err) {
-            setError("An unexpected error occurred. Please try again later.");
+            console.error("Network or parsing error:", err);
+            setError("Network error: Could not connect to the server.");
             setIsEmailLoading(false);
         }
     };
