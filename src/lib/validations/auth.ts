@@ -1,12 +1,10 @@
 import { z } from "zod";
-import DOMPurify from "isomorphic-dompurify";
-
 /**
- * Sanitizes a string using isomorphic-dompurify to strip all HTML tags and prevent XSS.
+ * Sanitizes a string by stripping all HTML tags.
  */
 export const sanitizeInput = (input: string | undefined | null): string => {
     if (!input) return "";
-    return DOMPurify.sanitize(input, { ALLOWED_TAGS: [] }).trim();
+    return input.replace(/<\/?[^>]+(>|$)/g, "").trim();
 };
 
 // Password requirements:
