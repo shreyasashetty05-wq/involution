@@ -44,7 +44,7 @@ export async function POST(request: Request) {
         if (error) {
             console.error(`[Auth Signup] Registration failed for ${email}. Reason: ${error.message} (Code: ${error.code || 'N/A'}, Status: ${error.status || 'N/A'})`);
             return NextResponse.json(
-                { error: "Signup failed. Please check your credentials or try again later.", details: error.message },
+                { error: error.message, details: error.message },
                 { status: 400 }
             );
         }

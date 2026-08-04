@@ -44,9 +44,9 @@ export async function POST(request: Request) {
                 );
             }
 
-            // Generic error message for other authentication failures (prevents email enumeration)
+            // Return the exact error message for debugging
             return NextResponse.json(
-                { error: "Invalid email or password.", code: "invalid_credentials" },
+                { error: error.message || "Invalid email or password.", code: error.code || "invalid_credentials", details: error },
                 { status: 400 }
             );
         }

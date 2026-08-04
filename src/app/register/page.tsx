@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { UserPlus, ArrowLeft, Mail, Lock, User } from "lucide-react";
+import { UserPlus, ArrowLeft, Mail, Lock, User, Eye, EyeOff, Check, X, ShieldAlert } from "lucide-react";
 import { RoleToggle } from "@/components/RoleToggle";
 import { GoogleAuthButton } from "@/components/GoogleAuthButton";
 import { useGoogleAuth } from "@/frontend/hooks/useGoogleAuth";
@@ -19,6 +19,10 @@ export default function RegisterPage() {
     const [username, setUsername] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
+    const [showOtpInput, setShowOtpInput] = useState(false);
+    const [otp, setOtp] = useState("");
+    const [isOtpLoading, setIsOtpLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
@@ -28,8 +32,23 @@ export default function RegisterPage() {
     // Merge Google auth errors into local error state
     const displayError = error || googleError;
 
+    // Password validation logic
+    const hasLength = password.length >= 8;
+    const hasUpper = /[A-Z]/.test(password);
+    const hasLower = /[a-z]/.test(password);
+    const hasNumber = /[0-9]/.test(password);
+    const hasSpecial = /[@$!%*?&._-]/.test(password);
+
+    const isPasswordValid = hasLength && hasUpper && hasLower && hasNumber && hasSpecial;
+
     const handleEmailRegister = async (e: React.FormEvent) => {
         e.preventDefault();
+        
+        if (!isPasswordValid) {
+            setError("Please ensure your password meets all requirements.");
+            return;
+        }
+
         setIsEmailLoading(true);
         setError(null);
         setSuccessMsg(null);
@@ -46,27 +65,66 @@ export default function RegisterPage() {
             const data = await res.json();
 
             if (!res.ok) {
-                setError(data.error || "Sign up failed. Please check your inputs.");
+                // Check if it's the generic Zod error
+                if (res.status === 400 && data.error === "Invalid request data. Please check your inputs and try again.") {
+                     setError("Registration failed. Please check that your email is valid and username only contains allowed characters.");
+                } else {
+                     setError(data.error || "Sign up failed. Please check your inputs.");
+                }
                 setIsEmailLoading(false);
                 return;
             }
 
-            const msg = data.requiresVerification
-                ? "Account created! Please check your email inbox to confirm your verification link before logging in."
-                : "Account created successfully! Redirecting...";
-            setSuccessMsg(msg);
-            
-            // Redirect to login after a short delay, passing any verification message
-            setTimeout(() => {
-                const redirectUrl = data.requiresVerification
-                    ? `/login?message=${encodeURIComponent("Please check your email inbox and click the Supabase verification link to activate your account before logging in.")}`
-                    : "/login";
-                router.push(redirectUrl);
-            }, 2000);
+            if (data.requiresVerification) {
+                setSuccessMsg("Account created! Please enter the 6-digit verification code sent to your email.");
+                setShowOtpInput(true);
+                setIsEmailLoading(false);
+            } else {
+                setSuccessMsg("Account created successfully! Redirecting...");
+                setTimeout(() => {
+                    router.push("/login");
+                }, 2000);
+            }
 
         } catch (err) {
             setError("An unexpected error occurred. Please try again later.");
             setIsEmailLoading(false);
+        }
+    };
+
+    const handleVerifyOtp = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsOtpLoading(true);
+        setError(null);
+        setSuccessMsg(null);
+        
+        try {
+            const res = await fetch("/api/auth/verify", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email, token: otp, type: 'signup' }),
+            });
+            const data = await res.json();
+            
+            if (!res.ok) {
+                setError(data.error || "Invalid verification code.");
+                setIsOtpLoading(false);
+                return;
+            }
+            
+            setSuccessMsg("Email verified successfully! Redirecting...");
+            
+            // Redirect to dashboard based on role
+            setTimeout(() => {
+                const dashUrl = role === "startup" ? "/startups/dashboard" : 
+                                role === "incubation" ? "/incube/dashboard" : 
+                                "/investors/dashboard";
+                router.push(dashUrl);
+            }, 2000);
+            
+        } catch (err) {
+            setError("An unexpected error occurred. Please try again later.");
+            setIsOtpLoading(false);
         }
     };
 
@@ -109,87 +167,155 @@ export default function RegisterPage() {
                         </div>
                     )}
 
-                    <form onSubmit={handleEmailRegister} className="space-y-4 text-left">
-                        <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">Username</label>
-                            <div className="relative">
-                                <User className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-slate-400" />
+                    {showOtpInput ? (
+                        <form onSubmit={handleVerifyOtp} className="space-y-4 text-left">
+                            <div className="text-center mb-6 mt-4">
+                                <ShieldAlert className="size-12 text-emerald-500 mx-auto mb-3" />
+                                <h3 className="text-xl font-semibold text-slate-800">Verify your email</h3>
+                                <p className="text-sm text-slate-500 mt-2">We sent a 6-digit code to <br/><span className="font-semibold text-slate-700">{email}</span></p>
+                            </div>
+                            
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">Verification Code</label>
                                 <input 
                                     type="text" 
-                                    value={username}
-                                    onChange={(e) => setUsername(e.target.value)}
-                                    placeholder="Choose a username"
+                                    value={otp}
+                                    onChange={(e) => setOtp(e.target.value)}
+                                    placeholder="••••••"
                                     required
-                                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all outline-none text-sm text-slate-700"
+                                    maxLength={6}
+                                    className="w-full px-4 py-4 text-center tracking-[0.5em] font-mono text-2xl rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all outline-none text-slate-700"
                                 />
                             </div>
-                            <p className="mt-1 text-[10px] text-slate-400">Alphanumeric, underscores, hyphens only.</p>
-                        </div>
 
-                        <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
-                            <div className="relative">
-                                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-slate-400" />
-                                <input 
-                                    type="email" 
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    placeholder="Enter your email"
-                                    required
-                                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all outline-none text-sm text-slate-700"
-                                />
-                            </div>
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">Password</label>
-                            <div className="relative">
-                                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-slate-400" />
-                                <input 
-                                    type="password" 
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    placeholder="Create a strong password"
-                                    required
-                                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all outline-none text-sm text-slate-700"
-                                />
-                            </div>
-                            <p className="mt-1 text-[10px] text-slate-400">Min 8 chars, 1 uppercase, 1 lowercase, 1 number, 1 special character.</p>
-                        </div>
-
-                        <button 
-                            type="submit" 
-                            disabled={isEmailLoading || isGoogleLoading}
-                            className="w-full py-3.5 px-6 bg-emerald-600 text-white rounded-xl font-semibold text-sm transition-all hover:bg-emerald-700 hover:scale-[1.02] active:scale-95 disabled:opacity-70 disabled:pointer-events-none shadow-sm shadow-emerald-600/20"
-                        >
-                            {isEmailLoading ? (
-                                <div className="flex items-center justify-center gap-2">
-                                    <div className="size-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                    <span>Creating account...</span>
+                            <button 
+                                type="submit" 
+                                disabled={isOtpLoading || otp.length !== 6}
+                                className="w-full py-3.5 px-6 bg-emerald-600 text-white rounded-xl font-semibold text-sm transition-all hover:bg-emerald-700 hover:scale-[1.02] active:scale-95 disabled:opacity-70 disabled:pointer-events-none shadow-sm shadow-emerald-600/20 mt-6"
+                            >
+                                {isOtpLoading ? (
+                                    <div className="flex items-center justify-center gap-2">
+                                        <div className="size-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                        <span>Verifying...</span>
+                                    </div>
+                                ) : "Verify Email"}
+                            </button>
+                            
+                            <button 
+                                type="button"
+                                onClick={() => setShowOtpInput(false)}
+                                className="w-full mt-3 py-2 text-sm text-slate-500 hover:text-slate-700 transition-colors"
+                            >
+                                Back to sign up
+                            </button>
+                        </form>
+                    ) : (
+                        <>
+                            <form onSubmit={handleEmailRegister} className="space-y-4 text-left">
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">Username</label>
+                                    <div className="relative">
+                                        <User className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-slate-400" />
+                                        <input 
+                                            type="text" 
+                                            value={username}
+                                            onChange={(e) => setUsername(e.target.value)}
+                                            placeholder="Choose a username"
+                                            required
+                                            className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all outline-none text-sm text-slate-700"
+                                        />
+                                    </div>
+                                    <p className="mt-1 text-[10px] text-slate-400">Alphanumeric, underscores, hyphens only.</p>
                                 </div>
-                            ) : "Create Account"}
-                        </button>
-                    </form>
 
-                    <div className="flex items-center gap-3 my-6">
-                        <div className="h-px bg-slate-200 flex-1"></div>
-                        <span className="text-xs text-slate-400 font-medium">or continue with</span>
-                        <div className="h-px bg-slate-200 flex-1"></div>
-                    </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
+                                    <div className="relative">
+                                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-slate-400" />
+                                        <input 
+                                            type="email" 
+                                            value={email}
+                                            onChange={(e) => setEmail(e.target.value)}
+                                            placeholder="Enter your email"
+                                            required
+                                            className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all outline-none text-sm text-slate-700"
+                                        />
+                                    </div>
+                                </div>
 
-                    <GoogleAuthButton
-                        onClick={handleGoogleAuth}
-                        disabled={isGoogleLoading || isEmailLoading}
-                        isLoading={isGoogleLoading}
-                    />
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">Password</label>
+                                    <div className="relative">
+                                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-slate-400" />
+                                        <input 
+                                            type={showPassword ? "text" : "password"} 
+                                            value={password}
+                                            onChange={(e) => setPassword(e.target.value)}
+                                            placeholder="Create a strong password"
+                                            required
+                                            className="w-full pl-10 pr-10 py-3 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all outline-none text-sm text-slate-700"
+                                        />
+                                        <button 
+                                            type="button"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-emerald-600 transition-colors focus:outline-none"
+                                        >
+                                            {showPassword ? <EyeOff className="size-5" /> : <Eye className="size-5" />}
+                                        </button>
+                                    </div>
+                                    {password.length > 0 && (
+                                        <div className="mt-2 space-y-1">
+                                            <p className={`text-[10px] flex items-center gap-1 ${hasLength ? 'text-emerald-600' : 'text-red-500'}`}>
+                                                {hasLength ? <Check className="size-3" /> : <X className="size-3" />} At least 8 characters
+                                            </p>
+                                            <p className={`text-[10px] flex items-center gap-1 ${hasUpper && hasLower ? 'text-emerald-600' : 'text-red-500'}`}>
+                                                {hasUpper && hasLower ? <Check className="size-3" /> : <X className="size-3" />} Uppercase and lowercase letters
+                                            </p>
+                                            <p className={`text-[10px] flex items-center gap-1 ${hasNumber ? 'text-emerald-600' : 'text-red-500'}`}>
+                                                {hasNumber ? <Check className="size-3" /> : <X className="size-3" />} At least 1 number
+                                            </p>
+                                            <p className={`text-[10px] flex items-center gap-1 ${hasSpecial ? 'text-emerald-600' : 'text-red-500'}`}>
+                                                {hasSpecial ? <Check className="size-3" /> : <X className="size-3" />} At least 1 special character (@$!%*?&._-)
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
 
-                    <p className="mt-8 text-xs text-slate-400">
-                        By signing up, you agree to our <Link href="/rules" className="text-emerald-600 hover:underline font-medium">Rules &amp; Liability Policy</Link>.
-                    </p>
-                    <p className="mt-3 text-xs text-slate-400">
-                        Already have an account?{" "}
-                        <Link href="/login" className="text-emerald-600 hover:text-emerald-700 font-medium">Log In</Link>
-                    </p>
+                                <button 
+                                    type="submit" 
+                                    disabled={isEmailLoading || isGoogleLoading || (password.length > 0 && !isPasswordValid)}
+                                    className="w-full py-3.5 px-6 bg-emerald-600 text-white rounded-xl font-semibold text-sm transition-all hover:bg-emerald-700 hover:scale-[1.02] active:scale-95 disabled:opacity-70 disabled:pointer-events-none shadow-sm shadow-emerald-600/20 mt-4"
+                                >
+                                    {isEmailLoading ? (
+                                        <div className="flex items-center justify-center gap-2">
+                                            <div className="size-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                            <span>Creating account...</span>
+                                        </div>
+                                    ) : "Create Account"}
+                                </button>
+                            </form>
+
+                            <div className="flex items-center gap-3 my-6">
+                                <div className="h-px bg-slate-200 flex-1"></div>
+                                <span className="text-xs text-slate-400 font-medium">or continue with</span>
+                                <div className="h-px bg-slate-200 flex-1"></div>
+                            </div>
+
+                            <GoogleAuthButton
+                                onClick={handleGoogleAuth}
+                                disabled={isGoogleLoading || isEmailLoading}
+                                isLoading={isGoogleLoading}
+                            />
+
+                            <p className="mt-8 text-xs text-slate-400">
+                                By signing up, you agree to our <Link href="/rules" className="text-emerald-600 hover:underline font-medium">Rules &amp; Liability Policy</Link>.
+                            </p>
+                            <p className="mt-3 text-xs text-slate-400">
+                                Already have an account?{" "}
+                                <Link href="/login" className="text-emerald-600 hover:text-emerald-700 font-medium">Log In</Link>
+                            </p>
+                        </>
+                    )}
                 </div>
             </div>
         </div>
