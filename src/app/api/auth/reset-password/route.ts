@@ -23,8 +23,9 @@ export async function POST(request: Request) {
         const cookieStore = await cookies();
         const supabase = createClient(cookieStore);
 
+        const origin = new URL(request.url).origin;
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
-            redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/auth/callback?next=/update-password`,
+            redirectTo: `${origin}/api/auth/callback?next=/update-password`,
         });
 
         // We always return success regardless of whether the email exists or if there's an error,
