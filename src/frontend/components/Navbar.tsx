@@ -119,8 +119,15 @@ export default function Navbar() {
         };
 
         fetchNotifications();
-        const intervalId = setInterval(fetchNotifications, 60000);
-        return () => clearInterval(intervalId);
+        const channel = supabase.channel('public:notifications')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications' }, () => {
+                fetchNotifications();
+            })
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
     }, [loading, user, dbRole]);
 
     const markAsRead = async (id: string) => {
@@ -241,45 +248,37 @@ export default function Navbar() {
                                     <div className="absolute right-0 mt-4 w-[360px] md:w-[420px] bg-white/95 backdrop-blur-xl border border-slate-200/60 rounded-2xl shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] z-50 overflow-hidden animate-in fade-in zoom-in-95 slide-in-from-top-4 duration-200 ease-out">
                                         <div className="px-5 py-4 border-b border-slate-100/50 bg-white/50 flex justify-between items-center">
                                             <h3 className="text-base font-bold text-slate-900 tracking-tight">Notifications</h3>
-                                            <button className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 transition-colors">Mark all as read</button>
+                                            <button onClick={markAllAsRead} className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 transition-colors">Mark all as read</button>
                                         </div>
                                         <div className="flex flex-col max-h-[400px] overflow-y-auto">
-                                            {/* Example 1: Meeting Started (Unread) */}
-                                            <div className="p-5 flex gap-4 hover:bg-slate-50/80 transition-colors cursor-pointer relative bg-white/40 border-b border-slate-50/50 group">
-                                                <div className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]"></div>
-                                                <div className="flex-shrink-0 mt-0.5">
-                                                    <div className="size-10 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
-                                                        <Video className="size-5" />
-                                                    </div>
-                                                </div>
-                                                <div className="flex-1">
-                                                    <div className="flex justify-between items-start mb-1">
-                                                        <h4 className="text-sm font-bold text-slate-900">Meeting Started</h4>
-                                                        <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">Now</span>
-                                                    </div>
-                                                    <p className="text-sm text-slate-500 leading-snug">The quarterly review meeting has started.</p>
-                                                    <button className="mt-3 w-full py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-lg transition-colors shadow-sm">
-                                                        Join Meeting
-                                                    </button>
-                                                </div>
-                                            </div>
-
-                                            {/* Example 2: Meeting Scheduled (Read) */}
-                                            <div className="p-5 flex gap-4 hover:bg-slate-50/80 transition-colors cursor-pointer bg-white/40 group">
-                                                <div className="absolute left-0 top-0 bottom-0 w-1 bg-transparent"></div>
-                                                <div className="flex-shrink-0 mt-0.5">
-                                                    <div className="size-10 bg-slate-100 text-slate-500 rounded-xl flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
-                                                        <Calendar className="size-5" />
-                                                    </div>
-                                                </div>
-                                                <div className="flex-1">
-                                                    <div className="flex justify-between items-start mb-1">
-                                                        <h4 className="text-sm font-bold text-slate-700">Meeting Scheduled</h4>
-                                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">2h ago</span>
-                                                    </div>
-                                                    <p className="text-sm text-slate-500 leading-snug">Project kick-off scheduled for tomorrow at 10:00 AM.</p>
-                                                </div>
-                                            </div>
+                                            {notifications.length === 0 ? (
+                                                <div className="p-6 text-center text-slate-500 text-sm">No notifications available.</div>
+                                            ) : (
+                                                notifications.map(n => {
+                                                    const isUnread = !n.is_read;
+                                                    let Icon = Bell;
+                                                    if (n.title?.toLowerCase().includes('meeting') || n.type === 'meeting') Icon = Video;
+                                                    else if (n.title?.toLowerCase().includes('schedule')) Icon = Calendar;
+                                                    
+                                                    return (
+                                                        <div key={n.id} onClick={() => { if(isUnread) markAsRead(n.id); if(n.link) router.push(n.link); }} className="p-5 flex gap-4 hover:bg-slate-50/80 transition-colors cursor-pointer relative bg-white/40 border-b border-slate-50/50 group">
+                                                            <div className={`absolute left-0 top-0 bottom-0 w-1 ${isUnread ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-transparent'}`}></div>
+                                                            <div className="flex-shrink-0 mt-0.5">
+                                                                <div className={`size-10 rounded-xl flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform ${isUnread ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-100 text-slate-500'}`}>
+                                                                    <Icon className="size-5" />
+                                                                </div>
+                                                            </div>
+                                                            <div className="flex-1">
+                                                                <div className="flex justify-between items-start mb-1">
+                                                                    <h4 className={`text-sm font-bold ${isUnread ? 'text-slate-900' : 'text-slate-700'}`}>{n.title}</h4>
+                                                                    <span className={`text-[10px] font-bold uppercase tracking-widest ${isUnread ? 'text-emerald-600' : 'text-slate-400'}`}>{formatRelativeTime(new Date(n.created_at))}</span>
+                                                                </div>
+                                                                <p className="text-sm text-slate-500 leading-snug">{n.description}</p>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })
+                                            )}
                                         </div>
                                         <div className="p-3 border-t border-slate-100/50 bg-slate-50/50 text-center">
                                             <Link href="/notifications" className="text-xs font-bold text-slate-500 hover:text-slate-800 transition-colors">
