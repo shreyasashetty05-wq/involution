@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from "@supabase/supabase-js";
 import { isAdmin } from "@/utils/supabase/server";
+import { sendRoleBasedWelcomeEmail } from "@/utils/email";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -73,6 +74,22 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
                             credibility: { ...(st.credibility || {}), panVerified: true }
                         })
                         .eq("id", st.id);
+                }
+            }
+
+            // Send welcome email if not sent yet
+            if (doc.welcome_email_sent !== true) {
+                try {
+                    const emailSent = await sendRoleBasedWelcomeEmail(doc.email, doc.name || 'User', doc.type || 'Startup Founder');
+                    if (emailSent) {
+                        // update DB to prevent duplicates
+                        await supabase
+                            .from("kyc_documents")
+                            .update({ welcome_email_sent: true })
+                            .eq("id", id);
+                    }
+                } catch (emailError) {
+                    console.error("Non-blocking error: Failed to send welcome email:", emailError);
                 }
             }
         } else if (body.status === 'MoreInfo') {

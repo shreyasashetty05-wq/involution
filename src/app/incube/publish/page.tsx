@@ -114,7 +114,7 @@ export default function IncubationForm() {
     // Initial Form State
     const [formData, setFormData] = useState({
         // Section 1
-        founderPhoto: null as File | null, founderPhotoPreview: "",
+        founderPhoto: null as File | null, founderPhotoPreview: "", founderPhotoUrl: "",
         fullName: "", email: "", phoneNumber: "", city: "", state: "",
         shortBio: "", linkedinUrl: "", githubUrl: "",
         teamMembers: [] as { photo: File | null, photoPreview: string, name: string, role: string, bio: string }[],
@@ -196,8 +196,11 @@ export default function IncubationForm() {
                         });
 
                         // 3. Handle Special Overrides (Media, Arrays, Defaults)
-                        if (mappedData.founderPhotoUrl) newState.founderPhotoPreview = mappedData.founderPhotoUrl;
-                        if (mappedData.ideaLogoUrl) newState.ideaLogoPreview = mappedData.ideaLogoUrl;
+                        if (mappedData.founderPhotoUrl) {
+                            newState.founderPhotoPreview = mappedData.founderPhotoUrl;
+                            newState.founderPhotoUrl = mappedData.founderPhotoUrl;
+                        }
+                        if (mappedData.ideaLogoUrl) newState.ideaLogoUrl = mappedData.ideaLogoUrl;
                         
                         if (mappedData.teamMembers && mappedData.teamMembers.length > 0) {
                             newState.teamMembers = mappedData.teamMembers.map((t: any) => ({
