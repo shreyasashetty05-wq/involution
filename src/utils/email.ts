@@ -146,7 +146,7 @@ export const sendRoleBasedWelcomeEmail = async (email: string, name: string, rol
     try {
         let subject = "Welcome to InVolution";
         let html = "";
-        
+
         const type = roleType.toLowerCase();
 
         if (type.includes("startup") || type === "startup founder") {
@@ -165,7 +165,7 @@ export const sendRoleBasedWelcomeEmail = async (email: string, name: string, rol
         }
 
         const data = await resend.emails.send({
-            from: 'InVolution <welcome@involution.in>', // Use an authorized domain. Users might need to change this if they haven't verified involution.in on Resend.
+            from: "onboarding@resend.dev",
             to: [email],
             subject: subject,
             html: html,

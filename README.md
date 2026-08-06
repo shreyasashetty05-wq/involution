@@ -10,6 +10,7 @@
 - **Encrypted Deal Room**: A 5-phase investment lifecycle environment featuring PII masking, integrated meeting scheduling, and deal negotiation tools.
 - **Incubation & Applications**: Dedicated flows for startups to apply for incubation and get discovered by top-tier incubators.
 - **In-Platform Communication**: Real-time shared chats and notifications connecting founders and investors directly.
+- **Automated Role-Based Emails**: Integrated with Resend to automatically send customized, responsive HTML welcome emails to Startups, Investors, and Incubation candidates upon KYC approval.
 
 ## 🛠 Tech Stack
 
@@ -27,6 +28,7 @@
 - [Google GenAI](https://ai.google.dev/) (Gemini AI integration)
 - [NextAuth](https://next-auth.js.org/) (Authentication)
 - [Zod](https://zod.dev/) (Schema Validation)
+- [Resend](https://resend.com/) (Email Delivery)
 
 ## 📁 Project Structure
 
@@ -78,6 +80,7 @@ Ensure you have the following installed on your local machine:
    SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
    GEMINI_API_KEY=your_google_gemini_api_key
    NEXTAUTH_SECRET=your_nextauth_secret
+   RESEND_API_KEY=your_resend_api_key
    # Add any other required keys (e.g. NextAuth URL)
    ```
 
