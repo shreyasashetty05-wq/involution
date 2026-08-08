@@ -121,6 +121,8 @@ export async function updateSession(request: NextRequest) {
     let rawRole = user.user_metadata?.role;
     if (dbRole === "admin") {
         rawRole = "admin";
+    } else if (dbRole === "mentor") {
+        rawRole = "mentor";
     } else if (!rawRole && dbRole) {
         rawRole = dbRole;
     }
@@ -168,8 +170,8 @@ export async function updateSession(request: NextRequest) {
         }
     }
 
-    // KYC Check applies to all non-admin roles
-    if (role !== "admin") {
+    // KYC Check applies to all non-admin/mentor roles
+    if (role !== "admin" && role !== "mentor") {
         const isProtectedAppRoute = path.startsWith("/investors") || path.startsWith("/startups") || path.startsWith("/incube") || path.startsWith("/mentors");
         
         if (!kycDone && isProtectedAppRoute) {

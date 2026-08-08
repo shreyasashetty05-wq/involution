@@ -194,11 +194,14 @@ export default function Navbar() {
                     {isAuthenticated ? (
                         role === "admin" ? (
                             <>
-                                <Link href="/admin/kyc" className="hover:text-emerald-700 transition-colors font-bold text-emerald-600">Admin Panel</Link>
+                                <Link href="/admin/kyc" className="hover:text-emerald-700 transition-colors font-bold text-emerald-600">KYC Verification</Link>
                                 <Link href="/admin/financial-verification" className="hover:text-emerald-700 transition-colors font-bold text-emerald-600">Financial Verification</Link>
                                 <Link href="/admin/investors" className="hover:text-emerald-700 transition-colors font-bold text-emerald-600">Investor Verification</Link>
-                                <Link href="/admin/users" className="hover:text-emerald-700 transition-colors">Users</Link>
-                                <Link href="/admin/knowledge" className="hover:text-emerald-700 transition-colors font-bold text-emerald-600">Manage Knowledge Hub</Link>
+                            </>
+                        ) : role === "mentor" ? (
+                            <>
+                                <Link href="/mentors/dashboard" className="hover:text-emerald-700 transition-colors">Mentor Dashboard</Link>
+                                <Link href="/mentors/manage-knowledge" className="hover:text-emerald-700 transition-colors font-bold text-emerald-600">Manage Knowledge Hub</Link>
                             </>
                         ) : role === "investor" ? (
                             <>
@@ -218,8 +221,8 @@ export default function Navbar() {
                         </>
                     )}
 
-                    {isAuthenticated && (
-                        <Link href="/knowledge" className="hover:text-emerald-700 transition-colors font-bold">Knowledge Hub</Link>
+                    {isAuthenticated && role === "mentor" && (
+                        <Link href="/mentors/knowledge-hub" className="hover:text-emerald-700 transition-colors font-bold">Knowledge Hub</Link>
                     )}
 
                     <Link href="/rules" className="hover:text-emerald-700 transition-colors">Rules & FAQ</Link>
@@ -334,11 +337,14 @@ export default function Navbar() {
                     {isAuthenticated ? (
                         role === "admin" ? (
                             <>
-                                <Link href="/admin/kyc" className="hover:text-emerald-700 transition-colors font-bold text-emerald-600" onClick={() => setIsMobileMenuOpen(false)}>Admin Panel</Link>
+                                <Link href="/admin/kyc" className="hover:text-emerald-700 transition-colors font-bold text-emerald-600" onClick={() => setIsMobileMenuOpen(false)}>KYC Verification</Link>
                                 <Link href="/admin/financial-verification" className="hover:text-emerald-700 transition-colors font-bold text-emerald-600" onClick={() => setIsMobileMenuOpen(false)}>Financial Verification</Link>
                                 <Link href="/admin/investors" className="hover:text-emerald-700 transition-colors font-bold text-emerald-600" onClick={() => setIsMobileMenuOpen(false)}>Investor Verification</Link>
-                                <Link href="/admin/users" className="hover:text-emerald-700 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>Users</Link>
-                                <Link href="/admin/knowledge" className="hover:text-emerald-700 transition-colors font-bold text-emerald-600" onClick={() => setIsMobileMenuOpen(false)}>Manage Knowledge Hub</Link>
+                            </>
+                        ) : role === "mentor" ? (
+                            <>
+                                <Link href="/mentors/dashboard" className="hover:text-emerald-700 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>Mentor Dashboard</Link>
+                                <Link href="/mentors/manage-knowledge" className="hover:text-emerald-700 transition-colors font-bold text-emerald-600" onClick={() => setIsMobileMenuOpen(false)}>Manage Knowledge Hub</Link>
                             </>
                         ) : role === "investor" ? (
                             <>
@@ -358,8 +364,8 @@ export default function Navbar() {
                         </>
                     )}
 
-                    {isAuthenticated && (
-                        <Link href="/knowledge" className="hover:text-emerald-700 transition-colors font-bold" onClick={() => setIsMobileMenuOpen(false)}>Knowledge Hub</Link>
+                    {isAuthenticated && role === "mentor" && (
+                        <Link href="/mentors/knowledge-hub" className="hover:text-emerald-700 transition-colors font-bold" onClick={() => setIsMobileMenuOpen(false)}>Knowledge Hub</Link>
                     )}
 
                     <Link href="/rules" className="hover:text-emerald-700 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>Rules & FAQ</Link>

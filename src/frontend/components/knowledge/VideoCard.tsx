@@ -15,7 +15,7 @@ export default function VideoCard({ video, watchHistory }: VideoCardProps) {
     const thumbnailUrl = video.thumbnail_url || (videoId ? getYouTubeThumbnail(videoId) : null);
 
     return (
-        <Link href={`/knowledge/${video.id}`} className="group flex flex-col bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+        <Link href={`/mentors/knowledge-hub/${video.id}`} className="group flex flex-col bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
             <div className="relative aspect-video bg-slate-100 overflow-hidden">
                 {thumbnailUrl ? (
                     <Image 

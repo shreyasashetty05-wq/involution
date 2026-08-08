@@ -41,7 +41,7 @@ export default function AdminKnowledgeHubPage() {
                     <p className="text-slate-500 mt-1">Manage educational videos and categories.</p>
                 </div>
                 <Link 
-                    href="/admin/knowledge/upload" 
+                    href="/mentors/manage-knowledge/upload" 
                     className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-sm transition-colors"
                 >
                     <Plus className="size-5" />
@@ -131,7 +131,7 @@ export default function AdminKnowledgeHubPage() {
                                         <td className="p-4 font-semibold text-slate-700">{video.views.toLocaleString()}</td>
                                         <td className="p-4 text-right">
                                             <div className="flex items-center justify-end gap-2">
-                                                <Link href={`/knowledge/${video.id}`} target="_blank" className="p-2 text-slate-400 hover:text-emerald-600 transition-colors" title="View">
+                                                <Link href={`/mentors/knowledge-hub/${video.id}`} target="_blank" className="p-2 text-slate-400 hover:text-emerald-600 transition-colors" title="View">
                                                     <Eye className="size-4" />
                                                 </Link>
                                                 <button onClick={() => handleDelete(video.id)} className="p-2 text-slate-400 hover:text-rose-600 transition-colors" title="Delete">

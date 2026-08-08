@@ -97,7 +97,7 @@ export default function KnowledgeVideoPage() {
         return (
             <div className="min-h-screen bg-slate-50 pt-24 px-4 flex flex-col items-center">
                 <h2 className="text-2xl font-bold text-slate-900 mb-4">Video not found</h2>
-                <button onClick={() => router.push('/knowledge')} className="text-emerald-600 hover:underline">
+                <button onClick={() => router.push('/mentors/knowledge-hub')} className="text-emerald-600 hover:underline">
                     Back to Knowledge Hub
                 </button>
             </div>
@@ -107,7 +107,7 @@ export default function KnowledgeVideoPage() {
     return (
         <div className="min-h-screen bg-slate-50 pt-24 pb-12 px-4 md:px-8">
             <div className="max-w-6xl mx-auto">
-                <Link href="/knowledge" className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-slate-900 transition-colors mb-6">
+                <Link href="/mentors/knowledge-hub" className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-slate-900 transition-colors mb-6">
                     <ArrowLeft className="size-4" />
                     Back to Knowledge Hub
                 </Link>

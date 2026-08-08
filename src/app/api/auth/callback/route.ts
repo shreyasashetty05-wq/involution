@@ -46,9 +46,19 @@ export async function GET(request: Request) {
                     .eq("email", user.email)
                     .maybeSingle();
 
+                // Check if they are a mentor
+                const { data: mentorData } = await supabase
+                    .from("mentor_emails")
+                    .select("email")
+                    .ilike("email", user.email)
+                    .maybeSingle();
+
                 if (roleData?.role === "admin") {
                     currentRole = "admin";
                     role = "admin";
+                } else if (mentorData?.email) {
+                    currentRole = "mentor";
+                    role = "mentor";
                 }
 
                 // Check if they already have a KYC record
@@ -72,6 +82,8 @@ export async function GET(request: Request) {
                 let finalRole = currentRole;
                 if (roleData?.role === "admin") {
                     finalRole = "admin";
+                } else if (mentorData?.email) {
+                    finalRole = "mentor";
                 } else if (isNewUser) {
                     // User hasn't finished onboarding. Always honor their latest selection.
                     finalRole = role;
@@ -97,8 +109,11 @@ export async function GET(request: Request) {
                                  redirectRole === "mentor" ? "/mentors/dashboard" :
                                  "/investors/dashboard";
                 
+                
                 if (redirectRole === "admin") {
                     redirectPath = "/admin/kyc";
+                } else if (redirectRole === "mentor") {
+                    redirectPath = "/mentors/dashboard";
                 }
 
                 console.log(`[Auth Callback] Redirecting user ${user.email} (Role: ${redirectRole}) to ${redirectPath}`);
