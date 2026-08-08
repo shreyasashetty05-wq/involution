@@ -70,7 +70,7 @@ export default function AboutPage() {
 
                             <div className="mt-8 flex justify-between items-center mb-6">
                                 <div className="flex items-center gap-2">
-                                    <Image src="/logo.svg" alt="InVolution Logo" width={24} height={24} className="size-6 object-contain" />
+                                    <Image src="/logo.jpg" alt="InVolution Logo" width={120} height={32} className="h-8 w-auto object-contain" />
                                     <span className="font-bold text-sm">Portfolio</span>
                                 </div>
                             </div>

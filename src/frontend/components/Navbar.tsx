@@ -184,8 +184,7 @@ export default function Navbar() {
             <div className="container mx-auto flex items-center justify-between">
                 {/* Logo */}
                 <Link href="/" className="font-outfit text-lg font-bold tracking-tight flex items-center gap-2.5 text-slate-900">
-                    <Image src="/logo.svg" alt="InVolution Logo" width={30} height={30} className="size-7 object-contain" />
-                    <span>InVolution</span>
+                    <Image src="/logo.jpg" alt="InVolution Logo" width={300} height={80} className="h-16 w-auto object-contain" priority />
                 </Link>
 
                 {/* Nav links */}
