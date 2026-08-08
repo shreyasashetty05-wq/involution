@@ -188,7 +188,7 @@ export default function StartupDashboardClient({ myStartups }: StartupDashboardC
                             </div>
 
                             {/* Main Statistics Row */}
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                                 <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
                                     <div className="absolute -right-4 -top-4 p-4 opacity-10 group-hover:scale-110 transition-transform"><Eye className="size-24 text-blue-500" /></div>
                                     <div className="size-10 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mb-4 relative z-10 border border-blue-100"><Eye className="size-5" /></div>
@@ -215,7 +215,7 @@ export default function StartupDashboardClient({ myStartups }: StartupDashboardC
                                 </div>
                             </div>
 
-                            <div className="grid lg:grid-cols-3 gap-6">
+                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                                 {/* Left Column: Actionable Cards */}
                                 <div className="lg:col-span-2 space-y-6">
                                     
@@ -236,7 +236,7 @@ export default function StartupDashboardClient({ myStartups }: StartupDashboardC
                                             )}
                                         </div>
 
-                                        <div className="p-6 md:p-8 grid md:grid-cols-3 gap-6 border-b border-slate-800">
+                                        <div className="p-6 md:p-8 grid grid-cols-1 md:grid-cols-3 gap-6 border-b border-slate-800">
                                             {/* Score Ring */}
                                             <div className="bg-[#172033] border border-slate-800 rounded-2xl p-6 flex flex-col items-center justify-center">
                                                 <div className="relative size-40 flex items-center justify-center mb-6">
@@ -267,7 +267,7 @@ export default function StartupDashboardClient({ myStartups }: StartupDashboardC
                                                         {myStartup.ai_executive_summary || "No executive summary generated yet. Continue updating your profile to unlock this feature."}
                                                     </p>
                                                 </div>
-                                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-8">
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-8">
                                                     <div className="bg-[#111827] border border-slate-800 rounded-xl p-4 flex flex-col justify-center">
                                                         <p className="text-[10px] text-slate-400 uppercase font-bold mb-2 flex items-center justify-center gap-1.5"><ShieldCheck className="size-3 text-emerald-500" /> Investment<br/>Readiness</p>
                                                         <p className="text-sm font-bold text-emerald-400 text-center">{myStartup.ai_investment_readiness || 'Ready'}</p>
@@ -294,7 +294,7 @@ export default function StartupDashboardClient({ myStartups }: StartupDashboardC
                                                 <Activity className="size-5 text-indigo-400" /> Score Breakdown
                                             </h3>
                                             
-                                            <div className="grid md:grid-cols-2 gap-x-12 gap-y-6">
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
                                                 {[
                                                     { label: 'Founder & Team', key: 'founderAndTeam', max: 15, icon: <ShieldCheck className="size-4 text-emerald-400" /> },
                                                     { label: 'Business Idea', key: 'businessIdea', max: 20, icon: <Lightbulb className="size-4 text-yellow-400" /> },
@@ -315,7 +315,7 @@ export default function StartupDashboardClient({ myStartups }: StartupDashboardC
 
                                                     return (
                                                         <div key={idx} className="flex items-center justify-between gap-4">
-                                                            <div className="flex items-center gap-3 w-48">
+                                                            <div className="flex items-center gap-3 w-32 sm:w-48">
                                                                 {config.icon}
                                                                 <span className="text-sm font-medium text-slate-300 truncate">{config.label}</span>
                                                             </div>
@@ -348,7 +348,7 @@ export default function StartupDashboardClient({ myStartups }: StartupDashboardC
                                         </div>
 
                                         {dynamicFinancials.hasVerifiedData ? (
-                                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                                                 <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl">
                                                     <p className="text-[10px] uppercase font-bold text-slate-400 mb-1">Latest Revenue</p>
                                                     <p className="text-xl font-bold font-mono text-emerald-600">{formatCurrency(dynamicFinancials.monthlyRevenue)}</p>

@@ -178,7 +178,7 @@ export default function PortfolioWorkspace() {
                                 <p className="text-slate-600 leading-relaxed">{startup.desc}</p>
                             </div>
                             
-                            <div className="grid md:grid-cols-3 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100">
                                     <p className="text-xs uppercase font-bold text-slate-400 mb-1">Business Model</p>
                                     <p className="font-bold text-slate-800">{startup.business_model || 'N/A'}</p>

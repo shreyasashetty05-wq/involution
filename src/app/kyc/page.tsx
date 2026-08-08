@@ -331,7 +331,7 @@ export default function KYCSubmitPage() {
                             </p>
                         </div>
 
-                        <div className="grid md:grid-cols-2 gap-8">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             <div className="space-y-3">
                                 <label className="block text-sm font-semibold text-slate-700 font-inter">Aadhaar Number *</label>
                                 <input
@@ -371,7 +371,7 @@ export default function KYCSubmitPage() {
                             <button
                                 type="submit"
                                 disabled={status === "uploading" || status === "submitting" || !verifiedA || !verifiedP || !legalName.trim()}
-                                className="px-8 py-3 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-700 transition-all flex items-center justify-center min-w-[200px] gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow"
+                                className="px-8 py-3 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-700 transition-all flex items-center justify-center w-full sm:w-auto min-w-[200px] gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow"
                             >
                                 {status === "uploading" ? (
                                     <><Loader2 className="size-5 animate-spin" /> Uploading...</>
@@ -383,7 +383,7 @@ export default function KYCSubmitPage() {
                             </button>
                         </div>
                         
-                        <div className="flex items-center justify-center gap-8 pt-4 pb-2 text-xs font-semibold text-slate-400">
+                        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-8 pt-4 pb-2 text-xs font-semibold text-slate-400">
                             <span className="flex items-center gap-1.5"><Lock className="size-4" /> End-to-End Encrypted</span>
                             <span className="flex items-center gap-1.5"><ShieldCheck className="size-4" /> Admin Only Access</span>
                             <span className="flex items-center gap-1.5"><FileText className="size-4" /> Secure Document Storage</span>

@@ -23,7 +23,7 @@ export default function GlobalChatbot() {
     }
 
     return (
-        <div className="fixed bottom-6 right-6 z-[9999] flex flex-col items-end gap-4 pointer-events-none">
+        <div className="fixed bottom-4 right-4 md:bottom-6 md:right-6 z-[9999] flex flex-col items-end gap-4 pointer-events-none">
             <AnimatePresence>
                 {isOpen && (
                     <motion.div
@@ -31,7 +31,7 @@ export default function GlobalChatbot() {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 20, scale: 0.95 }}
                         transition={{ duration: 0.2 }}
-                        className="w-[90vw] md:w-[400px] h-[600px] max-h-[80vh] pointer-events-auto shadow-2xl rounded-[24px]"
+                        className="w-[calc(100vw-2rem)] sm:w-[400px] h-[600px] max-h-[80vh] pointer-events-auto shadow-2xl rounded-[24px]"
                     >
                         <AIChat startupId={startupId} />
                     </motion.div>

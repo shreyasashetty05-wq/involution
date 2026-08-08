@@ -251,7 +251,7 @@ export function SmartAgreementTab({
                     </div>
                 </div>
 
-                <div className="grid lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* Left Col: Summary & Signatures */}
                     <div className="lg:col-span-2 space-y-6">
                         
@@ -262,7 +262,7 @@ export function SmartAgreementTab({
                                 Agreement Summary
                             </h3>
                             {deal && (
-                                <div className="grid grid-cols-2 md:grid-cols-3 gap-y-6 gap-x-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-y-6 gap-x-4">
                                     <div>
                                         <p className="text-xs text-slate-500 font-bold uppercase tracking-wider mb-1">Founder Name</p>
                                         <p className="font-semibold text-slate-800">{fetchedFounderName}</p>

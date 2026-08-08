@@ -127,7 +127,7 @@ export default function MyPortfolioPage() {
                                 </div>
                             </div>
                             
-                            <div className="grid grid-cols-2 gap-3 mb-6 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6 bg-slate-50 p-3 rounded-xl border border-slate-100">
                                 <div>
                                     <p className="text-[10px] uppercase font-bold text-slate-400 mb-0.5">Raised</p>
                                     <p className="font-mono font-bold text-slate-700 text-sm">{formatCurrency(startup.requested)}</p>

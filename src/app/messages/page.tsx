@@ -1107,7 +1107,7 @@ function DealWorkspace() {
                         {activeTab === 'diligence' && currentPhase >= 3 && (
                             <div className="p-6 overflow-y-auto">
                                 <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2 mb-5"><CheckSquare className="text-amber-600 size-5" /> Due Diligence Portal</h2>
-                                <div className="grid md:grid-cols-2 gap-5">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                     <div className="bg-slate-50 border border-slate-200 p-5 rounded-2xl">
                                         <h3 className="text-sm font-semibold text-slate-700 mb-4 pb-2 border-b border-slate-200">Financial Audit Check</h3>
                                         {['Revenue Statements Authenticated', 'Burn Rate Anomalies Cleared', 'Cap Table Verified'].map((l, i) => (

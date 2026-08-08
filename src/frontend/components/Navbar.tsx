@@ -6,7 +6,7 @@ import { createClient } from "@/utils/supabase/client";
 import { useEffect, useState } from "react";
 import { User } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
-import { Bell, Video, Calendar } from "lucide-react";
+import { Bell, Video, Calendar, Menu, X } from "lucide-react";
 import { formatRelativeTime } from "@/utils/timeHelper";
 
 const supabase = createClient();
@@ -20,8 +20,12 @@ export default function Navbar() {
     const [notifications, setNotifications] = useState<any[]>([]);
     const [unreadCount, setUnreadCount] = useState(0);
     const [showNotifications, setShowNotifications] = useState(false);
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
+    // Close mobile menu when route changes
     useEffect(() => {
+        setIsMobileMenuOpen(false);
+    }, [router]);    useEffect(() => {
         const fetchUser = async () => {
             try {
                 const { data, error } = await supabase.auth.getUser();
@@ -245,7 +249,7 @@ export default function Navbar() {
                                     )}
                                 </button>
                                 {showNotifications && (
-                                    <div className="absolute right-0 mt-4 w-[360px] md:w-[420px] bg-white/95 backdrop-blur-xl border border-slate-200/60 rounded-2xl shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] z-50 overflow-hidden animate-in fade-in zoom-in-95 slide-in-from-top-4 duration-200 ease-out">
+                                    <div className="absolute -right-12 sm:right-0 mt-4 w-[calc(100vw-3rem)] sm:w-[360px] md:w-[420px] bg-white/95 backdrop-blur-xl border border-slate-200/60 rounded-2xl shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] z-50 overflow-hidden animate-in fade-in zoom-in-95 slide-in-from-top-4 duration-200 ease-out">
                                         <div className="px-5 py-4 border-b border-slate-100/50 bg-white/50 flex justify-between items-center">
                                             <h3 className="text-base font-bold text-slate-900 tracking-tight">Notifications</h3>
                                             <button onClick={markAllAsRead} className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 transition-colors">Mark all as read</button>
@@ -312,8 +316,67 @@ export default function Navbar() {
                             </Link>
                         </>
                     )}
+
+                    {/* Mobile Menu Toggle */}
+                    <button 
+                        className="md:hidden ml-2 p-2 text-slate-500 hover:text-emerald-600 transition-colors"
+                        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                    >
+                        {isMobileMenuOpen ? <X className="size-6" /> : <Menu className="size-6" />}
+                    </button>
                 </div>
             </div>
+
+            {/* Mobile Menu Overlay */}
+            {isMobileMenuOpen && (
+                <div className="md:hidden absolute top-full left-0 w-full bg-white border-b border-slate-200 shadow-lg animate-in slide-in-from-top-2 flex flex-col items-center py-6 gap-6 text-base font-semibold text-slate-600 z-40 max-h-[calc(100vh-70px)] overflow-y-auto">
+                    <Link href="/about" className="hover:text-emerald-700 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>About</Link>
+                    
+                    {isAuthenticated ? (
+                        role === "admin" ? (
+                            <>
+                                <Link href="/admin/kyc" className="hover:text-emerald-700 transition-colors font-bold text-emerald-600" onClick={() => setIsMobileMenuOpen(false)}>Admin Panel</Link>
+                                <Link href="/admin/financial-verification" className="hover:text-emerald-700 transition-colors font-bold text-emerald-600" onClick={() => setIsMobileMenuOpen(false)}>Financial Verification</Link>
+                                <Link href="/admin/investors" className="hover:text-emerald-700 transition-colors font-bold text-emerald-600" onClick={() => setIsMobileMenuOpen(false)}>Investor Verification</Link>
+                                <Link href="/admin/users" className="hover:text-emerald-700 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>Users</Link>
+                                <Link href="/admin/knowledge" className="hover:text-emerald-700 transition-colors font-bold text-emerald-600" onClick={() => setIsMobileMenuOpen(false)}>Manage Knowledge Hub</Link>
+                            </>
+                        ) : role === "investor" ? (
+                            <>
+                                <Link href="/investors/dashboard" className="hover:text-emerald-700 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>Overview</Link>
+                                <Link href="/investors/portfolio" className="hover:text-emerald-700 transition-colors font-bold text-emerald-600" onClick={() => setIsMobileMenuOpen(false)}>My Portfolio</Link>
+                                <Link href="/investors/search" className="hover:text-emerald-700 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>Startups</Link>
+                                <Link href="/investors/incube" className="hover:text-emerald-700 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>Incube</Link>
+                            </>
+                        ) : (
+                            <Link href="/startups/dashboard" className="hover:text-emerald-700 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>Dashboard</Link>
+                        )
+                    ) : (
+                        <>
+                            <Link href="/startups" className="hover:text-emerald-700 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>Startups</Link>
+                            <Link href="/investors" className="hover:text-emerald-700 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>Investors</Link>
+                            <Link href="/incube" className="hover:text-emerald-700 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>Incube</Link>
+                        </>
+                    )}
+
+                    {isAuthenticated && (
+                        <Link href="/knowledge" className="hover:text-emerald-700 transition-colors font-bold" onClick={() => setIsMobileMenuOpen(false)}>Knowledge Hub</Link>
+                    )}
+
+                    <Link href="/rules" className="hover:text-emerald-700 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>Rules & FAQ</Link>
+
+                    {!isAuthenticated && (
+                        <div className="w-full px-6 flex flex-col gap-3 mt-2 pt-6 border-t border-slate-100">
+                            <Link href="/login" className="w-full text-center text-sm font-semibold text-slate-500 hover:text-emerald-700 transition-colors py-2 bg-slate-50 rounded-xl" onClick={() => setIsMobileMenuOpen(false)}>
+                                Login
+                            </Link>
+                            <Link href="/login" className="w-full text-center text-sm font-semibold bg-emerald-600 text-white px-5 py-2.5 rounded-xl hover:bg-emerald-700 transition-colors shadow-sm" onClick={() => setIsMobileMenuOpen(false)}>
+                                Investor Portal
+                            </Link>
+                        </div>
+                    )}
+                </div>
+            )}
         </nav>
     );
 }

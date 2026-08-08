@@ -271,7 +271,7 @@ export default function IncubeDashboard() {
                         </div>
 
                         {/* 2. Statistics Cards */}
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                             <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
                                 <div className="absolute -right-4 -top-4 p-4 opacity-10 group-hover:scale-110 transition-transform"><Eye className="size-24 text-blue-500" /></div>
                                 <div className="size-10 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mb-4 relative z-10 border border-blue-100"><Eye className="size-5" /></div>
@@ -298,7 +298,7 @@ export default function IncubeDashboard() {
                             </div>
                         </div>
 
-                        <div className="grid lg:grid-cols-3 gap-6">
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                             
                             {/* Left Column */}
                             <div className="lg:col-span-2 space-y-6">
@@ -332,7 +332,7 @@ export default function IncubeDashboard() {
                                                     {application.ai_recommendation || "Your idea shows potential for incubation. Complete your profile and submit a financial update to generate detailed AI insights and matchmaking parameters."}
                                                 </p>
                                                 
-                                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                                                     <div className="bg-white/5 border border-white/10 rounded-xl p-3 backdrop-blur-sm">
                                                         <p className="text-[10px] text-slate-400 uppercase font-bold mb-1">Incubation Readiness</p>
                                                         <p className="text-sm font-bold text-emerald-400">{application.ai_investment_readiness || 'Suitable'}</p>
@@ -359,7 +359,7 @@ export default function IncubeDashboard() {
                                             <Activity className="size-5 text-indigo-400" /> Score Breakdown
                                         </h3>
                                         
-                                        <div className="grid md:grid-cols-2 gap-x-8 gap-y-5">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
                                             {[
                                                 { label: 'Founder Potential', key: 'founderPotential', max: 15, icon: <CheckCircle2 className="size-4 text-emerald-400" /> },
                                                 { label: 'Innovation', key: 'innovation', max: 20, icon: <Lightbulb className="size-4 text-yellow-400" /> },
@@ -511,7 +511,7 @@ export default function IncubeDashboard() {
                                     <div>
                                         <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-3">Use of Funds</p>
                                         {application.fund_utilization && Array.isArray(application.fund_utilization) && application.fund_utilization.length > 0 ? (
-                                            <div className="grid grid-cols-2 gap-2">
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                                 {application.fund_utilization.map((item: string, idx: number) => (
                                                     <div key={idx} className="flex items-center gap-1.5 text-xs font-medium text-slate-600 bg-slate-50 px-2 py-1.5 rounded-lg border border-slate-100">
                                                         <CheckCircle2 className="size-3 text-indigo-400" /> {item}
@@ -569,7 +569,7 @@ export default function IncubeDashboard() {
                             
                             <div className="p-6">
                                 {activeDeals.length > 0 ? (
-                                    <div className="grid md:grid-cols-2 gap-4">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         {activeDeals.map((deal) => (
                                             <div key={deal.id} className="bg-white border border-slate-100 hover:border-blue-200 rounded-2xl p-4 shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
                                                 <div className="flex items-start justify-between mb-4">

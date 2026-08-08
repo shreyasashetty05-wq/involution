@@ -86,7 +86,7 @@ export default function DueDiligencePage() {
                 <div className="grow">
                     <h2 className="text-2xl font-bold text-slate-900 mb-2">Overall Due Diligence Score</h2>
                     <p className="text-slate-500 mb-4 text-sm">Based on financial health (30%), growth metrics (20%), team & credibility (25%), and risk & legal (25%).</p>
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {report.sections?.map((sec: Record<string, unknown>) => (
                             <div key={String(sec.id)} className="bg-white rounded-xl p-3 border border-slate-200">
                                 <p className="text-xs text-slate-500 mb-1">{String(sec.label)}</p>
@@ -103,7 +103,7 @@ export default function DueDiligencePage() {
             </div>
 
             {/* Key Metrics */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-8">
                 {[
                     { label: "MRR", value: `₹${(report.keyMetrics?.revenue / 100000).toFixed(2)}L` },
                     { label: "Monthly Burn", value: `₹${(report.keyMetrics?.burn / 1000).toFixed(0)}K` },

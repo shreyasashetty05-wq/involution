@@ -627,7 +627,7 @@ export default function IncubationForm() {
 
                         <div>
                             <Label required subtitle="(Select all that apply)">Technology Used</Label>
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-y-4 gap-x-6 mt-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-y-4 gap-x-6 mt-4">
                                 {techOptions.map(tech => (
                                     <CheckboxLabel key={tech} label={tech} checked={formData.technologyUsed.includes(tech)} onChange={() => toggleArray('technologyUsed', tech)} />
                                 ))}
@@ -693,7 +693,7 @@ export default function IncubationForm() {
                                 {formData.fundingRequired && (
                                     <div className="p-6 bg-slate-50 border border-slate-200 rounded-2xl space-y-6">
                                         <div><h4 className="text-xs font-bold text-blue-600 uppercase">If Yes, please provide the details below</h4></div>
-                                        <div className="grid grid-cols-2 gap-6">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                             <div>
                                                 <Label required subtitle="Value must be greater than 0">Funding Required (₹)</Label>
                                                 <FormattedNumberInput required value={formData.askAmount} onChange={(e:any)=>updateField('askAmount', e.target.value)} />

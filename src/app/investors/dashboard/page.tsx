@@ -250,7 +250,7 @@ export default function InvestorDashboard() {
                 </div>
             </div>
 
-            <div className="grid lg:grid-cols-3 gap-8 mb-10">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
                 {/* Left Column (Main Content) */}
                 <div className="lg:col-span-2 space-y-8">
                     
@@ -332,7 +332,7 @@ export default function InvestorDashboard() {
                                     </Link>
                                 </div>
                             ) : (
-                                <div className="grid md:grid-cols-2 gap-5">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                     {followedStartups.map(s => {
                                         const approved = getApprovedUpdates(s);
                                         const latestRev = approved.length > 0 ? approved[approved.length - 1].revenue : 0;

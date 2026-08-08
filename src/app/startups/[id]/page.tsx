@@ -393,7 +393,7 @@ export default function StartupProfile() {
                     </h2>
                     <div className="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm flex flex-col md:flex-row gap-12">
                         <div className="flex-1 space-y-6">
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div><p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Industry</p><p className="font-bold text-slate-900">{business_info.industry || "Not Available"}</p></div>
                                 <div><p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Business Model</p><p className="font-bold text-slate-900">{business_info.businessModel || "Not Available"}</p></div>
                                 <div><p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Revenue Model</p><p className="font-bold text-slate-900">{business_info.revenueModel || "Not Available"}</p></div>
@@ -447,7 +447,7 @@ export default function StartupProfile() {
                             <p className="text-slate-500 text-sm max-w-md mx-auto">This startup has not yet submitted or received verification for its monthly financial updates.</p>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
                             <div className="bg-white border border-slate-200 p-4 rounded-2xl shadow-sm text-center relative overflow-hidden group">
                                 <div className="absolute top-0 left-0 w-full h-1 bg-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                                 <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 flex items-center justify-center gap-1">
@@ -542,7 +542,7 @@ export default function StartupProfile() {
                             <ShieldCheck className="size-6 text-emerald-500" /> Verification Badges
                         </h2>
                         <div className="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm h-full">
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 {Object.entries({
                                     'KYC Verified': true,
                                     'GST Registered': credibility?.verification?.gstRegistered || false,
@@ -585,7 +585,7 @@ export default function StartupProfile() {
                                 {risk_disclosure?.previousFundingRaised && (
                                     <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl">
                                         <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Previous Funding Details</p>
-                                        <div className="grid grid-cols-2 gap-4">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             <div>
                                                 <p className="text-[10px] font-bold text-slate-400 uppercase">Amount</p>
                                                 <p className="text-sm font-bold text-slate-900 font-mono">{formatCurrency(risk_disclosure?.fundingAmount)}</p>
@@ -745,7 +745,7 @@ export default function StartupProfile() {
                                     </div>
                                     
                                     <div className="flex-1">
-                                        <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-4">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-4 mb-4">
                                             <div><p className="text-[10px] font-bold text-slate-400 uppercase">Revenue</p><p className="font-bold text-slate-900 font-mono text-sm">{formatCurrency(update.revenue)}</p></div>
                                             <div><p className="text-[10px] font-bold text-slate-400 uppercase">Expenses</p><p className="font-bold text-slate-900 font-mono text-sm">{formatCurrency(update.expenses)}</p></div>
                                             <div><p className="text-[10px] font-bold text-slate-400 uppercase">Profit</p><p className={`font-bold font-mono text-sm ${Number(update.profit) >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>{formatCurrency(update.profit)}</p></div>
