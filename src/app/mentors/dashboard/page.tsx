@@ -12,7 +12,7 @@ export default function MentorDashboard() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl">
                     {/* Knowledge Hub Access */}
-                    <Link href="/mentors/knowledge-hub" className="group bg-white rounded-2xl p-8 border border-slate-200/60 shadow-sm hover:shadow-md transition-all hover:border-emerald-200 flex flex-col">
+                    <Link href="/knowledge-hub" className="group bg-white rounded-2xl p-8 border border-slate-200/60 shadow-sm hover:shadow-md transition-all hover:border-emerald-200 flex flex-col">
                         <div className="size-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                             <BookOpen className="size-6" />
                         </div>

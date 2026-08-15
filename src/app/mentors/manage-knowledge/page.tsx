@@ -131,7 +131,7 @@ export default function AdminKnowledgeHubPage() {
                                         <td className="p-4 font-semibold text-slate-700">{video.views.toLocaleString()}</td>
                                         <td className="p-4 text-right">
                                             <div className="flex items-center justify-end gap-2">
-                                                <Link href={`/mentors/knowledge-hub/${video.id}`} target="_blank" className="p-2 text-slate-400 hover:text-emerald-600 transition-colors" title="View">
+                                                <Link href={`/knowledge-hub/${video.id}`} target="_blank" className="p-2 text-slate-400 hover:text-emerald-600 transition-colors" title="View">
                                                     <Eye className="size-4" />
                                                 </Link>
                                                 <button onClick={() => handleDelete(video.id)} className="p-2 text-slate-400 hover:text-rose-600 transition-colors" title="Delete">

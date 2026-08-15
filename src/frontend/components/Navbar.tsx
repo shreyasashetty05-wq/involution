@@ -221,8 +221,8 @@ export default function Navbar() {
                         </>
                     )}
 
-                    {isAuthenticated && role === "mentor" && (
-                        <Link href="/mentors/knowledge-hub" className="hover:text-emerald-700 transition-colors font-bold">Knowledge Hub</Link>
+                    {isAuthenticated && (
+                        <Link href="/knowledge-hub" className="hover:text-emerald-700 transition-colors font-bold">Knowledge Hub</Link>
                     )}
 
                     <Link href="/rules" className="hover:text-emerald-700 transition-colors">Rules & FAQ</Link>
@@ -364,8 +364,8 @@ export default function Navbar() {
                         </>
                     )}
 
-                    {isAuthenticated && role === "mentor" && (
-                        <Link href="/mentors/knowledge-hub" className="hover:text-emerald-700 transition-colors font-bold" onClick={() => setIsMobileMenuOpen(false)}>Knowledge Hub</Link>
+                    {isAuthenticated && (
+                        <Link href="/knowledge-hub" className="hover:text-emerald-700 transition-colors font-bold" onClick={() => setIsMobileMenuOpen(false)}>Knowledge Hub</Link>
                     )}
 
                     <Link href="/rules" className="hover:text-emerald-700 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>Rules & FAQ</Link>

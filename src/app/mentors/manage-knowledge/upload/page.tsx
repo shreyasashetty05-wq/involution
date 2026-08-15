@@ -108,7 +108,7 @@ export default function UploadVideoPage() {
 
             if (dbError) throw dbError;
 
-            router.push('/admin/knowledge');
+            router.push('/mentors/manage-knowledge');
         } catch (err: any) {
             console.error('Upload Error:', err);
             setError(err.message || 'An error occurred during publishing.');
@@ -118,7 +118,7 @@ export default function UploadVideoPage() {
 
     return (
         <div className="p-8 max-w-5xl mx-auto">
-            <Link href="/admin/knowledge" className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-slate-900 transition-colors mb-6">
+            <Link href="/mentors/manage-knowledge" className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-slate-900 transition-colors mb-6">
                 <ArrowLeft className="size-4" />
                 Back to Knowledge Hub Management
             </Link>
