@@ -197,6 +197,7 @@ export default function Navbar() {
                                 <Link href="/admin/kyc" className="hover:text-emerald-700 transition-colors font-bold text-emerald-600">KYC Verification</Link>
                                 <Link href="/admin/financial-verification" className="hover:text-emerald-700 transition-colors font-bold text-emerald-600">Financial Verification</Link>
                                 <Link href="/admin/investors" className="hover:text-emerald-700 transition-colors font-bold text-emerald-600">Investor Verification</Link>
+                                <Link href="/mentors/manage-knowledge" className="hover:text-emerald-700 transition-colors font-bold text-emerald-600">Manage Knowledge Hub</Link>
                             </>
                         ) : role === "mentor" ? (
                             <>
@@ -340,6 +341,7 @@ export default function Navbar() {
                                 <Link href="/admin/kyc" className="hover:text-emerald-700 transition-colors font-bold text-emerald-600" onClick={() => setIsMobileMenuOpen(false)}>KYC Verification</Link>
                                 <Link href="/admin/financial-verification" className="hover:text-emerald-700 transition-colors font-bold text-emerald-600" onClick={() => setIsMobileMenuOpen(false)}>Financial Verification</Link>
                                 <Link href="/admin/investors" className="hover:text-emerald-700 transition-colors font-bold text-emerald-600" onClick={() => setIsMobileMenuOpen(false)}>Investor Verification</Link>
+                                <Link href="/mentors/manage-knowledge" className="hover:text-emerald-700 transition-colors font-bold text-emerald-600" onClick={() => setIsMobileMenuOpen(false)}>Manage Knowledge Hub</Link>
                             </>
                         ) : role === "mentor" ? (
                             <>

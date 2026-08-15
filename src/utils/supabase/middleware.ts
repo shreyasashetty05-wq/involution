@@ -110,7 +110,7 @@ export async function updateSession(request: NextRequest) {
     }
 
     // Admin dashboard isolation
-    if (dbRole === "admin" && (path.startsWith("/investors") || path.startsWith("/startups") || path.startsWith("/kyc") || path.startsWith("/incube") || path.startsWith("/mentors"))) {
+    if (dbRole === "admin" && (path.startsWith("/investors") || path.startsWith("/startups") || path.startsWith("/kyc") || path.startsWith("/incube") || (path.startsWith("/mentors") && !path.startsWith("/mentors/manage-knowledge")))) {
         const url = request.nextUrl.clone();
         url.pathname = "/admin/kyc";
         return NextResponse.redirect(url);
@@ -163,7 +163,7 @@ export async function updateSession(request: NextRequest) {
 
     // Admin Dashboard Isolation
     if (role === "admin") {
-        if (path.startsWith("/investors") || path.startsWith("/startups") || path.startsWith("/kyc") || path.startsWith("/incube") || path.startsWith("/mentors")) {
+        if (path.startsWith("/investors") || path.startsWith("/startups") || path.startsWith("/kyc") || path.startsWith("/incube") || (path.startsWith("/mentors") && !path.startsWith("/mentors/manage-knowledge"))) {
             const url = request.nextUrl.clone();
             url.pathname = "/admin/kyc";
             return NextResponse.redirect(url);

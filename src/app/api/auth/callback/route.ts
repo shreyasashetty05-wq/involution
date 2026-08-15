@@ -43,14 +43,14 @@ export async function GET(request: Request) {
                 const { data: roleData } = await supabase
                     .from("user_roles")
                     .select("role")
-                    .eq("email", user.email)
+                    .eq("email", user.email || "")
                     .maybeSingle();
 
                 // Check if they are a mentor
                 const { data: mentorData } = await supabase
                     .from("mentor_emails")
                     .select("email")
-                    .ilike("email", user.email)
+                    .ilike("email", user.email || "")
                     .maybeSingle();
 
                 if (roleData?.role === "admin") {
