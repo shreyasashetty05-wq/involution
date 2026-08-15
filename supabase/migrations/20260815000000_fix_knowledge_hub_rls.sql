@@ -15,8 +15,11 @@ BEGIN
 
   RETURN EXISTS (
     SELECT 1 FROM public.user_roles 
-    WHERE email = jwt_email 
+    WHERE LOWER(email) = LOWER(jwt_email) 
     AND role = 'admin'
+  ) OR EXISTS (
+    SELECT 1 FROM public.mentor_emails 
+    WHERE LOWER(email) = LOWER(jwt_email)
   );
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
