@@ -820,6 +820,7 @@ function DealWorkspace() {
                                                 </p>
                                             </div>
                                         </div>
+                                        </div>
                                         <div className="flex items-center gap-1">
                                             <button className="p-2 hover:bg-slate-200 text-slate-500 rounded-full transition-colors" title="Options">
                                                 <MoreVertical className="size-5" />
