@@ -141,7 +141,7 @@ export default function RegisterPage() {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center p-6 relative bg-[#f8faf9] overflow-hidden">
+        <div className="min-h-screen flex items-center justify-center p-4 sm:p-6 relative bg-[#f8faf9] overflow-hidden">
             {/* Soft bg blobs */}
             <div className="absolute top-0 left-0 size-[500px] bg-emerald-50 rounded-full blur-[120px] opacity-60 pointer-events-none" />
             <div className="absolute bottom-0 right-0 size-[400px] bg-emerald-100/40 rounded-full blur-[100px] pointer-events-none" />
@@ -151,7 +151,7 @@ export default function RegisterPage() {
                     <ArrowLeft className="size-4" /> Back to Home
                 </Link>
 
-                <div className="bg-white rounded-3xl shadow-xl border border-slate-200 p-8 md:p-10 text-center relative overflow-hidden">
+                <div className="bg-white rounded-3xl shadow-xl border border-slate-200 p-6 sm:p-8 md:p-10 text-center relative overflow-hidden">
                     {/* Top accent bar */}
                     <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 to-emerald-400" />
 

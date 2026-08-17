@@ -470,7 +470,7 @@ export default function AISearchEngine() {
                                         style={{ animationDelay: `${Math.min(idx * 50, 500)}ms` }}
                                     >
                                         {/* Row 1: Header */}
-                                        <div className="flex gap-4 items-center justify-between">
+                                        <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
                                             <div className="flex items-center gap-4">
                                                 <div className="size-16 rounded-2xl bg-gradient-to-br from-slate-50 to-slate-100 border border-slate-200 shadow-sm flex items-center justify-center overflow-hidden shrink-0">
                                                     {startup.basic_info?.logoUrl ? (
@@ -493,7 +493,7 @@ export default function AISearchEngine() {
                                             </div>
                                             
                                             {/* Badges Right */}
-                                            <div className="flex items-center gap-2 self-start mt-2">
+                                            <div className="flex flex-wrap items-center gap-2 self-start mt-2">
                                                 {approvedUpdates.length > 0 && <span className="px-2.5 py-1 bg-blue-50 border border-blue-100 text-blue-700 rounded-md text-[10px] font-bold flex items-center gap-1 shadow-sm"><ShieldCheck className="size-3"/> Financial Verified</span>}
                                                 {startup.score > 0 && <span className="px-2.5 py-1 bg-purple-50 border border-purple-100 text-purple-700 rounded-md text-[10px] font-bold flex items-center gap-1 shadow-sm"><BrainCircuit className="size-3"/> AI Reviewed</span>}
                                                 {(startup.credibility?.gstRegistered || startup.credibility?.panVerified) && <span className="px-2.5 py-1 bg-emerald-50 border border-emerald-100 text-emerald-700 rounded-md text-[10px] font-bold flex items-center gap-1 shadow-sm"><CheckCircle2 className="size-3"/> KYC Verified</span>}
@@ -508,7 +508,7 @@ export default function AISearchEngine() {
                                         </div>
 
                                         {/* Main Content Split */}
-                                        <div className="flex gap-8 relative">
+                                        <div className="flex flex-col lg:flex-row gap-8 relative">
                                             {/* Left Column */}
                                             <div className="flex-1 space-y-6">
                                                 {/* Founder Section */}

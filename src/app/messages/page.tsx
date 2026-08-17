@@ -632,16 +632,15 @@ function DealWorkspace() {
     const nextPhaseObj = displayPhases.find(p => p.dbPhase > currentPhase);
 
     return (
-        <div className="flex flex-col h-[calc(100vh-64px)] bg-[#f4f6f5] overflow-hidden">
+        <div className="flex flex-col h-[100dvh] sm:h-[calc(100vh-64px)] bg-[#f4f6f5] overflow-hidden">
             {/* ── TOP BAR ── */}
             <div className="bg-slate-900 text-white px-6 py-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 shadow-lg">
                 <div>
                     <h1 className="text-xl font-bold font-outfit flex items-center gap-2">
                         <Lock className="size-5 text-emerald-400" />
                         Secure Deal Workspace
-                        <span className="text-sm font-medium px-3 py-0.5 bg-white/10 rounded-full text-slate-300 border border-white/10">with {startupName}</span>
                     </h1>
-                    <p className="text-xs text-slate-400 mt-0.5">
+                    <p className="text-xs text-slate-400 mt-1">
                         End-to-end encrypted negotiation · {displayPhases.length}-phase investment lifecycle
                         {isStudent && institutionName && ` · ${institutionName}`}
                         {isStudent && incubationCentre && ` (${incubationCentre})`}
@@ -664,7 +663,7 @@ function DealWorkspace() {
 
             <div className="flex flex-col lg:flex-row flex-1 gap-0 overflow-hidden">
                 {/* ── SIDEBAR ── */}
-                <aside className="lg:w-64 bg-slate-900 text-white px-5 py-6 flex flex-col gap-2 border-r border-slate-700 shrink-0">
+                <aside className="hidden lg:flex lg:w-64 bg-slate-900 text-white px-5 py-6 flex-col gap-2 border-r border-slate-700 shrink-0">
                     <p className="text-[10px] font-bold tracking-widest uppercase text-slate-500 mb-3">Deal Lifecycle</p>
 
                     {/* Vertical connecting line container */}
@@ -800,8 +799,13 @@ function DealWorkspace() {
                                         </div>
                                     </div>
                                 ) : (
-                                    <div className="px-5 py-3 border-b border-slate-100 bg-slate-50 flex items-center justify-between shrink-0">
-                                        <div className="flex items-center gap-3 cursor-pointer hover:bg-slate-200/50 p-1.5 -ml-1.5 rounded-lg transition-colors" onClick={() => setShowInvestorModal(true)}>
+                                    <div className="px-3 sm:px-5 py-3 border-b border-slate-100 bg-slate-50 flex items-center justify-between shrink-0">
+                                        <div className="flex items-center gap-2 sm:gap-3">
+                                            {/* Mobile Back Button */}
+                                            <button onClick={() => router.back()} className="lg:hidden p-1.5 -ml-1.5 mr-1 hover:bg-slate-200 rounded-lg text-slate-600 transition-colors">
+                                                <ArrowLeft className="size-5" />
+                                            </button>
+                                            <div className="flex items-center gap-3 cursor-pointer hover:bg-slate-200/50 p-1.5 -ml-1.5 rounded-lg transition-colors" onClick={() => setShowInvestorModal(true)}>
                                             <div className="size-10 rounded-full bg-indigo-100 flex items-center justify-center overflow-hidden shrink-0">
                                                 {investorProfile ? (
                                                     <img src={investorProfile.photo_url || `https://ui-avatars.com/api/?name=${investorProfile.full_name}`} alt={investorProfile.full_name} className="w-full h-full object-cover" />

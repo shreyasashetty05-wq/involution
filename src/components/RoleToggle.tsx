@@ -19,7 +19,7 @@ export function RoleToggle({ role, setRole }: RoleToggleProps) {
     ];
 
     return (
-        <div className="flex bg-slate-100/80 p-1.5 rounded-2xl border border-slate-200/60 mb-8 mx-auto w-fit relative backdrop-blur-sm shadow-inner">
+        <div className="flex bg-slate-100/80 p-1.5 rounded-2xl border border-slate-200/60 mb-8 mx-auto w-full sm:w-fit relative backdrop-blur-sm shadow-inner">
             {roles.map((r) => {
                 const Icon = r.icon;
                 const isActive = role === r.value;
@@ -29,7 +29,7 @@ export function RoleToggle({ role, setRole }: RoleToggleProps) {
                         key={r.value}
                         type="button"
                         onClick={() => setRole(r.value)}
-                        className={`relative flex flex-col items-center justify-center gap-1.5 px-6 py-2.5 rounded-xl text-sm font-semibold transition-colors duration-300 z-10 w-28 ${
+                        className={`relative flex flex-col items-center justify-center gap-1 sm:gap-1.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-colors duration-300 z-10 flex-1 sm:w-28 sm:flex-none ${
                             isActive ? "text-white" : "text-slate-500 hover:text-slate-700"
                         }`}
                     >

@@ -417,8 +417,8 @@ export function NegotiationTab({
                     </h2>
                     <p className="text-sm text-slate-500 mt-1">Define and agree on key investment terms before moving to legal agreements.</p>
                 </div>
-                <div className="flex gap-4">
-                    <div className="bg-white p-3 px-4 rounded-xl shadow-sm border border-slate-200">
+                <div className="flex flex-col sm:flex-row gap-4">
+                    <div className="bg-white p-3 px-4 rounded-xl shadow-sm border border-slate-200 w-full sm:w-auto">
                         <p className="text-[10px] uppercase font-bold text-slate-400">Current Status</p>
                         <div className="flex items-center gap-2 mt-1">
                             <span className={`size-2.5 rounded-full ${isAccepted ? 'bg-emerald-500' : 'bg-blue-500'}`} />

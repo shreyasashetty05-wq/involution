@@ -131,7 +131,7 @@ function LoginContent() {
     const RoleIcon = currentContent.icon;
 
     return (
-        <div className="min-h-screen flex flex-col items-center justify-center p-6 relative bg-[#f8faf9] overflow-hidden selection:bg-emerald-200">
+        <div className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 relative bg-[#f8faf9] overflow-hidden selection:bg-emerald-200">
             {/* Background Animations */}
             <div className="absolute inset-0 pointer-events-none overflow-hidden">
                 <motion.div 
@@ -187,7 +187,7 @@ function LoginContent() {
                     initial={{ opacity: 0, y: 20, scale: 0.96 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }} // smooth ease out
-                    className="bg-white/80 backdrop-blur-xl rounded-[2rem] shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05),0_0_0_1px_rgba(255,255,255,0.5)_inset,0_0_0_1px_rgba(0,0,0,0.02)] border border-slate-100/50 p-8 md:p-10 w-full text-center relative"
+                    className="bg-white/80 backdrop-blur-xl rounded-[2rem] shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05),0_0_0_1px_rgba(255,255,255,0.5)_inset,0_0_0_1px_rgba(0,0,0,0.02)] border border-slate-100/50 p-6 sm:p-8 md:p-10 w-full text-center relative"
                 >
                     {/* Top gradient accent */}
                     <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-1 bg-gradient-to-r from-transparent via-emerald-400 to-transparent opacity-80" />

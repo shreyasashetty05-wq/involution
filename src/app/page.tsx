@@ -84,7 +84,7 @@ export default function Home() {
               {/* Dashboard inside */}
               <div className="bg-white p-6">
                 {/* Top stats */}
-                <div className="grid grid-cols-3 gap-4 mb-6">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
                   {[
                     { label: 'Capital Deployed', value: '₹ 4.50 Cr', delta: '+14.2%' },
                     { label: 'Active Deals', value: '12', delta: '+3 this week' },
@@ -255,7 +255,7 @@ export default function Home() {
             </div>
 
             {/* Financial row */}
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {[
                 { label: 'MRR Growth', value: '+24.5%' },
                 { label: 'LTV/CAC', value: '4.2x' },

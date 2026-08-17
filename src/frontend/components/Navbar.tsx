@@ -180,11 +180,11 @@ export default function Navbar() {
     const isAuthenticated = !loading && !!user;
 
     return (
-        <nav className="fixed top-0 inset-x-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-200/80 px-6 py-3 shadow-sm">
+        <nav className="fixed top-0 inset-x-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-200/80 px-4 md:px-6 py-2 md:py-3 shadow-sm">
             <div className="container mx-auto flex items-center justify-between">
                 {/* Logo */}
                 <Link href="/" className="font-outfit text-lg font-bold tracking-tight flex items-center gap-2.5 text-slate-900">
-                    <Image src="/logo.jpg" alt="InVolution Logo" width={300} height={80} className="h-16 w-auto object-contain" priority />
+                    <Image src="/logo.jpg" alt="InVolution Logo" width={300} height={80} className="h-12 md:h-16 w-auto object-contain" priority />
                 </Link>
 
                 {/* Nav links */}
@@ -230,7 +230,7 @@ export default function Navbar() {
                 </div>
 
                 {/* Right side */}
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 md:gap-3">
                     {isAuthenticated ? (
                         <>
                             <Link
@@ -241,23 +241,23 @@ export default function Navbar() {
                             </Link>
                             
                             {/* Global Notification Center */}
-                            <div className="relative ml-2">
-                                <button onClick={() => setShowNotifications(!showNotifications)} className="p-3 min-w-[44px] min-h-[44px] flex items-center justify-center text-slate-400 hover:text-emerald-600 transition-colors relative rounded-full hover:bg-slate-50">
+                            <div className="relative ml-1 md:ml-2">
+                                <button onClick={() => setShowNotifications(!showNotifications)} className="p-2 md:p-3 min-w-[40px] min-h-[40px] md:min-w-[44px] md:min-h-[44px] flex items-center justify-center text-slate-400 hover:text-emerald-600 transition-colors relative rounded-full hover:bg-slate-50">
                                     <Bell className="size-5" />
                                     {unreadCount > 0 && (
-                                        <span className="absolute top-2 right-2 flex size-4">
+                                        <span className="absolute top-1 right-1 md:top-2 md:right-2 flex size-4">
                                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
                                             <span className="relative inline-flex rounded-full size-4 bg-red-500 border-2 border-white items-center justify-center text-[8px] font-bold text-white">{unreadCount}</span>
                                         </span>
                                     )}
                                 </button>
                                 {showNotifications && (
-                                    <div className="absolute right-[-16px] sm:right-0 mt-2 w-[calc(100vw-2rem)] sm:w-[360px] md:w-[420px] bg-white/95 backdrop-blur-xl border border-slate-200/60 rounded-2xl shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] z-50 overflow-hidden animate-in fade-in zoom-in-95 slide-in-from-top-2 duration-200 ease-out">
+                                    <div className="fixed top-[64px] left-4 right-4 sm:absolute sm:top-auto sm:left-auto sm:right-0 sm:mt-2 sm:w-[360px] md:w-[420px] bg-white/95 backdrop-blur-xl border border-slate-200/60 rounded-2xl shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] z-50 overflow-hidden animate-in fade-in zoom-in-95 slide-in-from-top-2 duration-200 ease-out">
                                         <div className="px-5 py-4 border-b border-slate-100/50 bg-white/50 flex justify-between items-center">
                                             <h3 className="text-base font-bold text-slate-900 tracking-tight">Notifications</h3>
                                             <button onClick={markAllAsRead} className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 transition-colors">Mark all as read</button>
                                         </div>
-                                        <div className="flex flex-col max-h-[400px] overflow-y-auto">
+                                        <div className="flex flex-col max-h-[60vh] sm:max-h-[400px] overflow-y-auto">
                                             {notifications.length === 0 ? (
                                                 <div className="p-6 text-center text-slate-500 text-sm">No notifications available.</div>
                                             ) : (
@@ -268,19 +268,19 @@ export default function Navbar() {
                                                     else if (n.title?.toLowerCase().includes('schedule')) Icon = Calendar;
                                                     
                                                     return (
-                                                        <div key={n.id} onClick={() => { if(isUnread) markAsRead(n.id); if(n.link) router.push(n.link); }} className="p-5 flex gap-4 hover:bg-slate-50/80 transition-colors cursor-pointer relative bg-white/40 border-b border-slate-50/50 group">
+                                                        <div key={n.id} onClick={() => { if(isUnread) markAsRead(n.id); if(n.link) router.push(n.link); setIsMobileMenuOpen(false); setShowNotifications(false); }} className="p-4 md:p-5 flex gap-3 md:gap-4 hover:bg-slate-50/80 transition-colors cursor-pointer relative bg-white/40 border-b border-slate-50/50 group">
                                                             <div className={`absolute left-0 top-0 bottom-0 w-1 ${isUnread ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-transparent'}`}></div>
                                                             <div className="flex-shrink-0 mt-0.5">
-                                                                <div className={`size-10 rounded-xl flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform ${isUnread ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-100 text-slate-500'}`}>
-                                                                    <Icon className="size-5" />
+                                                                <div className={`size-8 md:size-10 rounded-xl flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform ${isUnread ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-100 text-slate-500'}`}>
+                                                                    <Icon className="size-4 md:size-5" />
                                                                 </div>
                                                             </div>
                                                             <div className="flex-1">
-                                                                <div className="flex justify-between items-start mb-1">
-                                                                    <h4 className={`text-sm font-bold ${isUnread ? 'text-slate-900' : 'text-slate-700'}`}>{n.title}</h4>
-                                                                    <span className={`text-[10px] font-bold uppercase tracking-widest ${isUnread ? 'text-emerald-600' : 'text-slate-400'}`}>{formatRelativeTime(new Date(n.created_at))}</span>
+                                                                <div className="flex justify-between items-start mb-1 gap-2">
+                                                                    <h4 className={`text-xs md:text-sm font-bold leading-tight ${isUnread ? 'text-slate-900' : 'text-slate-700'}`}>{n.title}</h4>
+                                                                    <span className={`text-[9px] md:text-[10px] font-bold uppercase tracking-widest whitespace-nowrap flex-shrink-0 ${isUnread ? 'text-emerald-600' : 'text-slate-400'}`}>{formatRelativeTime(new Date(n.created_at))}</span>
                                                                 </div>
-                                                                <p className="text-sm text-slate-500 leading-snug">{n.description}</p>
+                                                                <p className="text-xs md:text-sm text-slate-500 leading-snug">{n.description}</p>
                                                             </div>
                                                         </div>
                                                     );
@@ -288,7 +288,7 @@ export default function Navbar() {
                                             )}
                                         </div>
                                         <div className="p-3 border-t border-slate-100/50 bg-slate-50/50 text-center">
-                                            <Link href="/notifications" className="text-xs font-bold text-slate-500 hover:text-slate-800 transition-colors">
+                                            <Link href="/notifications" onClick={() => setShowNotifications(false)} className="text-xs font-bold text-slate-500 hover:text-slate-800 transition-colors">
                                                 View all notifications
                                             </Link>
                                         </div>
@@ -296,25 +296,25 @@ export default function Navbar() {
                                 )}
                             </div>
 
-                            <div className="flex items-center gap-3 pl-3 border-l border-slate-200 ml-2">
+                            <div className="flex items-center gap-2 md:gap-3 pl-2 md:pl-3 border-l border-slate-200 ml-1 md:ml-2">
                                 {image ? (
-                                    <Image src={image} alt="Avatar" width={28} height={28} className="size-7 rounded-full border-2 border-emerald-200 shadow-sm" />
+                                    <Image src={image} alt="Avatar" width={28} height={28} className="size-6 md:size-7 rounded-full border-2 border-emerald-200 shadow-sm" />
                                 ) : (
-                                    <div className="size-7 rounded-full border-2 border-emerald-200 shadow-sm bg-emerald-100 flex items-center justify-center text-xs font-bold text-emerald-700">
+                                    <div className="size-6 md:size-7 rounded-full border-2 border-emerald-200 shadow-sm bg-emerald-100 flex items-center justify-center text-[10px] md:text-xs font-bold text-emerald-700">
                                         {name?.charAt(0) || "U"}
                                     </div>
                                 )}
-                                <button onClick={handleSignOut} className="text-xs font-semibold text-slate-400 hover:text-rose-500 transition-colors">
+                                <button onClick={handleSignOut} className="hidden sm:block text-xs font-semibold text-slate-400 hover:text-rose-500 transition-colors">
                                     Sign Out
                                 </button>
                             </div>
                         </>
                     ) : (
                         <>
-                            <Link href="/login" className="text-sm font-semibold text-slate-500 hover:text-emerald-700 transition-colors">
+                            <Link href="/login" className="hidden sm:block text-sm font-semibold text-slate-500 hover:text-emerald-700 transition-colors">
                                 Login
                             </Link>
-                            <Link href="/login" className="text-sm font-semibold bg-emerald-600 text-white px-5 py-2 rounded-full hover:bg-emerald-700 transition-colors shadow-sm">
+                            <Link href="/login" className="hidden sm:block text-sm font-semibold bg-emerald-600 text-white px-5 py-2 rounded-full hover:bg-emerald-700 transition-colors shadow-sm">
                                 Investor Portal
                             </Link>
                         </>
@@ -322,8 +322,8 @@ export default function Navbar() {
 
                     {/* Mobile Menu Toggle */}
                     <button 
-                        className="md:hidden ml-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-slate-500 hover:text-emerald-600 transition-colors rounded-full hover:bg-slate-50"
-                        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                        className="md:hidden ml-1 min-w-[40px] min-h-[40px] flex items-center justify-center text-slate-500 hover:text-emerald-600 transition-colors rounded-full hover:bg-slate-50"
+                        onClick={() => { setIsMobileMenuOpen(!isMobileMenuOpen); setShowNotifications(false); }}
                     >
                         {isMobileMenuOpen ? <X className="size-6" /> : <Menu className="size-6" />}
                     </button>
@@ -332,26 +332,26 @@ export default function Navbar() {
 
             {/* Mobile Menu Overlay */}
             {isMobileMenuOpen && (
-                <div className="md:hidden absolute top-full left-0 w-full bg-white border-b border-slate-200 shadow-lg animate-in slide-in-from-top-2 flex flex-col items-center py-6 gap-6 text-base font-semibold text-slate-600 z-40 max-h-[calc(100vh-70px)] overflow-y-auto">
+                <div className="md:hidden absolute top-full inset-x-0 bg-white border-b border-slate-200 shadow-lg animate-in slide-in-from-top-2 flex flex-col py-6 px-6 gap-6 text-base font-semibold text-slate-600 z-40 max-h-[calc(100vh-64px)] overflow-y-auto">
                     <Link href="/about" className="hover:text-emerald-700 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>About</Link>
                     
                     {isAuthenticated ? (
                         role === "admin" ? (
                             <>
-                                <Link href="/admin/kyc" className="hover:text-emerald-700 transition-colors font-bold text-emerald-600" onClick={() => setIsMobileMenuOpen(false)}>KYC Verification</Link>
-                                <Link href="/admin/financial-verification" className="hover:text-emerald-700 transition-colors font-bold text-emerald-600" onClick={() => setIsMobileMenuOpen(false)}>Financial Verification</Link>
-                                <Link href="/admin/investors" className="hover:text-emerald-700 transition-colors font-bold text-emerald-600" onClick={() => setIsMobileMenuOpen(false)}>Investor Verification</Link>
-                                <Link href="/mentors/manage-knowledge" className="hover:text-emerald-700 transition-colors font-bold text-emerald-600" onClick={() => setIsMobileMenuOpen(false)}>Manage Knowledge Hub</Link>
+                                <Link href="/admin/kyc" className="hover:text-emerald-700 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>KYC Verification</Link>
+                                <Link href="/admin/financial-verification" className="hover:text-emerald-700 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>Financial Verification</Link>
+                                <Link href="/admin/investors" className="hover:text-emerald-700 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>Investor Verification</Link>
+                                <Link href="/mentors/manage-knowledge" className="hover:text-emerald-700 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>Manage Knowledge Hub</Link>
                             </>
                         ) : role === "mentor" ? (
                             <>
                                 <Link href="/mentors/dashboard" className="hover:text-emerald-700 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>Mentor Dashboard</Link>
-                                <Link href="/mentors/manage-knowledge" className="hover:text-emerald-700 transition-colors font-bold text-emerald-600" onClick={() => setIsMobileMenuOpen(false)}>Manage Knowledge Hub</Link>
+                                <Link href="/mentors/manage-knowledge" className="hover:text-emerald-700 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>Manage Knowledge Hub</Link>
                             </>
                         ) : role === "investor" ? (
                             <>
                                 <Link href="/investors/dashboard" className="hover:text-emerald-700 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>Overview</Link>
-                                <Link href="/investors/portfolio" className="hover:text-emerald-700 transition-colors font-bold text-emerald-600" onClick={() => setIsMobileMenuOpen(false)}>My Portfolio</Link>
+                                <Link href="/investors/portfolio" className="hover:text-emerald-700 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>My Portfolio</Link>
                                 <Link href="/investors/search" className="hover:text-emerald-700 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>Startups</Link>
                                 <Link href="/investors/incube" className="hover:text-emerald-700 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>Incube</Link>
                             </>
@@ -367,17 +367,23 @@ export default function Navbar() {
                     )}
 
                     {isAuthenticated && (
-                        <Link href="/knowledge-hub" className="hover:text-emerald-700 transition-colors font-bold" onClick={() => setIsMobileMenuOpen(false)}>Knowledge Hub</Link>
+                        <Link href="/knowledge-hub" className="hover:text-emerald-700 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>Knowledge Hub</Link>
                     )}
 
                     <Link href="/rules" className="hover:text-emerald-700 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>Rules & FAQ</Link>
 
+                    {isAuthenticated && (
+                        <button onClick={() => { handleSignOut(); setIsMobileMenuOpen(false); }} className="text-left text-rose-500 hover:text-rose-600 transition-colors font-bold mt-2 pt-6 border-t border-slate-100">
+                            Sign Out
+                        </button>
+                    )}
+
                     {!isAuthenticated && (
-                        <div className="w-full px-6 flex flex-col gap-3 mt-2 pt-6 border-t border-slate-100">
-                            <Link href="/login" className="w-full text-center text-sm font-semibold text-slate-500 hover:text-emerald-700 transition-colors py-2 bg-slate-50 rounded-xl" onClick={() => setIsMobileMenuOpen(false)}>
+                        <div className="flex flex-col gap-3 mt-2 pt-6 border-t border-slate-100">
+                            <Link href="/login" className="w-full text-center text-sm font-semibold text-slate-500 hover:text-emerald-700 transition-colors py-3 bg-slate-50 rounded-xl" onClick={() => setIsMobileMenuOpen(false)}>
                                 Login
                             </Link>
-                            <Link href="/login" className="w-full text-center text-sm font-semibold bg-emerald-600 text-white px-5 py-2.5 rounded-xl hover:bg-emerald-700 transition-colors shadow-sm" onClick={() => setIsMobileMenuOpen(false)}>
+                            <Link href="/login" className="w-full text-center text-sm font-semibold bg-emerald-600 text-white px-5 py-3 rounded-xl hover:bg-emerald-700 transition-colors shadow-sm" onClick={() => setIsMobileMenuOpen(false)}>
                                 Investor Portal
                             </Link>
                         </div>
