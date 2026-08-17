@@ -299,7 +299,7 @@ export default function KYCSubmitPage() {
                 )}
             </div>
 
-            <div className="bg-white border border-slate-200 shadow-sm rounded-2xl p-8 relative overflow-hidden">
+            <div className="bg-white border border-slate-200 shadow-sm rounded-2xl p-6 sm:p-8 relative overflow-hidden">
                 <div className="absolute -top-32 -left-32 size-64 bg-indigo-600/10 rounded-full blur-[100px]" />
 
                 {status === "success" ? (
@@ -313,7 +313,7 @@ export default function KYCSubmitPage() {
                     </div>
                 ) : (
                     <form onSubmit={handleSubmit} className="relative z-10 space-y-8">
-                        <div className="max-w-xl mx-auto mb-8 bg-slate-50 p-6 rounded-2xl border border-slate-200">
+                        <div className="max-w-xl mx-auto mb-8 bg-slate-50 p-4 sm:p-6 rounded-2xl border border-slate-200">
                             <label className="block text-sm font-bold text-slate-700 font-inter mb-3 flex items-center justify-between">
                                 Full Legal Name *
                                 <span className="text-[10px] font-normal text-indigo-600 bg-indigo-100 px-2 py-0.5 rounded-full">Permanent Record</span>
