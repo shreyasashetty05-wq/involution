@@ -91,7 +91,7 @@ export function ModalProvider({ children }: { children: ReactNode }) {
                     />
                     
                     {/* Modal Content */}
-                    <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                    <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-200">
                         <div className="p-6">
                             <div className="flex items-start justify-between mb-4">
                                 <h3 className="text-xl font-bold text-slate-900">

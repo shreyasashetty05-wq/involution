@@ -252,10 +252,10 @@ export default function Navbar() {
                                     )}
                                 </button>
                                 {showNotifications && (
-                                    <div className="absolute -right-12 sm:right-0 mt-4 w-[calc(100vw-3rem)] sm:w-[360px] md:w-[420px] bg-white/95 backdrop-blur-xl border border-slate-200/60 rounded-2xl shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] z-50 overflow-hidden animate-in fade-in zoom-in-95 slide-in-from-top-4 duration-200 ease-out">
+                                    <div className="absolute right-[-1rem] sm:right-0 mt-4 w-[calc(100vw-2rem)] sm:w-[360px] md:w-[420px] bg-white/95 backdrop-blur-xl border border-slate-200/60 rounded-2xl shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] z-50 overflow-hidden animate-in fade-in zoom-in-95 slide-in-from-top-4 duration-200 ease-out">
                                         <div className="px-5 py-4 border-b border-slate-100/50 bg-white/50 flex justify-between items-center">
                                             <h3 className="text-base font-bold text-slate-900 tracking-tight">Notifications</h3>
-                                            <button onClick={markAllAsRead} className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 transition-colors">Mark all as read</button>
+                                            <button onClick={markAllAsRead} className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 transition-colors py-2 px-2 -mr-2">Mark all as read</button>
                                         </div>
                                         <div className="flex flex-col max-h-[400px] overflow-y-auto">
                                             {notifications.length === 0 ? (
@@ -275,12 +275,12 @@ export default function Navbar() {
                                                                     <Icon className="size-5" />
                                                                 </div>
                                                             </div>
-                                                            <div className="flex-1">
-                                                                <div className="flex justify-between items-start mb-1">
-                                                                    <h4 className={`text-sm font-bold ${isUnread ? 'text-slate-900' : 'text-slate-700'}`}>{n.title}</h4>
-                                                                    <span className={`text-[10px] font-bold uppercase tracking-widest ${isUnread ? 'text-emerald-600' : 'text-slate-400'}`}>{formatRelativeTime(new Date(n.created_at))}</span>
+                                                            <div className="flex-1 min-w-0">
+                                                                <div className="flex justify-between items-start mb-1 gap-2">
+                                                                    <h4 className={`text-sm font-bold truncate ${isUnread ? 'text-slate-900' : 'text-slate-700'}`}>{n.title}</h4>
+                                                                    <span className={`text-[10px] font-bold uppercase tracking-widest whitespace-nowrap shrink-0 ${isUnread ? 'text-emerald-600' : 'text-slate-400'}`}>{formatRelativeTime(new Date(n.created_at))}</span>
                                                                 </div>
-                                                                <p className="text-sm text-slate-500 leading-snug">{n.description}</p>
+                                                                <p className="text-sm text-slate-500 leading-snug line-clamp-2">{n.description}</p>
                                                             </div>
                                                         </div>
                                                     );
@@ -288,7 +288,7 @@ export default function Navbar() {
                                             )}
                                         </div>
                                         <div className="p-3 border-t border-slate-100/50 bg-slate-50/50 text-center">
-                                            <Link href="/notifications" className="text-xs font-bold text-slate-500 hover:text-slate-800 transition-colors">
+                                            <Link href="/notifications" className="block w-full py-2 text-xs font-bold text-slate-500 hover:text-slate-800 transition-colors">
                                                 View all notifications
                                             </Link>
                                         </div>
@@ -304,17 +304,17 @@ export default function Navbar() {
                                         {name?.charAt(0) || "U"}
                                     </div>
                                 )}
-                                <button onClick={handleSignOut} className="text-xs font-semibold text-slate-400 hover:text-rose-500 transition-colors">
+                                <button onClick={handleSignOut} className="hidden sm:block text-xs font-semibold text-slate-400 hover:text-rose-500 transition-colors py-2">
                                     Sign Out
                                 </button>
                             </div>
                         </>
                     ) : (
                         <>
-                            <Link href="/login" className="text-sm font-semibold text-slate-500 hover:text-emerald-700 transition-colors">
+                            <Link href="/login" className="hidden md:block text-sm font-semibold text-slate-500 hover:text-emerald-700 transition-colors">
                                 Login
                             </Link>
-                            <Link href="/login" className="text-sm font-semibold bg-emerald-600 text-white px-5 py-2 rounded-full hover:bg-emerald-700 transition-colors shadow-sm">
+                            <Link href="/login" className="hidden md:block text-sm font-semibold bg-emerald-600 text-white px-5 py-2 rounded-full hover:bg-emerald-700 transition-colors shadow-sm">
                                 Investor Portal
                             </Link>
                         </>
@@ -322,8 +322,9 @@ export default function Navbar() {
 
                     {/* Mobile Menu Toggle */}
                     <button 
-                        className="md:hidden ml-2 p-2 text-slate-500 hover:text-emerald-600 transition-colors"
+                        className="md:hidden ml-2 p-2 -mr-2 text-slate-500 hover:text-emerald-600 transition-colors"
                         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                        aria-label="Toggle menu"
                     >
                         {isMobileMenuOpen ? <X className="size-6" /> : <Menu className="size-6" />}
                     </button>
@@ -332,56 +333,64 @@ export default function Navbar() {
 
             {/* Mobile Menu Overlay */}
             {isMobileMenuOpen && (
-                <div className="md:hidden absolute top-full left-0 w-full bg-white border-b border-slate-200 shadow-lg animate-in slide-in-from-top-2 flex flex-col items-center py-6 gap-6 text-base font-semibold text-slate-600 z-40 max-h-[calc(100vh-70px)] overflow-y-auto">
-                    <Link href="/about" className="hover:text-emerald-700 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>About</Link>
-                    
-                    {isAuthenticated ? (
-                        role === "admin" ? (
-                            <>
-                                <Link href="/admin/kyc" className="hover:text-emerald-700 transition-colors font-bold text-emerald-600" onClick={() => setIsMobileMenuOpen(false)}>KYC Verification</Link>
-                                <Link href="/admin/financial-verification" className="hover:text-emerald-700 transition-colors font-bold text-emerald-600" onClick={() => setIsMobileMenuOpen(false)}>Financial Verification</Link>
-                                <Link href="/admin/investors" className="hover:text-emerald-700 transition-colors font-bold text-emerald-600" onClick={() => setIsMobileMenuOpen(false)}>Investor Verification</Link>
-                                <Link href="/mentors/manage-knowledge" className="hover:text-emerald-700 transition-colors font-bold text-emerald-600" onClick={() => setIsMobileMenuOpen(false)}>Manage Knowledge Hub</Link>
-                            </>
-                        ) : role === "mentor" ? (
-                            <>
-                                <Link href="/mentors/dashboard" className="hover:text-emerald-700 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>Mentor Dashboard</Link>
-                                <Link href="/mentors/manage-knowledge" className="hover:text-emerald-700 transition-colors font-bold text-emerald-600" onClick={() => setIsMobileMenuOpen(false)}>Manage Knowledge Hub</Link>
-                            </>
-                        ) : role === "investor" ? (
-                            <>
-                                <Link href="/investors/dashboard" className="hover:text-emerald-700 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>Overview</Link>
-                                <Link href="/investors/portfolio" className="hover:text-emerald-700 transition-colors font-bold text-emerald-600" onClick={() => setIsMobileMenuOpen(false)}>My Portfolio</Link>
-                                <Link href="/investors/search" className="hover:text-emerald-700 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>Startups</Link>
-                                <Link href="/investors/incube" className="hover:text-emerald-700 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>Incube</Link>
-                            </>
+                <div className="md:hidden absolute top-full left-0 w-full bg-white border-b border-slate-200 shadow-lg animate-in slide-in-from-top-2 flex flex-col py-2 z-40 max-h-[calc(100vh-70px)] overflow-y-auto">
+                    <div className="flex flex-col px-4 gap-1">
+                        <Link href="/about" className="block py-3 px-4 hover:bg-slate-50 rounded-xl text-base font-semibold text-slate-600 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>About</Link>
+                        
+                        {isAuthenticated ? (
+                            role === "admin" ? (
+                                <>
+                                    <Link href="/admin/kyc" className="block py-3 px-4 hover:bg-slate-50 rounded-xl text-base font-bold text-emerald-600 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>KYC Verification</Link>
+                                    <Link href="/admin/financial-verification" className="block py-3 px-4 hover:bg-slate-50 rounded-xl text-base font-bold text-emerald-600 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>Financial Verification</Link>
+                                    <Link href="/admin/investors" className="block py-3 px-4 hover:bg-slate-50 rounded-xl text-base font-bold text-emerald-600 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>Investor Verification</Link>
+                                    <Link href="/mentors/manage-knowledge" className="block py-3 px-4 hover:bg-slate-50 rounded-xl text-base font-bold text-emerald-600 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>Manage Knowledge Hub</Link>
+                                </>
+                            ) : role === "mentor" ? (
+                                <>
+                                    <Link href="/mentors/dashboard" className="block py-3 px-4 hover:bg-slate-50 rounded-xl text-base font-semibold text-slate-600 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>Mentor Dashboard</Link>
+                                    <Link href="/mentors/manage-knowledge" className="block py-3 px-4 hover:bg-slate-50 rounded-xl text-base font-bold text-emerald-600 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>Manage Knowledge Hub</Link>
+                                </>
+                            ) : role === "investor" ? (
+                                <>
+                                    <Link href="/investors/dashboard" className="block py-3 px-4 hover:bg-slate-50 rounded-xl text-base font-semibold text-slate-600 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>Overview</Link>
+                                    <Link href="/investors/portfolio" className="block py-3 px-4 hover:bg-slate-50 rounded-xl text-base font-bold text-emerald-600 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>My Portfolio</Link>
+                                    <Link href="/investors/search" className="block py-3 px-4 hover:bg-slate-50 rounded-xl text-base font-semibold text-slate-600 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>Startups</Link>
+                                    <Link href="/investors/incube" className="block py-3 px-4 hover:bg-slate-50 rounded-xl text-base font-semibold text-slate-600 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>Incube</Link>
+                                </>
+                            ) : (
+                                <Link href="/startups/dashboard" className="block py-3 px-4 hover:bg-slate-50 rounded-xl text-base font-semibold text-slate-600 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>Dashboard</Link>
+                            )
                         ) : (
-                            <Link href="/startups/dashboard" className="hover:text-emerald-700 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>Dashboard</Link>
-                        )
-                    ) : (
-                        <>
-                            <Link href="/startups" className="hover:text-emerald-700 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>Startups</Link>
-                            <Link href="/investors" className="hover:text-emerald-700 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>Investors</Link>
-                            <Link href="/incube" className="hover:text-emerald-700 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>Incube</Link>
-                        </>
-                    )}
+                            <>
+                                <Link href="/startups" className="block py-3 px-4 hover:bg-slate-50 rounded-xl text-base font-semibold text-slate-600 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>Startups</Link>
+                                <Link href="/investors" className="block py-3 px-4 hover:bg-slate-50 rounded-xl text-base font-semibold text-slate-600 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>Investors</Link>
+                                <Link href="/incube" className="block py-3 px-4 hover:bg-slate-50 rounded-xl text-base font-semibold text-slate-600 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>Incube</Link>
+                            </>
+                        )}
 
-                    {isAuthenticated && (
-                        <Link href="/knowledge-hub" className="hover:text-emerald-700 transition-colors font-bold" onClick={() => setIsMobileMenuOpen(false)}>Knowledge Hub</Link>
-                    )}
+                        {isAuthenticated && (
+                            <Link href="/knowledge-hub" className="block py-3 px-4 hover:bg-slate-50 rounded-xl text-base font-bold text-slate-600 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>Knowledge Hub</Link>
+                        )}
 
-                    <Link href="/rules" className="hover:text-emerald-700 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>Rules & FAQ</Link>
+                        <Link href="/rules" className="block py-3 px-4 hover:bg-slate-50 rounded-xl text-base font-semibold text-slate-600 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>Rules & FAQ</Link>
 
-                    {!isAuthenticated && (
-                        <div className="w-full px-6 flex flex-col gap-3 mt-2 pt-6 border-t border-slate-100">
-                            <Link href="/login" className="w-full text-center text-sm font-semibold text-slate-500 hover:text-emerald-700 transition-colors py-2 bg-slate-50 rounded-xl" onClick={() => setIsMobileMenuOpen(false)}>
-                                Login
-                            </Link>
-                            <Link href="/login" className="w-full text-center text-sm font-semibold bg-emerald-600 text-white px-5 py-2.5 rounded-xl hover:bg-emerald-700 transition-colors shadow-sm" onClick={() => setIsMobileMenuOpen(false)}>
-                                Investor Portal
-                            </Link>
-                        </div>
-                    )}
+                        {isAuthenticated && (
+                            <button onClick={() => { handleSignOut(); setIsMobileMenuOpen(false); }} className="sm:hidden text-left block w-full py-3 px-4 hover:bg-slate-50 rounded-xl text-base font-semibold text-rose-500 transition-colors">
+                                Sign Out
+                            </button>
+                        )}
+
+                        {!isAuthenticated && (
+                            <div className="w-full flex flex-col gap-3 mt-4 pt-4 border-t border-slate-100">
+                                <Link href="/login" className="w-full text-center text-base font-semibold text-slate-600 hover:bg-slate-100 transition-colors py-3.5 bg-slate-50 rounded-xl" onClick={() => setIsMobileMenuOpen(false)}>
+                                    Login
+                                </Link>
+                                <Link href="/login" className="w-full text-center text-base font-semibold bg-emerald-600 text-white py-3.5 rounded-xl hover:bg-emerald-700 transition-colors shadow-sm" onClick={() => setIsMobileMenuOpen(false)}>
+                                    Investor Portal
+                                </Link>
+                            </div>
+                        )}
+                    </div>
                 </div>
             )}
         </nav>

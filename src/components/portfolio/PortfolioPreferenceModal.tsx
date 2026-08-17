@@ -19,7 +19,7 @@ export default function PortfolioPreferenceModal({ startupName, onSelectPreferen
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
-            <div className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full p-8 relative overflow-hidden animate-in fade-in zoom-in-95 duration-300">
+            <div className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-8 relative animate-in fade-in zoom-in-95 duration-300">
                 <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none">
                     <ShieldCheck className="size-48 text-emerald-600" />
                 </div>
