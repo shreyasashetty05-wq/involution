@@ -30,7 +30,7 @@ export function VoiceRecorder({
             <button
                 type="button"
                 disabled
-                className="p-2.5 rounded-full text-[#334155] cursor-not-allowed flex items-center justify-center relative group"
+                className="p-2.5 min-w-[44px] min-h-[44px] rounded-full text-[#334155] cursor-not-allowed flex items-center justify-center relative group"
                 title="Voice input is not supported in this browser."
             >
                 <Mic className="size-4" />
@@ -46,7 +46,7 @@ export function VoiceRecorder({
         <button
             type="button"
             onClick={isListening ? stopListening : startListening}
-            className={`p-2.5 rounded-full transition-all flex items-center justify-center relative group ${
+            className={`p-2.5 min-w-[44px] min-h-[44px] rounded-full transition-all flex items-center justify-center relative group ${
                 isListening 
                     ? 'bg-red-500 text-white' 
                     : 'text-[#94A3B8] hover:text-[#F8FAFC] hover:bg-[#334155]'

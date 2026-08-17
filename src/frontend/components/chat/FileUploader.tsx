@@ -41,7 +41,7 @@ export function FileUploader({ onFilesSelected }: FileUploaderProps) {
             <button 
                 type="button" 
                 onClick={() => fileInputRef.current?.click()}
-                className="p-2.5 rounded-full text-[#94A3B8] hover:text-[#F8FAFC] hover:bg-[#334155] transition-all flex items-center justify-center"
+                className="p-2.5 min-w-[44px] min-h-[44px] rounded-full text-[#94A3B8] hover:text-[#F8FAFC] hover:bg-[#334155] transition-all flex items-center justify-center"
                 title="Attach documents"
             >
                 <Paperclip className="size-4" />

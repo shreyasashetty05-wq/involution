@@ -142,7 +142,7 @@ export function ChatInput({ onSubmit, isLoading, quickPrompts }: ChatInputProps)
                         <button
                             type="submit"
                             disabled={(!displayValue.trim() && files.length === 0) || isLoading}
-                            className="mb-1 p-2.5 ml-1 bg-gradient-to-r from-[#8b5cf6] to-[#ec4899] hover:from-[#7c3aed] hover:to-[#db2777] disabled:from-[#1E293B] disabled:to-[#1E293B] disabled:text-[#94A3B8] text-white rounded-full transition-all flex items-center justify-center shrink-0 shadow-[0_0_10px_rgba(236,72,153,0.4)] relative group"
+                            className="mb-1 p-2.5 ml-1 min-w-[44px] min-h-[44px] bg-gradient-to-r from-[#8b5cf6] to-[#ec4899] hover:from-[#7c3aed] hover:to-[#db2777] disabled:from-[#1E293B] disabled:to-[#1E293B] disabled:text-[#94A3B8] text-white rounded-full transition-all flex items-center justify-center shrink-0 shadow-[0_0_10px_rgba(236,72,153,0.4)] relative group"
                             title="Send Message"
                         >
                             <ArrowUp className="size-4" strokeWidth={3} />
