@@ -123,7 +123,11 @@ export default function Navbar() {
         };
 
         fetchNotifications();
-        const channel = supabase.channel('public:notifications')
+        
+        // Append a random string to the channel name to avoid "cannot add callbacks after subscribe()" 
+        // errors during React Strict Mode double-mounting or hot reloads.
+        const channelId = `public:notifications:${user?.id || 'guest'}-${Math.random().toString(36).substring(7)}`;
+        const channel = supabase.channel(channelId)
             .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications' }, () => {
                 fetchNotifications();
             })
