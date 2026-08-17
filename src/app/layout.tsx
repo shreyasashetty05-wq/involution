@@ -30,7 +30,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${inter.variable} ${outfit.variable} font-sans bg-[#f8faf9] text-slate-900 antialiased min-h-screen flex flex-col`}
+        className={`${inter.variable} ${outfit.variable} font-sans bg-[#f8faf9] text-slate-900 antialiased min-h-screen flex flex-col overflow-x-hidden w-full`}
       >
         <ToastProvider>
           <ModalProvider>

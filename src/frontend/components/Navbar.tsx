@@ -242,17 +242,17 @@ export default function Navbar() {
                             
                             {/* Global Notification Center */}
                             <div className="relative ml-2">
-                                <button onClick={() => setShowNotifications(!showNotifications)} className="p-2 text-slate-400 hover:text-emerald-600 transition-colors relative">
+                                <button onClick={() => setShowNotifications(!showNotifications)} className="p-3 min-w-[44px] min-h-[44px] flex items-center justify-center text-slate-400 hover:text-emerald-600 transition-colors relative rounded-full hover:bg-slate-50">
                                     <Bell className="size-5" />
                                     {unreadCount > 0 && (
-                                        <span className="absolute top-1 right-1 flex size-4">
+                                        <span className="absolute top-2 right-2 flex size-4">
                                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
                                             <span className="relative inline-flex rounded-full size-4 bg-red-500 border-2 border-white items-center justify-center text-[8px] font-bold text-white">{unreadCount}</span>
                                         </span>
                                     )}
                                 </button>
                                 {showNotifications && (
-                                    <div className="absolute -right-12 sm:right-0 mt-4 w-[calc(100vw-3rem)] sm:w-[360px] md:w-[420px] bg-white/95 backdrop-blur-xl border border-slate-200/60 rounded-2xl shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] z-50 overflow-hidden animate-in fade-in zoom-in-95 slide-in-from-top-4 duration-200 ease-out">
+                                    <div className="absolute right-[-16px] sm:right-0 mt-2 w-[calc(100vw-2rem)] sm:w-[360px] md:w-[420px] bg-white/95 backdrop-blur-xl border border-slate-200/60 rounded-2xl shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] z-50 overflow-hidden animate-in fade-in zoom-in-95 slide-in-from-top-2 duration-200 ease-out">
                                         <div className="px-5 py-4 border-b border-slate-100/50 bg-white/50 flex justify-between items-center">
                                             <h3 className="text-base font-bold text-slate-900 tracking-tight">Notifications</h3>
                                             <button onClick={markAllAsRead} className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 transition-colors">Mark all as read</button>
@@ -322,7 +322,7 @@ export default function Navbar() {
 
                     {/* Mobile Menu Toggle */}
                     <button 
-                        className="md:hidden ml-2 p-2 text-slate-500 hover:text-emerald-600 transition-colors"
+                        className="md:hidden ml-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-slate-500 hover:text-emerald-600 transition-colors rounded-full hover:bg-slate-50"
                         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                     >
                         {isMobileMenuOpen ? <X className="size-6" /> : <Menu className="size-6" />}
