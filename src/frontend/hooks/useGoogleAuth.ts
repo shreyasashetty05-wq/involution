@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { createClient } from "@/utils/supabase/client";
+import { Capacitor } from "@capacitor/core";
 
 /**
  * Shared hook for Google OAuth sign-in/sign-up flow.
@@ -16,12 +17,18 @@ export function useGoogleAuth(role: string) {
         setError(null);
         // Set cookie with Secure and SameSite flags for better persistence across environments
         document.cookie = `involution_role=${role}; path=/; max-age=3600; Secure; SameSite=Lax`;
+        // Determine the correct redirect URI based on platform
+        let redirectUrl = `${window.location.origin}/api/auth/callback?role=${encodeURIComponent(role)}`;
+        if (Capacitor.isNativePlatform()) {
+            redirectUrl = `com.involution.app://callback?role=${encodeURIComponent(role)}`;
+        }
+
         const supabase = createClient();
         const { error: authError } = await supabase.auth.signInWithOAuth({
             provider: "google",
             options: {
                 // Pass role in URL params to guarantee it survives cross-origin OAuth redirects in production
-                redirectTo: `${window.location.origin}/api/auth/callback?role=${encodeURIComponent(role)}`,
+                redirectTo: redirectUrl,
                 queryParams: {
                     prompt: 'select_account'
                 }

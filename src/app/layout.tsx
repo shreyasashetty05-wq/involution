@@ -4,6 +4,7 @@ import Navbar from "@/frontend/components/Navbar";
 import GlobalChatbot from "@/frontend/components/GlobalChatbot";
 import { ToastProvider } from "@/components/ui/ToastProvider";
 import { ModalProvider } from "@/components/ui/ModalProvider";
+import { CapacitorProvider } from "@/components/ui/CapacitorProvider";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
@@ -32,15 +33,16 @@ export default function RootLayout({
       <body
         className={`${inter.variable} ${outfit.variable} font-sans bg-[#f8faf9] text-slate-900 antialiased min-h-screen flex flex-col overflow-x-hidden w-full`}
       >
-        <ToastProvider>
-          <ModalProvider>
-            <Navbar />
-            <main className="grow pt-20">{children}</main>
-            <GlobalChatbot />
-          </ModalProvider>
-        </ToastProvider>
+        <CapacitorProvider>
+          <ToastProvider>
+            <ModalProvider>
+              <Navbar />
+              <main className="grow pt-20">{children}</main>
+              <GlobalChatbot />
+            </ModalProvider>
+          </ToastProvider>
+        </CapacitorProvider>
       </body>
     </html>
   );
 }
-
