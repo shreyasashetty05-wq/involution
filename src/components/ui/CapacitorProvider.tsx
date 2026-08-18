@@ -35,8 +35,6 @@ export function CapacitorProvider({ children }: { children: React.ReactNode }) {
         const backListener = CapacitorApp.addListener('backButton', () => {
             const rootPaths = [
                 '/', 
-                '/login', 
-                '/register', 
                 '/investors/dashboard', 
                 '/startups/dashboard', 
                 '/incube/dashboard', 
